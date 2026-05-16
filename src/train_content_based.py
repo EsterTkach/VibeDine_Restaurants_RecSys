@@ -1,17 +1,19 @@
+import config
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 import pickle
 import os
 
 ### load data
-restaurants = pd.read_parquet("data/CBF_item_features.parquet")
+restaurants = pd.read_parquet(config.CBF_FEATURES_FILE)
 restaurants = restaurants.reset_index(drop=True)
 
 print("Data loaded successfully")
 
+
 ### clean data for combined_text
 def clean_text(values):
-    if isinstance(values, list):  # flatten in case of list of str 
+    if isinstance(values, list):  # flatten in case of list of str
         return " ".join(map(str, values))
 
     if pd.isna(values):
@@ -50,7 +52,7 @@ print("Combined text created")
 
 
 ### TF-IDF Vectorization
-tfidf = TfidfVectorizer(stop_words="english", max_features=10000)
+tfidf = TfidfVectorizer(stop_words="english", max_features=config.MAX_FEATURES)
 
 tfidf_matrix = tfidf.fit_transform(restaurants["combined_text"])
 
@@ -60,14 +62,14 @@ print("TF-IDF matrix created")
 ### save model
 os.makedirs("models", exist_ok=True)
 
-with open("models/content_based_model.pkl", "wb") as f:
+with open(config.MODEL_CB_FILE, "wb") as f:
     pickle.dump(
         {
             "restaurants": restaurants,
             "tfidf": tfidf,
             "tfidf_matrix": tfidf_matrix,
         },
-        f
+        f,
     )
 
 print("Model saved to models/content_based_model.pkl")

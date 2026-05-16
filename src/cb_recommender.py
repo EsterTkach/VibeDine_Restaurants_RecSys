@@ -1,12 +1,11 @@
-import pandas as pd
+import config
 import pickle
+import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
 
-interactions = pd.read_parquet("data/CF_interaction_matrix.parquet")
-
 ### Load trained model
-
-with open("models/content_based_model.pkl", "rb") as f:
+interactions = pd.read_parquet(config.INTERACTIONS_FILE)
+with open(config.MODEL_CB_FILE, "rb") as f:
     model = pickle.load(f)
 
 print("Model loaded")
@@ -16,8 +15,10 @@ tfidf = model["tfidf"]
 tfidf_matrix = model["tfidf_matrix"]
 
 
-### get topK recommanded restaurants by content - by restaurant name
-def recommend_similar_restaurants(restaurant_name, top_k=5):
+### get top K recommanded restaurants by content - by restaurant name
+def recommend_similar_restaurants(
+    restaurant_name, top_k=config.TOP_K, candidate_gmap_ids=None
+):
     matches = restaurants[restaurants["name"] == restaurant_name]
 
     if matches.empty:
@@ -32,24 +33,36 @@ def recommend_similar_restaurants(restaurant_name, top_k=5):
 
     scores = sorted(scores, key=lambda x: x[1], reverse=True)
 
-    top_scores = scores[1 : top_k + 1]
-
     recommendations = []
+    candidate_set = set(candidate_gmap_ids) if candidate_gmap_ids is not None else None
 
-    for i, score in top_scores:
+    for i, score in scores:
+        if i == idx:
+            continue
+
+        gmap_id = restaurants.iloc[i]["gmap_id"]
+
+        if candidate_set is not None and gmap_id not in candidate_set:
+            continue
+
         recommendations.append(
             {
                 "name": restaurants.iloc[i]["name"],
-                "gmap_id": restaurants.iloc[i]["gmap_id"],
-                "similarity_score": round(score, 3),
+                "gmap_id": gmap_id,
+                "similarity_score": round(float(score), 3),
             }
         )
+
+        if len(recommendations) == top_k:
+            break
 
     return recommendations
 
 
-### get topK recommanded restaurants by content - by user ("liked" = rated above min_rating)
-def recommend_for_user(user_id, top_k=10, min_rating=4):
+### get top K recommanded restaurants by content - by user ("liked" = rated above min_rating)
+def recommend_for_user(
+    user_id, top_k=config.TOP_K, min_rating=config.MIN_RATING, candidate_gmap_ids=None
+):
     user_likes = interactions[
         (interactions["user_id"] == user_id) & (interactions["rating"] >= min_rating)
     ]
@@ -75,6 +88,7 @@ def recommend_for_user(user_id, top_k=10, min_rating=4):
     ranked_indices = user_scores.argsort()[::-1]
 
     recommendations = []
+    candidate_set = set(candidate_gmap_ids) if candidate_gmap_ids is not None else None
 
     for idx in ranked_indices:
         # Skip restaurants the user already liked, because we dont want to
@@ -82,10 +96,15 @@ def recommend_for_user(user_id, top_k=10, min_rating=4):
         if idx in liked_indices:
             continue
 
+        gmap_id = restaurants.iloc[idx]["gmap_id"]
+
+        if candidate_set is not None and gmap_id not in candidate_set:
+            continue
+
         recommendations.append(
             {
                 "name": restaurants.iloc[idx]["name"],
-                "gmap_id": restaurants.iloc[idx]["gmap_id"],
+                "gmap_id": gmap_id,
                 "score": round(float(user_scores[idx]), 3),
             }
         )
@@ -96,18 +115,17 @@ def recommend_for_user(user_id, top_k=10, min_rating=4):
     return recommendations
 
 
+###############
+##### test ####
+###############
 
-
-##### test #####
-
-# results1 = recommend_similar_restaurants("Vons Chicken", 5)
+# results1 = recommend_similar_restaurants("Carpo's Restaurant", 5)
 
 # print("\nTop similar restaurants:")
 # for r in results1:
 #     print(r)
 
-# user_id = interactions["user_id"].iloc[0]
-
+# user_id = interactions["user_id"].iloc[5]
 # results2 = recommend_for_user(user_id, 5, 3)
 
 # print(f"\nRecommendations for user {user_id}:")
