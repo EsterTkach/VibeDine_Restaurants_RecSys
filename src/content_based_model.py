@@ -22,22 +22,7 @@ def clean_text(values):
 
     return str(values)
 
-def flatten_hours(hours):
-    if not isinstance(hours, list):
-        return ""
 
-    result = []
-
-    for item in hours:
-        if isinstance(item, list):
-            result.extend(map(str, item))
-        else:
-            result.append(str(item))
-
-    return " ".join(result)
-
-
-restaurants["hours_text"] = restaurants["hours"].apply(flatten_hours)
 text_columns = {
     "name": "name_text",
     "category": "category_text",
@@ -54,8 +39,6 @@ restaurants["combined_text"] = (
     restaurants["name_text"]
     + " "
     + restaurants["category_text"]
-    + " "
-    + restaurants["hours_text"]
     + " "
     + restaurants["service_text"]
     + " "
