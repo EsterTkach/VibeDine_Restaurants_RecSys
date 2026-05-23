@@ -1,7 +1,9 @@
-import config
+from src import config
 import pickle
 import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
+
+"""Content-Based Recommender System for Restaurants"""
 
 ### Load trained model
 interactions = pd.read_parquet(config.INTERACTIONS_FILE)

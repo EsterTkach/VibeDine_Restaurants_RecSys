@@ -10,3 +10,8 @@ LIORA-
 3) To get Content Based recommendations see functions in  file: src/cb_recommender.py
 4) To build the OFFLINE Item-Based Collaborative Filtering Model, run: python src/train_item_cf.py
 5) To get Collaborative Filtering recommendations, see functions in: src/cf_recommender.py
+
+AYA- 
+1) Change config.py to allow data versoning
+2) Created api folder - FastApi server, cold start run: python -m uvicorn api.main:app --reload
+3) Added requirements.txt file. In order to install all: pip install -r requirements.txt 

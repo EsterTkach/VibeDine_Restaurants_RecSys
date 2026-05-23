@@ -2,6 +2,8 @@
 DATA_PATH = "data/"
 MODEL_PATH = "models/"
 
+DATA_VERSION = "1"
+
 # Content-Based parameters
 MAX_FEATURES = 10000
 
@@ -10,7 +12,7 @@ TOP_K = 10
 MIN_RATING = 4
 
 # Files
-CBF_FEATURES_FILE = f"{DATA_PATH}CBF_item_features.parquet"
-INTERACTIONS_FILE = f"{DATA_PATH}CF_interaction_matrix.parquet"
+CBF_FEATURES_FILE = f"{DATA_PATH}CBF_item_features_{DATA_VERSION}.parquet"
+INTERACTIONS_FILE = f"{DATA_PATH}CF_interaction_matrix_{DATA_VERSION}.parquet"
 MODEL_CB_FILE = f"{MODEL_PATH}content_based_model.pkl"
 MODEL_CF_FILE = f"{MODEL_PATH}item_cf_model.pkl"
