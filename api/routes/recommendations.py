@@ -18,7 +18,7 @@ router = APIRouter(
     tags=["Recommendations"]
 )
 
-
+# Popular restaurants endpoint - returns top 10 popular restaurants similar to the original restaurant based on overall ratings and number of reviews
 @router.get("/cb/{restaurant_name}")
 def get_similar_restaurants(
     restaurant_name: str,
