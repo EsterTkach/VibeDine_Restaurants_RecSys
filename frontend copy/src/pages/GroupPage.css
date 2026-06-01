@@ -1,0 +1,163 @@
+.group-page {
+  padding: 28px;
+}
+
+.group-page h1 {
+  margin-top: 20px;
+}
+
+.group-page p {
+  color: #777;
+  margin-top: 8px;
+}
+
+.friends-selection {
+  margin-top: 30px;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 14px;
+}
+
+.friend-select {
+  border: none;
+
+  background: white;
+
+  border-radius: 20px;
+
+  padding: 18px;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 10px 25px rgba(0,0,0,0.05);
+
+  transition: 0.2s;
+}
+
+.friend-select.selected {
+  background: #8b6b4a;
+
+  color: white;
+}
+
+.filters {
+  margin-top: 40px;
+}
+
+.filters h3 {
+  margin-bottom: 16px;
+}
+
+.filter-chip {
+  background: white;
+
+  padding: 14px;
+
+  border-radius: 16px;
+
+  margin-bottom: 10px;
+
+  box-shadow:
+    0 6px 18px rgba(0,0,0,0.05);
+}
+
+.find-match-btn {
+  margin-top: 40px;
+
+  width: 100%;
+
+  border: none;
+
+  background: #8b6b4a;
+
+  color: white;
+
+  padding: 18px;
+
+  border-radius: 20px;
+
+  font-size: 16px;
+
+  cursor: pointer;
+}
+
+.friend-subtitle {
+  font-size: 13px;
+  margin-top: 4px;
+  color: inherit;
+  opacity: 0.8;
+}
+
+.friend-icon {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.friend-select {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.find-match-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Vibe Matcher Style */
+
+.preference-group {
+  margin-bottom: 22px;
+}
+
+.preference-group label {
+  display: block;
+  margin-bottom: 10px;
+
+  font-weight: 600;
+}
+
+.segmented-control {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  background: white;
+
+  padding: 8px;
+
+  border-radius: 14px;
+
+  box-shadow:
+    0 4px 12px rgba(0,0,0,0.04);
+}
+
+.segment {
+  border: none;
+
+  background: #f0ebe0;
+
+  color: #666;
+
+  padding: 12px 14px;
+
+  border-radius: 10px;
+
+  cursor: pointer;
+
+  transition: 0.25s;
+}
+
+.segment.active {
+  background: #8b6b4a;
+
+  color: white;
+
+  box-shadow:
+    0 0 15px rgba(139,107,74,0.35);
+}

@@ -1,0 +1,35 @@
+.app-shell {
+  min-height: 100vh;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+ background:
+  radial-gradient(circle at 20% 20%, #efe3d1 0%, transparent 25%),
+  radial-gradient(circle at 80% 80%, #e8d4b3 0%, transparent 30%),
+  radial-gradient(circle at 80% 10%, #f4ebe0 0%, transparent 20%),
+  #f8f5f0;
+
+  padding: 24px;
+}
+
+.phone-frame {
+  width: 100%;
+  max-width: 430px;
+  min-height: 90vh;
+
+  background: rgba(255,255,255,0.88);
+
+  backdrop-filter: blur(20px);
+
+  border-radius: 36px;
+
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.12);
+
+  position: relative;
+}

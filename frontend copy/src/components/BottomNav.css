@@ -1,0 +1,53 @@
+.bottom-nav {
+  position: absolute;
+
+  bottom: 0;
+
+  left: 0;
+
+  right: 0;
+
+  height: 78px;
+
+  background: rgba(255,255,255,0.95);
+
+  backdrop-filter: blur(20px);
+
+  display: flex;
+
+  justify-content: space-around;
+
+  align-items: center;
+
+  border-top: 1px solid #ececec;
+}
+
+.nav-item {
+  border: none;
+
+  background: transparent;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  gap: 6px;
+
+  color: #999;
+
+  cursor: pointer;
+
+  font-size: 14px;
+}
+
+.nav-item svg {
+  font-size: 18px;
+}
+
+.nav-item.active {
+  color: #8b6b4a;
+
+  font-weight: 600;
+}

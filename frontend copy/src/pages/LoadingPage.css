@@ -1,0 +1,178 @@
+.loading-container {
+  height: 90vh;
+
+  display: flex;
+  flex-direction: column;
+
+  justify-content: center;
+  align-items: center;
+
+  padding: 32px;
+
+  text-align: center;
+}
+
+.loading-logo {
+  width: 110px;
+  height: 110px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 48px;
+
+  border-radius: 50%;
+
+  background: white;
+
+  box-shadow:
+    0 20px 50px rgba(139, 107, 74, 0.15);
+
+  animation: floatLogo 2.5s ease-in-out infinite;
+
+  position: relative;
+}
+
+.loading-logo::before {
+  content: "";
+
+  position: absolute;
+
+  width: 140px;
+  height: 140px;
+
+  border-radius: 50%;
+
+  background: rgba(214, 180, 138, 0.35);
+
+  filter: blur(35px);
+
+  z-index: -1;
+
+  animation: pulseGlow 3s ease-in-out infinite;
+}
+
+.loading-title {
+  margin-top: 24px;
+
+  font-family: "Parisienne", cursive;
+
+  font-size: 64px;
+
+  color: #8b6b4a;
+
+  animation: floatTitle 2.5s ease-in-out infinite;
+}
+
+.loading-message {
+  margin-top: 16px;
+
+  color: #666;
+
+  font-size: 16px;
+
+  min-height: 24px;
+}
+
+.loading-bar {
+  margin-top: 36px;
+
+  width: 240px;
+  height: 8px;
+
+  border-radius: 999px;
+
+  background: #eee;
+
+  overflow: hidden;
+}
+
+.loading-bar-fill {
+  width: 40%;
+
+  height: 100%;
+
+  border-radius: 999px;
+
+  background: #d6b48a;
+
+  animation: loadingMove 1.5s ease-in-out infinite;
+}
+
+.food-icons {
+  margin-top: 40px;
+
+  font-size: 26px;
+
+  opacity: 0.7;
+
+  letter-spacing: 6px;
+
+  animation: fadeFood 2s ease-in-out infinite alternate;
+}
+
+@keyframes floatLogo {
+  0% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-12px);
+  }
+
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes floatTitle {
+  0% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
+
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+@keyframes loadingMove {
+  0% {
+    transform: translateX(-120%);
+  }
+
+  100% {
+    transform: translateX(320%);
+  }
+}
+
+@keyframes pulseGlow {
+  0% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+
+  50% {
+    transform: scale(1.15);
+    opacity: 0.9;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+}
+
+@keyframes fadeFood {
+  from {
+    opacity: 0.4;
+  }
+
+  to {
+    opacity: 0.9;
+  }
+}
