@@ -17,7 +17,9 @@ restaurant_lookup = model["restaurant_lookup"]
 
 
 ### get Top-K restaurant recommendations for a user using Item-Based Collaborative Filtering
-def recommend_for_user_cf(user_id, top_k=config.TOP_K, candidate_gmap_ids=None):
+def recommend_for_user_cf(user_id, top_k=config.TOP_K, candidate_gmap_ids=None, allow_liked_items=False):
+    # allow_liked_items: allow restaurants already liked by the user to appear in recommendations.
+    
     if user_id not in user_id_to_index:
         print(f"User {user_id} not found")
         return []
@@ -43,9 +45,10 @@ def recommend_for_user_cf(user_id, top_k=config.TOP_K, candidate_gmap_ids=None):
     similarities = cosine_similarity(item_user_matrix[liked_indices], item_user_matrix)
 
     # Remove self-similarity:
-    # do not let a restaurant recommend itself through similarity = 1
+    # do not let a restaurant contribute to its own score with similarity = 1    
     for i, item_idx in enumerate(liked_indices):
         similarities[i, item_idx] = 0
+
 
     numerator = similarities.T @ liked_ratings
     denominator = similarities.sum(axis=0)
@@ -68,7 +71,7 @@ def recommend_for_user_cf(user_id, top_k=config.TOP_K, candidate_gmap_ids=None):
     candidate_set = set(candidate_gmap_ids) if candidate_gmap_ids is not None else None
 
     for idx in ranked_indices:
-        if idx in liked_set:
+        if not allow_liked_items and idx in liked_set:
             continue
 
         gmap_id = index_to_item_id[idx]
