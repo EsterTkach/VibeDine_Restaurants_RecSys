@@ -1,6 +1,6 @@
 # Paths
-DATA_PATH = "data/"
-MODEL_PATH = "models/"
+DATA_PATH = "src/data/"
+MODEL_PATH = "src/models/"
 
 DATA_VERSION = "1"
 
