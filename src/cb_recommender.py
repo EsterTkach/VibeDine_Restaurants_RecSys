@@ -17,17 +17,17 @@ tfidf = model["tfidf"]
 tfidf_matrix = model["tfidf_matrix"]
 
 
-### get top K recommanded restaurants by content - by restaurant name
+### get top K recommanded restaurants by content - by restaurant gmap_id
 def recommend_similar_restaurants(
-    restaurant_name, top_k=config.TOP_K, candidate_gmap_ids=None
+    restaurant_gmap_id, top_k=config.TOP_K, candidate_gmap_ids=None
 ):
-    matches = restaurants[restaurants["name"] == restaurant_name]
+    matches = restaurants[restaurants["gmap_id"] == restaurant_gmap_id]
 
     if matches.empty:
-        print(f"Restaurant '{restaurant_name}' not found")
+        print(f"Restaurant '{restaurant_gmap_id}' not found")
         return []
 
-    idx = matches.index[0]  # NOTICE- כרגע לוקח לפי המסעדה הראושנה בשם זה
+    idx = matches.index.item()
 
     scores = cosine_similarity(tfidf_matrix[idx], tfidf_matrix).flatten()
 
@@ -121,7 +121,7 @@ def recommend_for_user(
 ##### test ####
 ###############
 
-# results1 = recommend_similar_restaurants("Carpo's Restaurant", 5)
+# results1 = recommend_similar_restaurants("0x80dd2b4c8555edb7:0xfc33d65c4bdbef42", 5)
 
 # print("\nTop similar restaurants:")
 # for r in results1:
