@@ -11,3 +11,4 @@ client = MongoClient(MONGO_URI)
 db = client["vibedine"]
 
 users_collection = db["users"]
+user_interactions_collection = db["user_interactions"]
