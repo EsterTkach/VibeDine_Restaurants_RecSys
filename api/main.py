@@ -6,6 +6,9 @@ from api.routes.recommendations import (
 from api.routes.users import (
     router as users_router
 )
+from api.routes.mongo_tests import (
+    router as mongoTest_router
+)
 
 app = FastAPI(
     title="VibeDine API",
@@ -13,13 +16,15 @@ app = FastAPI(
     version="1.0.0"
 )
 
-app.include_router(
-    recommendations_router
-)
+routers = [
+    recommendations_router,
+    users_router,
+    mongoTest_router
+]
 
-app.include_router(
-    users_router
-)
+for router in routers:
+    app.include_router(router)
+
 
 @app.get("/")
 def root():
