@@ -1,4 +1,4 @@
-from src import config
+from api.ml import config
 import pickle
 import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity

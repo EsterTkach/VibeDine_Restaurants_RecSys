@@ -1,14 +1,9 @@
 from pathlib import Path
 
 # This gets the directory where config.py lives (src/) and goes up one level to the project root
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-# Paths
-from pathlib import Path
-
-BASE_DIR = Path(__file__).resolve().parent.parent
-
-DATA_PATH = BASE_DIR / "Data"
+DATA_PATH = BASE_DIR / "data"
 MODEL_PATH = BASE_DIR / "models"
 
 DATA_VERSION = "1"

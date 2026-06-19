@@ -16,7 +16,7 @@ from api.schemas.user import (
     RestaurantInteractionRequest
 )
 
-from src.cf_recommender import (
+from api.ml.cf_recommender import (
     user_item_matrix,
     user_id_to_index,
     index_to_item_id
