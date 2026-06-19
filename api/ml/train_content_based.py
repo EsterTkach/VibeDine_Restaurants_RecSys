@@ -1,4 +1,4 @@
-from src import config
+from api.ml import config
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 import pickle

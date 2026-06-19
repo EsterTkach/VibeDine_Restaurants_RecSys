@@ -1,4 +1,4 @@
-from src import config
+from api.ml import config
 import pandas as pd
 import pickle
 import os

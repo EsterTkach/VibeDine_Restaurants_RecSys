@@ -1,7 +1,7 @@
 import pandas as pd
 
-from src import config
-from src.cf_recommender import recommend_for_user_cf
+from api.ml import config
+from api.ml.cf_recommender import recommend_for_user_cf
 
 
 def get_popular_restaurants(top_k=10):
