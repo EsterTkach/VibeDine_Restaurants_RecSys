@@ -5,17 +5,16 @@ import BottomNav from "../components/BottomNav";
 import VibeMatcherModal from "../components/VibeMatcherModal";
 import ComingSoonModal from "../components/ComingSoonModal";
 import { useNavigate, useLocation } from "react-router-dom";
+import RestaurantRow from '../components/RestaurantRow';
 
 import { restaurants } from "../data/restaurants";
 
 import "./HomePage.css";
 
-
 export default function HomePage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
-  const [showSearchBanner, setShowSearchBanner] =
-  useState(false);
+  const [showSearchBanner, setShowSearchBanner] = useState(false);
   const location = useLocation();
   const [showVibeModal, setShowVibeModal] = useState(false);
   const [showComingSoon, setShowComingSoon] = useState(false);
@@ -49,15 +48,26 @@ export default function HomePage() {
 
   return (
     <AppShell>
-      <div className="home-page">
+      {/* We kept the up/down scrollbar controls on the main page, 
+        but removed the global 'gap' rule so your top elements don't separate.
+      */}
+      <div 
+        className="home-page"
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          height: 'calc(100vh - 20px)', /* Fills the window height */
+          overflowY: 'auto',           /* CRITICAL: Keeps up/down scrolling alive */
+          paddingBottom: '120px',      /* Safety cushion at the very bottom */
+          boxSizing: 'border-box'
+        }}
+      >
 
         <div className="home-header">
-
           <div>
             <h1>
               Good Afternoon, Aya 👋
             </h1>
-
             <p>
               Find your next favorite spot
             </p>
@@ -69,79 +79,78 @@ export default function HomePage() {
           <div className="profile-avatar">
             🍽️
           </div>
-
         </div>
 
         <div className="search-bar" onClick={handleVibeMatchClick}>
           <span className="search-icon">✨</span>
           <span className="search-text">Vibe Matcher</span>
         </div>
+
         <div className="hero-card">
+          <img
+            src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0"
+            alt="Nobu"
+          />
 
-        <img
-          src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0"
-          alt="Nobu"
-        />
-
-        <div className="hero-overlay">
-
-          <span className="hero-badge">
-            Tonight's Pick
-          </span>
-
-          <h2>Nobu</h2>
-
-          <p>
-            Japanese • Fine Dining
-          </p>
-
-          <button
-            className="hero-btn"
-            onClick={() =>
-              navigate("/restaurant")
-            }
-          >
-            View Restaurant →
-          </button>
-
+          <div className="hero-overlay">
+            <span className="hero-badge">
+              Tonight's Pick
+            </span>
+            <h2>Nobu</h2>
+            <p>
+              Japanese • Fine Dining
+            </p>
+            <button
+              className="hero-btn"
+              onClick={() => navigate("/restaurant")}
+            >
+              View Restaurant →
+            </button>
+          </div>
         </div>
 
-      </div>
-        <section>
-          <h2>Recommended For You</h2>
+        {/* NEW: This dedicated container holds only your carousels. 
+          It spaces them perfectly apart from each other and sits tightly beneath the hero card.
+        */}
+        <div 
+          className="carousels-container"
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '36px',       /* Perfectly spaces the rows apart from one another */
+            marginTop: '0px'  /* Controls the exact distance between the hero card and the first carousel */
+          }}
+        >
+          <RestaurantRow 
+            title="Recommended For You" 
+            emoji="✨" 
+            restaurants={restaurants} 
+          />
 
-          <div className="carousel">
-            {restaurants.map((restaurant) => (
-              <RestaurantCard
-                key={restaurant.id}
-                restaurant={restaurant} />
-            ))}
-          </div>
-        </section>
+          <RestaurantRow 
+            title="Popular Near You" 
+            emoji="🔥" 
+            restaurants={restaurants} 
+          />
 
-        <section>
-          <h2>Popular Near You</h2>
+          <RestaurantRow 
+            title="Cafe" 
+            emoji="☕" 
+            restaurants={restaurants} 
+          />
 
-          <div className="carousel">
-            {restaurants.map((restaurant) => (
-              <RestaurantCard
-                key={`popular-${restaurant.id}`}
-                restaurant={restaurant} />
-            ))}
-          </div>
-        </section>
+          <RestaurantRow 
+            title="Sushi" 
+            emoji="🍣" 
+            restaurants={restaurants} 
+          />
 
-        <section>
-          <h2>Date Night Picks</h2>
-
-          <div className="carousel">
-            {restaurants.map((restaurant) => (
-              <RestaurantCard
-                key={`date-${restaurant.id}`}
-                restaurant={restaurant} />
-            ))}
-          </div>
-        </section>
+          <RestaurantRow 
+            title="Italian" 
+            emoji="🍝" 
+            restaurants={restaurants} 
+          />
+        </div>
 
       </div>
 

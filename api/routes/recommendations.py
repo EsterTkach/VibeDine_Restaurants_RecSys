@@ -10,7 +10,7 @@ from api.ml.cf_recommender import (
 
 from api.services.recommendation_service import (
     get_popular_restaurants,
-    get_popular_by_category,
+    # (should be implemented..?) get_popular_by_category,
     get_recommendations,
 )
 
