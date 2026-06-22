@@ -2,7 +2,8 @@ import pandas as pd
 
 from api.ml import config
 from api.ml.cf_recommender import recommend_for_user_cf
-
+from api.db.restaurant_repository import get_filtered_restaurants_repo
+from api.utils.utils import format_restaurant_for_frontend
 
 def get_popular_restaurants(top_k=10):
     """
@@ -70,7 +71,6 @@ def get_popular_restaurants(top_k=10):
 
     return recommendations
 
-
 def get_recommendations(
     user_id: str,
     top_k=10
@@ -106,3 +106,15 @@ def get_recommendations(
         "recommendations":
         recommendations,
     }
+
+def get_popular_by_category(category: str, top_k: int = 10):
+    # Some categories in MongoDB might have slightly different naming conventions
+    # This handles edge cases (like "Sushi" vs "Sushi restaurant")
+    categories_to_search = [category]
+    if category.lower() == "sushi":
+        categories_to_search = ["Sushi restaurant", "Sushi"]
+    elif category.lower() == "italian":
+        categories_to_search = ["Italian restaurant", "Italian"]
+
+    raw_restaurants = get_filtered_restaurants_repo(k=top_k, categories=categories_to_search)
+    return [format_restaurant_for_frontend(r) for r in raw_restaurants]

@@ -1,19 +1,5 @@
 from api.db.mongo import restaurants_collection
 
-
-def get_k_popular_restaurant_repo(k: int):
-    restaurants = list(
-        restaurants_collection.find(
-            {},
-            {"_id": 0, "gmap_id": 1, "name": 1, "avg_rating": 1, "num_of_reviews": 1},
-        )
-        .sort([("avg_rating", -1), ("num_of_reviews", -1)])
-        .limit(k)
-    )
-
-    return restaurants
-
-
 def get_filtered_restaurants_repo(
     k: int,
     categories=None,
@@ -49,7 +35,14 @@ def get_filtered_restaurants_repo(
         query["offerings"] = {"$all": offerings}
 
     print(query)
-    projection = {"_id": 1, "gmap_id": 1, "name": 1}
+    projection = {
+        "_id": 1, 
+        "gmap_id": 1, 
+        "name": 1, 
+        "avg_rating": 1, 
+        "category": 1,
+        "price": 1,         
+    }
 
     for field in query.keys():
         projection[field] = 1

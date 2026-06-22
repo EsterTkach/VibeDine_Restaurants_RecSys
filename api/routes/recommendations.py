@@ -10,7 +10,7 @@ from api.ml.cf_recommender import (
 
 from api.services.recommendation_service import (
     get_popular_restaurants,
-    # (should be implemented..?) get_popular_by_category,
+    get_popular_by_category,
     get_recommendations,
 )
 
@@ -47,11 +47,6 @@ def get_home_carousels(top_k: int = 10):
                 "title": "Popular Italian",
                 "items": get_popular_by_category(category="Italian", top_k=top_k)
             },
-            {
-                "id": "popular_desserts",
-                "title": "Popular Desserts",
-                "items": get_popular_by_category(category="Dessert", top_k=top_k)
-            }
         ]
     }
 
