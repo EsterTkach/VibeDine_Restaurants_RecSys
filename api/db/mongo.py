@@ -14,5 +14,6 @@ db = client["restaurants_project_db"]
 
 users_collection = db["users"]
 restaurants_collection = db["restaurants"]
+user_interactions_collection = db["user_interactions"]
 
-print(client.list_database_names())
+#print(client.list_database_names())

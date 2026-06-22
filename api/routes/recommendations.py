@@ -1,10 +1,10 @@
 from fastapi import APIRouter, HTTPException
 
-from src.cb_recommender import (
+from api.ml.cb_recommender import (
     recommend_similar_restaurants,
 )
 
-from src.cf_recommender import (
+from api.ml.cf_recommender import (
     recommend_for_user_cf,
 )
 
