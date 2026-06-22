@@ -34,18 +34,22 @@ def get_home_carousels(top_k: int = 10):
             {
                 "id": "popular_cafes",
                 "title": "Popular Cafes",
-                # Make sure the string here matches exactly how it's stored in MongoDB
-                "items": get_popular_by_category(category="Cafe", top_k=top_k)
+                "items": get_popular_by_category(category="cafe", per_page=top_k)
             },
             {
                 "id": "popular_sushi",
                 "title": "Popular Sushi",
-                "items": get_popular_by_category(category="Sushi", top_k=top_k)
+                "items": get_popular_by_category(category="sushi", per_page=top_k)
             },
             {
                 "id": "popular_italian",
                 "title": "Popular Italian",
-                "items": get_popular_by_category(category="Italian", top_k=top_k)
+                "items": get_popular_by_category(category="italian", per_page=top_k)
+            },
+            {
+                "id": "popular_dessert",
+                "title": "Popular Desserts",
+                "items": get_popular_by_category(category="dessert", per_page=top_k)
             },
         ]
     }

@@ -150,6 +150,12 @@ export default function HomePage() {
             emoji="🍝" 
             restaurants={restaurants} 
           />
+
+          <RestaurantRow 
+            title="Dessert" 
+            emoji="🍰" 
+            restaurants={restaurants} 
+          />
         </div>
 
       </div>
