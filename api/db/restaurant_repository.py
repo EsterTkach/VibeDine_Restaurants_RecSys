@@ -1,4 +1,4 @@
-from api.db.mongo import restaurants_collection
+from mongo import restaurants_collection
 
 
 def get_k_popular_restaurant_repo(k: int):
