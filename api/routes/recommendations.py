@@ -10,6 +10,7 @@ from api.ml.cf_recommender import (
 
 from api.services.recommendation_service import (
     get_popular_restaurants,
+    get_popular_by_category,
     get_recommendations,
 )
 
@@ -17,6 +18,41 @@ router = APIRouter(
     prefix="/recommend",
     tags=["Recommendations"]
 )
+
+@router.get("/home-carousels")
+def get_home_carousels(top_k: int = 10):
+    """
+    Returns static, non-personalized carousels for the homepage separated by category.
+    """
+    return {
+        "carousels": [
+            {
+                "id": "popular_restaurants",
+                "title": "Popular Restaurants",
+                "items": get_popular_restaurants(top_k=top_k)
+            },
+            {
+                "id": "popular_cafes",
+                "title": "Popular Cafes",
+                "items": get_popular_by_category(category="cafe", per_page=top_k)
+            },
+            {
+                "id": "popular_sushi",
+                "title": "Popular Sushi",
+                "items": get_popular_by_category(category="sushi", per_page=top_k)
+            },
+            {
+                "id": "popular_italian",
+                "title": "Popular Italian",
+                "items": get_popular_by_category(category="italian", per_page=top_k)
+            },
+            {
+                "id": "popular_dessert",
+                "title": "Popular Desserts",
+                "items": get_popular_by_category(category="dessert", per_page=top_k)
+            },
+        ]
+    }
 
 # Popular restaurants endpoint - returns top 10 popular restaurants similar to the original restaurant based on overall ratings and number of reviews
 @router.get("/cb/{restaurant_name}")

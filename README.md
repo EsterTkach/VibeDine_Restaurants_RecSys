@@ -6,10 +6,10 @@ https://mailtauacil-my.sharepoint.com/:f:/g/personal/estertkach_mail_tau_ac_il/I
 
 LIORA-
 1) Add the 2 .parquet files Esty made to the /data folder.
-2) To build the OFFLINE Content-Based Model, run: python src/train_content_based.py
-3) To get Content Based recommendations see functions in  file: src/cb_recommender.py
-4) To build the OFFLINE Item-Based Collaborative Filtering Model, run: python src/train_item_cf.py
-5) To get Collaborative Filtering recommendations, see functions in: src/cf_recommender.py
+2) To build the OFFLINE Content-Based Model, run: python api/ml/train_content_based.py
+3) To get Content Based recommendations see functions in  file: api/ml/cb_recommender.py
+4) To build the OFFLINE Item-Based Collaborative Filtering Model, run: python api/ml/train_item_cf.py
+5) To get Collaborative Filtering recommendations, see functions in: api/ml/cf_recommender.py
 
 AYA- 
 1) Change config.py to allow data versoning
