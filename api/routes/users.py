@@ -1,12 +1,14 @@
 from fastapi import (
-    APIRouter
+    APIRouter,
+    HTTPException
 )
 
 from uuid import uuid4
 
 from api.db.mongo import (
     users_collection,
-    user_interactions_collection
+    user_interactions_collection,
+    restaurants_collection
 )
 
 from api.schemas.user import (
@@ -377,6 +379,192 @@ def get_augmented_likes(
 
         "augmented_likes":
         all_likes
+    }
+
+@router.get("/{user_id}/friends")
+def get_user_friends(
+    user_id: str
+):
+
+    user = users_collection.find_one(
+        {
+            "user_id": user_id
+        },
+        {
+            "_id": 0,
+            "friends": 1
+        }
+    )
+
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found"
+        )
+
+    return {
+        "user_id": user_id,
+        "friends": user.get(
+            "friends",
+            []
+        )
+    }
+
+@router.post("/{user_id}/friends/{friend_id}")
+def add_friend(
+    user_id: str,
+    friend_id: str
+):
+
+    if user_id == friend_id:
+        raise HTTPException(
+            status_code=400,
+            detail="User cannot add themselves as a friend"
+        )
+
+    user = users_collection.find_one(
+        {
+            "user_id": user_id
+        }
+    )
+
+    friend = users_collection.find_one(
+        {
+            "user_id": friend_id
+        }
+    )
+
+    if not user or not friend:
+        raise HTTPException(
+            status_code=404,
+            detail="User or friend not found"
+        )
+
+    users_collection.update_one(
+        {
+            "user_id": user_id
+        },
+        {
+            "$addToSet": {
+                "friends": friend_id
+            }
+        }
+    )
+
+    users_collection.update_one(
+        {
+            "user_id": friend_id
+        },
+        {
+            "$addToSet": {
+                "friends": user_id
+            }
+        }
+    )
+
+    return {
+        "message": "Friend added",
+        "user_id": user_id,
+        "friend_id": friend_id
+    }
+
+@router.delete("/{user_id}/friends/{friend_id}")
+def remove_friend(
+    user_id: str,
+    friend_id: str
+):
+
+    users_collection.update_one(
+        {
+            "user_id": user_id
+        },
+        {
+            "$pull": {
+                "friends": friend_id
+            }
+        }
+    )
+
+    users_collection.update_one(
+        {
+            "user_id": friend_id
+        },
+        {
+            "$pull": {
+                "friends": user_id
+            }
+        }
+    )
+
+    return {
+        "message": "Friend removed",
+        "user_id": user_id,
+        "friend_id": friend_id
+    }
+
+@router.get("/{user_id}/profile")
+def get_user_profile(
+    user_id: str,
+    top_k: int = 10
+):
+
+    user = users_collection.find_one(
+        {
+            "user_id": user_id
+        },
+        {
+            "_id": 0,
+            "password": 0
+        }
+    )
+
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found"
+        )
+
+    augmented_likes_response = get_augmented_likes(
+        user_id
+    )
+
+    liked_restaurant_ids = augmented_likes_response[
+        "augmented_likes"
+    ][:top_k]
+
+    liked_restaurants = list(
+        restaurants_collection.find(
+            {
+                "gmap_id": {
+                    "$in": liked_restaurant_ids
+                }
+            },
+            {
+                "_id": 0,
+                "gmap_id": 1,
+                "name": 1,
+                "category": 1,
+                "price": 1,
+                "avg_rating": 1
+            }
+        )
+    )
+
+    return {
+        "user_id": user_id,
+        "name": user.get(
+            "name",
+            user.get("username")
+        ),
+        "location": {
+            "lat": user.get("lat"),
+            "long": user.get("long")
+        },
+        "friends": user.get(
+            "friends",
+            []
+        ),
+        "liked_restaurants": liked_restaurants
     }
 
 #Test db
