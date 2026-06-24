@@ -208,7 +208,7 @@ def recommend_for_group_cf(user_ids, top_k=10, per_user_k=50, candidate_gmap_ids
         }
     )
 
-    # Generate recommendations for each user
+    # Generate CF recommendations for each user
     for user_id in user_ids:
 
         user_recs = recommend_for_user_cf(
@@ -224,7 +224,7 @@ def recommend_for_group_cf(user_ids, top_k=10, per_user_k=50, candidate_gmap_ids
             restaurant_scores[gmap_id]["score_sum"] += rec["predicted_rating"]
             restaurant_scores[gmap_id]["count"] += 1
 
-    # Build tore final group recommendations
+    # Build final group recommendations
     group_recommendations = []
     group_size = len(user_ids)
 
