@@ -1,0 +1,29 @@
+services:
+  api:
+    build:
+      context: ./api
+    container_name: python_api_server
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./Data:/data
+      - ./models:/models
+    environment:
+      - MONGO_URI=
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: react_frontend_server
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - WATCHPACK_POLLING=true
+      - CHOKIDAR_USEPOLLING=true
+    depends_on:
+      - api
+    restart: unless-stopped
