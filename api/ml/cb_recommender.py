@@ -64,18 +64,33 @@ def recommend_similar_restaurants(
 
 ### get top K recommanded restaurants by content - by user ("liked" = rated above min_rating)
 def recommend_for_user(
-    user_id, top_k=config.TOP_K, min_rating=config.MIN_RATING, candidate_gmap_ids=None
+    user_id,
+    top_k=config.TOP_K,
+    min_rating=config.MIN_RATING,
+    candidate_gmap_ids=None,
+    online_likes=None,
 ):
+
+    if online_likes is None:
+        online_likes = []
+
     user_likes = interactions[
         (interactions["user_id"] == user_id) & (interactions["rating"] >= min_rating)
     ]
 
-    if user_likes.empty:
+    offline_liked_gmap_ids = []
+
+    if not user_likes.empty:
+        offline_liked_gmap_ids = user_likes["gmap_id"].tolist()
+
+    # Merge offline likes with online likes
+    liked_gmap_ids = list(set(offline_liked_gmap_ids + online_likes))
+
+    if len(liked_gmap_ids) == 0:
         print(f"No liked restaurants found for user {user_id}")
         return []
 
-    liked_gmap_ids = user_likes["gmap_id"].tolist()
-
+    # Convert liked restaurant IDs to matrix indices
     liked_indices = restaurants[
         restaurants["gmap_id"].isin(liked_gmap_ids)
     ].index.tolist()
@@ -118,18 +133,25 @@ def recommend_for_user(
     return recommendations
 
 
-
 def recommend_for_group_cb(
     user_ids,
     top_k=config.TOP_K,
     per_user_k=50,
     min_rating=config.MIN_RATING,
     candidate_gmap_ids=None,
+    online_likes_by_user=None,
 ):
     """
-    Generate group recommendations 
+    Generate group recommendations
     using Content-Based filtering.
     """
+    
+    if not user_ids:
+        print("Group is empty")
+        return []
+
+    if online_likes_by_user is None:
+        online_likes_by_user = {}
 
     # Store recommendations collected from all users
     restaurant_scores = defaultdict(
@@ -147,6 +169,7 @@ def recommend_for_group_cb(
             top_k=per_user_k,
             min_rating=min_rating,
             candidate_gmap_ids=candidate_gmap_ids,
+            online_likes=online_likes_by_user.get(user_id, []),
         )
 
         # Collect restaurant scores
@@ -160,19 +183,19 @@ def recommend_for_group_cb(
     # Build final group recommendations
     group_recommendations = []
     group_size = len(user_ids)
-    
+
     # Calculate final score for each restaurant
     for gmap_id, data in restaurant_scores.items():
-        
-        # Average predicted rating
+
+        # Average content-based score
         avg_score = data["score_sum"] / data["count"]
-        
+
         # Percentage of group members that received this recommendation
         coverage = data["count"] / group_size
-        
+
         # Final group ranking score
         group_score = avg_score * coverage
-        
+
         # Save aggregated result
         group_recommendations.append(
             {
