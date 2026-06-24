@@ -1,4 +1,4 @@
-from src import config
+import config
 import pandas as pd
 import pickle
 import os

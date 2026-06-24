@@ -1,8 +1,9 @@
 import pandas as pd
 
-from src import config
-from src.cf_recommender import recommend_for_user_cf
-
+from api.ml import config
+from api.ml.cf_recommender import recommend_for_user_cf
+from api.db.restaurant_repository import get_filtered_restaurants_repo
+from api.utils.utils import format_restaurant_for_frontend
 
 def get_popular_restaurants(top_k=10):
     """
@@ -70,7 +71,6 @@ def get_popular_restaurants(top_k=10):
 
     return recommendations
 
-
 def get_recommendations(
     user_id: str,
     top_k=10
@@ -106,3 +106,38 @@ def get_recommendations(
         "recommendations":
         recommendations,
     }
+
+EXACT_CATEGORY_MAP = {
+    "sushi": ["Sushi", "Sushi restaurant", "Sushi takeaway", "Conveyor belt sushi restaurant", "japanese", "japanese restaurant"],
+    "italian": ["Italian", "Italian restaurant", "Pizza restaurant", "Pizza"],
+    "dessert": ["Dessert", "Dessert shop", "Dessert restaurant", "Ice cream shop", "Bakery"],
+    "cafe": ["Cafe", "Coffee shop", "Espresso bar"],
+    "burger": ["Hamburger", "Hamburger restaurant", "Burger restaurant"],
+    "bar": ["Bar", "Coctail bar", "Bar and restaurant"]
+}
+
+def get_popular_by_category(category: str, page: int = 1, per_page: int = 15):
+    """
+    Fetches the top matching restaurants for a category. 
+    Enforces quality limits because it's rendering a direct frontend browsing tier.
+    """
+    safe_category = category.lower()
+    
+    if safe_category in EXACT_CATEGORY_MAP:
+        categories_to_search = EXACT_CATEGORY_MAP[safe_category]
+    else:
+        categories_to_search = [category, category.title(), f"{category.title()} restaurant"]
+
+    # Calculate pagination offsets
+    skip_value = (page - 1) * per_page
+
+    # Execute the query with strict crowd-pleasing quality guidelines
+    raw_restaurants = get_filtered_restaurants_repo(
+        skip=skip_value,
+        limit=per_page,
+        categories=categories_to_search,
+        min_rating=4.0,
+        min_reviews=30
+    )
+    
+    return [format_restaurant_for_frontend(r) for r in raw_restaurants]
