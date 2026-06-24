@@ -262,6 +262,20 @@ def recommend_for_group_cf(user_ids, top_k=10, per_user_k=50, candidate_gmap_ids
     return group_recommendations[:top_k]
 
 
+def get_offline_likes(user_id, min_rating=config.MIN_RATING):
+    """
+    Return the number of restaurants the user liked
+    according to the offline user-item matrix.
+    """
+
+    if user_id not in user_id_to_index:
+        return 0
+
+    user_idx = user_id_to_index[user_id]
+    user_row = user_item_matrix[user_idx]
+
+    return int((user_row.data >= min_rating).sum())
+
 
 
 ###############
