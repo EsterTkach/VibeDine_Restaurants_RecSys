@@ -1,6 +1,6 @@
 Link to project docs- https://docs.google.com/document/d/1V400O_kI9OInR3E6nqbkzn43qCVtPkT29pzhgIPvJ6A/edit?usp=sharing
 
-ESTY-
+DataSets-
 https://mailtauacil-my.sharepoint.com/:f:/g/personal/estertkach_mail_tau_ac_il/IgCoo6KQJvaFRagY4IRDZW11AYesNT-0K6gkNcuXLhoHgOQ?e=VPvzd8
 
 
@@ -11,7 +11,14 @@ LIORA-
 4) To build the OFFLINE Item-Based Collaborative Filtering Model, run: python api/ml/train_item_cf.py
 5) To get Collaborative Filtering recommendations, see functions in: api/ml/cf_recommender.py
 
-AYA- 
+AYA (if not docker)- 
 1) Change config.py to allow data versoning
 2) Created api folder - FastApi server, cold start run: python -m uvicorn api.main:app --reload
-3) Added requirements.txt file. In order to install all: pip install -r requirements.txt 
+3) Added requirements.txt file. In order to install all: cd api, and only then, pip install -r requirements.txt 
+
+Docker-
+1) Make sure your docker app is open.
+2) Open start.bat
+3) Will open server, front and log if needed. 
+4) First load takes half a minute. Future loads take a few seconds. 
+5) To close follow console instructions. 

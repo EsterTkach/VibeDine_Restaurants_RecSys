@@ -1,5 +1,5 @@
-from src.cf_recommender import recommend_for_group_cf
-from src.cb_recommender import recommend_for_group_cb
+from ml.cf_recommender import recommend_for_group_cf
+from ml.cb_recommender import recommend_for_group_cb
 
 
 def get_group_cf_recommendations_service(
