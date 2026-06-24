@@ -14,6 +14,15 @@ from api.services.recommendation_service import (
     get_recommendations,
 )
 
+from api.schemas.group_schema import (
+    GroupRecommendationRequest,
+)
+
+from api.services.groups_service import (
+    get_group_cf_recommendations_service,
+    get_group_cb_recommendations_service,
+)
+
 router = APIRouter(
     prefix="/recommend",
     tags=["Recommendations"]
@@ -85,4 +94,30 @@ def get_user_recommendations(
     return get_recommendations(
         user_id=user_id,
         top_k=top_k
+    )
+
+@router.post("/cf/group")
+def get_group_recommendations(request: GroupRecommendationRequest):
+    if not request.user_ids:
+        raise HTTPException(status_code=400, detail="user_ids cannot be empty")
+
+    return get_group_cf_recommendations_service(
+        user_ids=request.user_ids,
+        top_k=request.top_k,
+        per_user_k=request.per_user_k,
+        filters=request.filters,
+    )
+
+
+@router.post("/cb/group")
+def get_group_cb_recommendations(request: GroupRecommendationRequest):
+
+    if not request.user_ids:
+        raise HTTPException(status_code=400, detail="user_ids cannot be empty")
+
+    return get_group_cb_recommendations_service(
+        user_ids=request.user_ids,
+        top_k=request.top_k,
+        per_user_k=request.per_user_k,
+        filters=request.filters,
     )
