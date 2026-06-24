@@ -8,6 +8,7 @@ import ProfilePage from "./pages/ProfilePage";
 import GroupPage from "./pages/GroupPage";
 import GroupResultPage from "./pages/GroupResultPage";
 import RestaurantPage from "./pages/RestaurantPage";
+import Onboarding from "./pages/Onboarding";
 
 function App() {
   return (
@@ -16,25 +17,14 @@ function App() {
         <Route path="/" element={<AuthPage />} />
         <Route path="/login" element={<AuthPage />} />
         <Route path="/signup" element={<SignUpPage />} />
+        <Route path="/onboarding" element={<Onboarding />} />
         <Route path="/loading" element={<LoadingPage />} />
         <Route path="/home" element={<HomePage />} />
-        <Route
-          path="/friends"
-          element={<FriendsPage />}
-        />
-        <Route
-          path="/profile"
-          element={<ProfilePage />}
-        />
-        <Route
-          path="/restaurant"
-          element={<RestaurantPage />}
-        />
+        <Route path="/friends" element={<FriendsPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/restaurant" element={<RestaurantPage />} />
         <Route path="/group" element={<GroupPage />} />
-        <Route
-          path="/group-result"
-          element={<GroupResultPage />}
-        />
+        <Route path="/group-result" element={<GroupResultPage />} />
       </Routes>
     </BrowserRouter>
   );
