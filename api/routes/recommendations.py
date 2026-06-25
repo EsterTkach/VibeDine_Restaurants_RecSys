@@ -9,9 +9,11 @@ from api.ml.cf_recommender import (
 )
 
 from api.services.recommendation_service import (
+    get_hybrid_recommendations_for_user,
     get_popular_restaurants,
     get_popular_by_category,
-    get_recommendations,
+    get_user_onboarding_recommendations,
+    get_hybrid_recommendations_for_user,
 )
 
 from api.schemas.group_schema import (
@@ -91,7 +93,7 @@ def get_user_recommendations(
     user_id: str,
     top_k: int = 10
 ):
-    return get_recommendations(
+    return get_hybrid_recommendations_for_user(
         user_id=user_id,
         top_k=top_k
     )

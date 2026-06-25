@@ -1,9 +1,10 @@
 import pandas as pd
 
 from api.ml import config
-from api.ml.cf_recommender import recommend_for_user_cf_augmented
 from api.db.restaurant_repository import (get_filtered_restaurants_repo, get_user_online_likes)
+from api.ml.cf_recommender import compute_cf_scores, recommend_for_user_cf
 from api.utils.utils import format_restaurant_for_frontend
+from api.routes.users import get_onboarding_preferences, get_user_online_likes, get_offline_likes, is_user_coldstart, get_user_alpha
 
 def get_popular_restaurants(top_k=10):
     """
@@ -71,42 +72,41 @@ def get_popular_restaurants(top_k=10):
 
     return recommendations
 
-def get_recommendations(
+
+"""fix: not done yet"""
+def get_user_onboarding_recommendations(user_id: str, top_k: int = 10):
+
+    pref = get_onboarding_preferences(user_id)
+    #need to continue, based on 
+    for category in pref["categories"]:
+        restaurants = get_popular_by_category(
+            category=category,
+            page=1,
+            per_page=top_k
+        )
+        if restaurants:
+            return restaurants
+        
+
+def get_hybrid_recommendations_for_user(
     user_id: str,
-    top_k=10
+    top_k=10,
+    candidate_gmap_ids=None,
 ):
     """
-    Main recommendation entrypoint.
-    Handles cold-start users.
+    Returns recommendations for a user.
+    If the user has no online likes, returns offline likes.
+    If the user has no offline likes, returns popular restaurants.
     """
+    alpha = get_user_alpha(user_id)
 
-    user_online_likes= get_user_online_likes(user_id)
+    if alpha == 0.0:
+        return get_user_onboarding_recommendations(user_id, top_k=top_k)
+    
+    cf_scores = compute_cf_scores(user_id)
+    cb_scores = compute_cb_scores(user_id) #will implement
 
-    recommendations = recommend_for_user_cf_augmented(
-        user_id=user_id,
-        top_k=top_k,
-        online_likes=user_online_likes,
-    )
-
-    if len(recommendations) == 0:
-
-        return {
-            "recommendation_type":
-            "cold_start_popular",
-
-            "recommendations":
-            get_popular_restaurants(
-                top_k
-            ),
-        }
-
-    return {
-        "recommendation_type":
-        "collaborative_filtering",
-
-        "recommendations":
-        recommendations,
-    }
+    
 
 EXACT_CATEGORY_MAP = {
     "sushi": ["Sushi", "Sushi restaurant", "Sushi takeaway", "Conveyor belt sushi restaurant", "japanese", "japanese restaurant"],

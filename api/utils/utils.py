@@ -19,3 +19,5 @@ def format_restaurant_for_frontend(restaurant_doc: dict) -> dict:
         "price": restaurant_doc.get("price") or price_tags[price_idx],
         "image": restaurant_doc.get("image_url") or "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4", 
     }
+
+
