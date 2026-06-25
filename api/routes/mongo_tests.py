@@ -3,7 +3,7 @@ from api.ml.cf_recommender import (
     get_popular_restaurants,
 )
 
-from api.db.restaurant_repository import get_k_popular_restaurant_repo, get_filtered_restaurants_repo
+from api.db.restaurant_repository import get_filtered_restaurants_repo
 
 router = APIRouter(prefix="/mongo", tags=["mongo tests"])
 
