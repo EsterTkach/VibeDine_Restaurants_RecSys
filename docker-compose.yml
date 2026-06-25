@@ -9,7 +9,7 @@ services:
       - ./data:/data
       - ./models:/models
     environment:
-      - MONGO_URI=
+      - MONGO_URI=mongodb+srv://ayarotbart_db_user:x0fGOfhRThKnkX4S@cluster0.yodtpzx.mongodb.net/?appName=Cluster0
     restart: unless-stopped
 
   frontend:
