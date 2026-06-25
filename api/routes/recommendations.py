@@ -5,7 +5,7 @@ from api.ml.cb_recommender import (
 )
 
 from api.ml.cf_recommender import (
-    recommend_for_user_cf_augmented,
+    recommend_for_user_cf,
 )
 
 from api.services.recommendation_service import (

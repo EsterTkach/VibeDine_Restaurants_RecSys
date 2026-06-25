@@ -3,7 +3,7 @@ import pickle
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 from collections import defaultdict
-from api.routes.users import get_user_online_likes
+from api.services.users_service import get_user_online_likes
 
 ### Load trained model
 with open(config.MODEL_CF_FILE, "rb") as f:
@@ -170,7 +170,7 @@ def compute_cf_scores(user_id):
     
     Higher user ratings have stronger influence on the recommendation score.
     Item similarities are based on behavior of all users in item_user_matrix.
-    """"
+    """
     similarities = cosine_similarity(item_user_matrix[liked_indices], item_user_matrix)
 
     # Remove self-similarity:
@@ -216,7 +216,7 @@ def recommend_for_user_cf(user_id, top_k=config.TOP_K, candidate_gmap_ids=None, 
     
     Higher user ratings have stronger influence on the recommendation score.
     Item similarities are based on behavior of all users in item_user_matrix.
-    """"
+    """
     similarities = cosine_similarity(item_user_matrix[liked_indices], item_user_matrix)
 
     # Remove self-similarity:
@@ -306,7 +306,7 @@ def recommend_for_group_cf(user_ids, top_k=10, per_user_k=50, candidate_gmap_ids
     # Generate CF recommendations for each user
     for user_id in user_ids:
 
-        user_recs = recommend_for_user_cf_augmented(
+        user_recs = recommend_for_user_cf(
             user_id=user_id,
             top_k=per_user_k,
             candidate_gmap_ids=candidate_gmap_ids,
@@ -357,12 +357,12 @@ def recommend_for_group_cf(user_ids, top_k=10, per_user_k=50, candidate_gmap_ids
     # Return Top-K recommendations
     return group_recommendations[:top_k]
 
-
+"""
 def get_offline_likes(user_id, min_rating=config.MIN_RATING):
-    """
+    
     Return the number of restaurants the user liked
     according to the offline user-item matrix.
-    """
+
 
     if user_id not in user_id_to_index:
         return 0
@@ -370,8 +370,8 @@ def get_offline_likes(user_id, min_rating=config.MIN_RATING):
     user_idx = user_id_to_index[user_id]
     user_row = user_item_matrix[user_idx]
 
-    return int((user_row.data >= min_rating).sum())
-
+##    return int((user_row.data >= min_rating).sum())
+"""
 
 def get_popular_restaurants(top_k=config.TOP_K):
     """
@@ -408,6 +408,37 @@ def get_popular_restaurants(top_k=config.TOP_K):
         )
 
     return recommendations
+
+def get_user_offline_likes(
+    user_id: str
+):
+
+    if user_id not in user_id_to_index:
+        return {
+            "user_id":
+            user_id,
+
+            "offline_likes":
+            []
+        }
+
+    user_idx = user_id_to_index[user_id]
+    user_row = user_item_matrix[user_idx]
+
+    liked_indices = user_row.nonzero()[1]
+
+    offline_likes = [
+        index_to_item_id[index]
+        for index in liked_indices
+    ]
+
+    return {
+        "user_id":
+        user_id,
+
+        "offline_likes":
+        offline_likes
+    }
 
 
 

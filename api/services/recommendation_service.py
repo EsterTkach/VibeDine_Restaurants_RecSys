@@ -1,10 +1,12 @@
 import pandas as pd
 
 from api.ml import config
-from api.db.restaurant_repository import (get_filtered_restaurants_repo, get_user_online_likes)
-from api.ml.cf_recommender import compute_cf_scores, recommend_for_user_cf
+from api.db.restaurant_repository import get_filtered_restaurants_repo
+from api.ml.cf_recommender import compute_cf_scores, get_user_offline_likes, recommend_for_user_cf
+from api.services.users_service import get_user_online_likes
 from api.utils.utils import format_restaurant_for_frontend
-from api.routes.users import get_onboarding_preferences, get_user_online_likes, get_offline_likes, is_user_coldstart, get_user_alpha
+from api.routes.users import get_onboarding_preferences
+
 
 def get_popular_restaurants(top_k=10):
     """
@@ -146,3 +148,60 @@ def get_popular_by_category(category: str, page: int = 1, per_page: int = 15):
     )
     
     return [format_restaurant_for_frontend(r) for r in raw_restaurants]
+
+
+
+#Test db
+def test_db():
+    return {
+        "count":
+        users_collection.count_documents({})
+    }
+
+#we dont need is_user_coldstart for sure
+
+def is_user_coldstart(user_id):
+    """
+    Check if a user is cold-start based on their offline and online likes.
+    A user is considered cold-start if they have no likes in both the offline
+    and online datasets.
+    """
+
+    # Check offline likes
+    offline_likes_count = len(get_user_offline_likes(user_id)["offline_likes"])
+
+    # Check online likes
+    online_likes_count = len(get_user_online_likes(user_id)["online_likes"])
+
+    # If both counts are zero, the user is cold-start
+    return offline_likes_count == 0 and online_likes_count == 0
+
+def get_user_alpha(user_id):
+    """
+    Determine the user's alpha value based on their offline and online likes.
+    Alpha is a measure of how much weight to give to the offline vs online
+    recommendations. A user with more online likes will have a higher alpha,
+    while a user with more offline likes will have a lower alpha.
+    """
+
+    # Get counts of offline and online likes
+    offline_likes_count = len(get_user_offline_likes(user_id)["offline_likes"])
+    online_likes_count = len(get_user_online_likes(user_id)["online_likes"])
+
+    # If both counts are zero, return None (cold-start user)
+    if offline_likes_count == 0 and online_likes_count == 0:
+        return None
+
+    # Calculate alpha as the ratio of online likes to total likes
+    n = offline_likes_count + online_likes_count
+    
+    if n <= 5: #cold-start user - pure cb
+        alpha = 0.0 
+    elif n <= 20: 
+        alpha = 0.4
+    elif n <= 100: #warm user - hybrid, cf dominates
+        alpha = 0.7
+    else:
+        alpha = 0.85
+
+    return alpha
