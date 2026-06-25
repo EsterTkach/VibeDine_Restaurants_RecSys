@@ -26,7 +26,7 @@ export default function SignUpPage() {
       return;
     }
 
-    navigate("/loading");
+    navigate("/onboarding", { state: { username } });
   };
 
   return (

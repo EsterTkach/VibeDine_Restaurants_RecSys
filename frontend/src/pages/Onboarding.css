@@ -1,0 +1,82 @@
+.onboarding-page {
+  padding: 28px;
+}
+
+.onboarding-page h1 {
+  margin-top: 20px;
+  font-size: 28px;
+}
+
+.onboarding-page p {
+  color: #777;
+  margin-top: 8px;
+  margin-bottom: 30px;
+}
+
+.filters {
+  margin-top: 20px;
+}
+
+.preference-group {
+  margin-bottom: 32px;
+}
+
+.preference-group label {
+  display: block;
+  margin-bottom: 12px;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.segmented-control {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  background: white;
+  padding: 12px;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+}
+
+.segment {
+  flex: 1 1 auto;
+  text-align: center;
+  border: none;
+  background: #f0ebe0;
+  color: #666;
+  padding: 12px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: 0.25s;
+  font-weight: 500;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.segment.active {
+  background: #8b6b4a;
+  color: white;
+  box-shadow: 0 0 15px rgba(139,107,74,0.35);
+}
+
+.submit-btn {
+  margin-top: 40px;
+  width: 100%;
+  border: none;
+  background: #8b6b4a;
+  color: white;
+  padding: 18px;
+  border-radius: 20px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+  box-shadow: 0 6px 18px rgba(139,107,74,0.2);
+}
+
+.submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
