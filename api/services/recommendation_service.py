@@ -1,8 +1,8 @@
 import pandas as pd
 
 from api.ml import config
-from api.ml.cf_recommender import recommend_for_user_cf
-from api.db.restaurant_repository import get_filtered_restaurants_repo
+from api.ml.cf_recommender import recommend_for_user_cf_augmented
+from api.db.restaurant_repository import (get_filtered_restaurants_repo, get_user_online_likes)
 from api.utils.utils import format_restaurant_for_frontend
 
 def get_popular_restaurants(top_k=10):
@@ -80,11 +80,12 @@ def get_recommendations(
     Handles cold-start users.
     """
 
-    recommendations = (
-        recommend_for_user_cf(
-            user_id=user_id,
-            top_k=top_k
-        )
+    user_online_likes= get_user_online_likes(user_id)
+
+    recommendations = recommend_for_user_cf_augmented(
+        user_id=user_id,
+        top_k=top_k,
+        online_likes=user_online_likes,
     )
 
     if len(recommendations) == 0:
@@ -126,7 +127,11 @@ def get_popular_by_category(category: str, page: int = 1, per_page: int = 15):
     if safe_category in EXACT_CATEGORY_MAP:
         categories_to_search = EXACT_CATEGORY_MAP[safe_category]
     else:
-        categories_to_search = [category, category.title(), f"{category.title()} restaurant"]
+        categories_to_search = [
+            category,
+            category.title(),
+            f"{category.title()} restaurant",
+        ]
 
     # Calculate pagination offsets
     skip_value = (page - 1) * per_page
