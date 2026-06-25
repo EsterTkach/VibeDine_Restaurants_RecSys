@@ -75,7 +75,7 @@ export default function AuthPage() {
 
           <p className="subtitle">
             Personalized dining recommendations
-            based on your taste and vibe.
+            based on your taste, vibe and friends!
           </p>
 
           {/* <div className="rotating-message">

@@ -51,18 +51,7 @@ export default function HomePage() {
       {/* We kept the up/down scrollbar controls on the main page, 
         but removed the global 'gap' rule so your top elements don't separate.
       */}
-      <div 
-        className="home-page"
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          height: 'calc(100vh - 20px)', /* Fills the window height */
-          overflowY: 'auto',           /* CRITICAL: Keeps up/down scrolling alive */
-          paddingBottom: '120px',      /* Safety cushion at the very bottom */
-          boxSizing: 'border-box'
-        }}
-      >
-
+      <div className="home-page">
         <div className="home-header">
           <div>
             <h1>
@@ -86,31 +75,8 @@ export default function HomePage() {
           <span className="search-text">Vibe Matcher</span>
         </div>
 
-        <div className="hero-card">
-          <img
-            src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0"
-            alt="Nobu"
-          />
-
-          <div className="hero-overlay">
-            <span className="hero-badge">
-              Tonight's Pick
-            </span>
-            <h2>Nobu</h2>
-            <p>
-              Japanese • Fine Dining
-            </p>
-            <button
-              className="hero-btn"
-              onClick={() => navigate("/restaurant")}
-            >
-              View Restaurant →
-            </button>
-          </div>
-        </div>
-
         {/* NEW: This dedicated container holds only your carousels. 
-          It spaces them perfectly apart from each other and sits tightly beneath the hero card.
+          It spaces them perfectly apart from each other.
         */}
         <div 
           className="carousels-container"
@@ -118,7 +84,7 @@ export default function HomePage() {
             display: 'flex',
             flexDirection: 'column',
             gap: '36px',       /* Perfectly spaces the rows apart from one another */
-            marginTop: '0px'  /* Controls the exact distance between the hero card and the first carousel */
+            marginTop: '10px'
           }}
         >
           <RestaurantRow 

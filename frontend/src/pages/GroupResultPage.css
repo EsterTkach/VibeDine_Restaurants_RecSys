@@ -2,14 +2,6 @@
   padding-bottom: 40px;
 }
 
-.hero-image img {
-  width: 100%;
-
-  height: 320px;
-
-  object-fit: cover;
-}
-
 .result-content {
   padding: 28px;
 }
