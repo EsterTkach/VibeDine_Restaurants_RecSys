@@ -1,9 +1,22 @@
 from fastapi import APIRouter, HTTPException, Query
-
+from api.ml.cf_recommender import (
+    get_popular_restaurants,
+)
 
 from api.db.restaurant_repository import get_filtered_restaurants_repo
 
 router = APIRouter(prefix="/mongo", tags=["mongo tests"])
+
+
+@router.get("/test/getK/{k}")
+def get_k_popular_restaurants(
+    k: int,
+):
+    return  {
+        "result":get_popular_restaurants(
+        k,
+    ) }
+
 
 @router.get("/test/filter/{k}")
 def get_filtered_restaurants(

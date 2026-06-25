@@ -13,8 +13,6 @@ def get_group_cf_recommendations_service(
     filters=None,
 ):
 
-    # TODO - change FILTER to esty's filtering function
-
     candidate_gmap_ids = None
 
     if filters:
@@ -48,8 +46,6 @@ def get_group_cb_recommendations_service(
     min_rating=3,
     filters=None,
 ):
-
-    # TODO - change FILTER to esty's filtering function
 
     candidate_gmap_ids = None
 
