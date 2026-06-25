@@ -5,7 +5,7 @@ from api.ml.cb_recommender import (
 )
 
 from api.ml.cf_recommender import (
-    recommend_for_user_cf,
+    recommend_for_user_cf_augmented,
 )
 
 from api.services.recommendation_service import (
@@ -97,7 +97,7 @@ def get_user_recommendations(
     )
 
 @router.post("/cf/group")
-def get_group_recommendations(request: GroupRecommendationRequest):
+def get_group_cf_recommendations(request: GroupRecommendationRequest):
     if not request.user_ids:
         raise HTTPException(status_code=400, detail="user_ids cannot be empty")
 
