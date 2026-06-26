@@ -1,5 +1,6 @@
 from fastapi import (
-    APIRouter
+    APIRouter,
+    HTTPException
 )
 
 from uuid import uuid4
@@ -37,6 +38,13 @@ def signup(
         "password":
         request.password,
     }
+    existing_user = users_collection.find_one(
+    {"username": request.username})
+    if existing_user:
+        raise HTTPException(
+            status_code=409,
+            detail="Username already exists"
+        )
 
     users_collection.insert_one(
         user
@@ -48,6 +56,8 @@ def signup(
 
         "user_id":
         user["user_id"],
+        "username":
+        user["username"],
     }
 
 @router.post("/login")
@@ -67,10 +77,10 @@ def login(
     )
 
     if not user:
-        return {
-            "message":
-            "Invalid username or password"
-        }
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid username or password"
+        )
 
     return {
         "message":
@@ -78,6 +88,8 @@ def login(
 
         "user_id":
         user["user_id"],
+        "username":
+        user["username"],
     }
 
 @router.post("/{user_id}/onboarding-preferences")
@@ -95,7 +107,7 @@ def save_onboarding_preferences(
         {
             "$set": {
                 "onboarding_preferences":
-                request.preferences
+                request.preferences.model_dump()
             }
         }
     )

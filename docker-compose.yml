@@ -24,6 +24,7 @@ services:
     environment:
       - WATCHPACK_POLLING=true
       - CHOKIDAR_USEPOLLING=true
+      - DOCKER=true
     depends_on:
       - api
     restart: unless-stopped
