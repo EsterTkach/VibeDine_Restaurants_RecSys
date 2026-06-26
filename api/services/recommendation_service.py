@@ -6,6 +6,7 @@ from api.ml.cf_recommender import compute_cf_scores, get_user_offline_likes, rec
 from api.services.users_service import get_user_online_likes
 from api.utils.utils import format_restaurant_for_frontend
 from api.routes.users import get_onboarding_preferences
+from api.ml.cb_recommender import compute_cb_scores, restaurants 
 
 
 def get_popular_restaurants(top_k=10):
@@ -88,7 +89,46 @@ def get_user_onboarding_recommendations(user_id: str, top_k: int = 10):
         )
         if restaurants:
             return restaurants
-        
+
+""" normalize scores and combine cb and cf scores """
+def min_max_normalize(score_dict, keys=None):
+    if keys is None:
+        keys = list(score_dict.keys())
+    else:
+        keys = list(keys)
+
+    if not keys:
+        return {}
+
+    values = [score_dict.get(k, 0.0) for k in keys]
+
+    min_score = min(values)
+    max_score = max(values)
+
+    if max_score == min_score:
+        return {k: 1.0 if score_dict.get(k, 0.0) > 0 else 0.0 for k in keys}
+
+    return {
+        k: (score_dict.get(k, 0.0) - min_score) / (max_score - min_score)
+        for k in keys
+    }
+
+def combine_hybrid_scores(cb_scores, cf_scores, alpha=0.5):
+    all_gmap_ids = set(cb_scores.keys()) | set(cf_scores.keys())
+
+    cb_norm = min_max_normalize(cb_scores, keys=all_gmap_ids)
+    cf_norm = min_max_normalize(cf_scores, keys=all_gmap_ids)
+
+    hybrid_scores = {}
+
+    for gmap_id in all_gmap_ids:
+        cb_score = cb_norm.get(gmap_id, 0.0)
+        cf_score = cf_norm.get(gmap_id, 0.0)
+
+        hybrid_scores[gmap_id] = alpha * cf_score + (1 - alpha) * cb_score
+
+    return hybrid_scores, cb_norm, cf_norm
+
 
 def get_hybrid_recommendations_for_user(
     user_id: str,
@@ -100,13 +140,32 @@ def get_hybrid_recommendations_for_user(
     If the user has no online likes, returns offline likes.
     If the user has no offline likes, returns popular restaurants.
     """
-    alpha = get_user_alpha(user_id)
-
-    if alpha == 0.0:
-        return get_user_onboarding_recommendations(user_id, top_k=top_k)
-    
+    cb_scores = compute_cb_scores(user_id)
     cf_scores = compute_cf_scores(user_id)
-    cb_scores = compute_cb_scores(user_id) #will implement
+    alpha = get_user_alpha(user_id)
+    hybrid_scores = combine_hybrid_scores(cb_scores, cf_scores,alpha)[0]
+    
+    candidate_set = set(candidate_gmap_ids) if candidate_gmap_ids else None
+    #rank recommendations by hybrid score
+    recommendations = []
+    for gmap_id, score in hybrid_scores.items():
+        if candidate_set is not None and gmap_id not in candidate_set:
+            continue
+        row = restaurants[restaurants["gmap_id"] == gmap_id]
+        if row.empty:
+            continue
+
+        recommendations.append(
+            {
+                "gmap_id": gmap_id,
+                "name": row.iloc[0]["name"],
+                "hybrid_score": round(float(score), 3),
+            }
+        )
+
+    recommendations.sort(key=lambda x: x["hybrid_score"], reverse=True)
+    return recommendations[:top_k]
+
 
     
 
