@@ -1,4 +1,3 @@
-// 1. Import your teammate's new API layer functions directly
 import { 
   login, 
   signup, 

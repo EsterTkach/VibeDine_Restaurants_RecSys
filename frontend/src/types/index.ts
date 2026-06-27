@@ -5,7 +5,7 @@ export interface Restaurant {
   avg_rating: number;
   review_count: number;
   image_url: string;
-  price_level?: '$' | '$$' | '$$$' | '$$$$';
+  price_level?: '$' | '$$' | '$$$';
   service_options?: string[];
   dining_options?: string[];
   address?: string;
@@ -21,11 +21,11 @@ export interface RowConfig {
 
 export interface User {
   user_id: string;
+  name: string;
   username: string;
-  email?: string;
-  avatar_url?: string;
-  member_since?: string;
-  review_count: number;
+  password: string;
+  avatar_url: string;
+  member_since: string;
   liked_restaurants: Restaurant[];
 }
 
@@ -50,7 +50,7 @@ export type PreferenceOption =
   | "distance" 
   | "dineOption";
 
-export type BudgetOption = "$" | "$$" | "$$$" | "$$$$";
+export type BudgetOption = "$" | "$$" | "$$$";
 export type DistanceOption = "Walking Distance" | "Up to 15 Minutes" | "Up to 30 Minutes" | "Anywhere";
 export type AccessibilityOption = "Required" | "Not Required";
 export type DietaryOption = "None" | "Vegetarian" | "Vegan" | "Gluten Free";
