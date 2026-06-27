@@ -4,10 +4,7 @@ import { FaApple, FaXTwitter } from "react-icons/fa6";
 import AppShell from "../layouts/AppShell";
 import { useNavigate } from "react-router-dom";
 import { demoUsers } from "../data/demoUsers";
-import { authService } from "../api/services"; // Importing centralized auth service
-
-import "./AuthPage.css";
-import { login } from "../api/restaurants";
+import { authService } from "../api/services";
 
 export default function AuthPage() {
   const navigate = useNavigate();

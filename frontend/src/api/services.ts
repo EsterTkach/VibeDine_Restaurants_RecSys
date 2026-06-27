@@ -1,6 +1,15 @@
+// 1. Import your teammate's new API layer functions directly
+import { 
+  login, 
+  signup, 
+  getUserRecommendations, 
+  getSimilarRestaurants,
+  saveOnboardingPreferences
+} from './restaurants';
+
 const BASE_URL = "http://localhost:8000/api";
 
-// Reusable core fetch wrapper to avoid repeating try/catch headers setup
+// Reusable core fetch wrapper (retained for custom native endpoints if needed)
 async function handleRequest<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`${BASE_URL}${endpoint}`, {
     headers: {
@@ -17,9 +26,19 @@ async function handleRequest<T>(endpoint: string, options?: RequestInit): Promis
   return response.json();
 }
 
-// Export specific, semantic API services for your components
+// 2. Export specific, semantic API services mapped cleanly to your teammate's setup
 export const restaurantService = {
-  getAll: () => handleRequest<any[]>("/restaurants"),
+  // Bridges to teammate's Collaborative Filtering endpoint
+  getAll: async () => {
+    // Uses a default placeholder user ID for now until state context management is added
+    const data = await getUserRecommendations("default_user_id");
+    // If their endpoint returns a structured object, adjust this mapping to extract the array
+    return data.recommendations || data; 
+  },
+  
+  // Bridges to teammate's Content-Based matching endpoint
+  getSimilar: (restaurantName: string) => getSimilarRestaurants(restaurantName),
+  
   getById: (id: string) => handleRequest<any>(`/restaurants/${id}`),
 };
 
@@ -32,44 +51,24 @@ export const userService = {
 };
 
 export const vibeService = {
-  submitMatch: (vibeData: any) => handleRequest("/vibe-match", {
-    method: "POST",
-    body: JSON.stringify(vibeData),
-  }),
+  submitMatch: async (preferences: any) => {
+    // Dynamically grab the userId stored by your teammate's login block
+    const userId = localStorage.getItem("userId") || "default_user_id"; 
+    
+    // Clean & simple: directly call the imported function!
+    return await saveOnboardingPreferences(userId, preferences);
+  },
 };
 
 export const authService = {
-  // Sign In call endpoint blueprint
+  // Bridges directly to teammate's login method using Axios under the hood
   login: async (username: string, password: string) => {
-    const response = await fetch(`${BASE_URL}/auth/login`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ username, password }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Login failed with status: ${response.status}`);
-    }
-
-    return response.json(); 
+    return await login(username, password);
   },
 
-  // Sign Up call endpoint blueprint
+  // Bridges directly to teammate's signup method
   register: async (username: string, email: string, password: string) => {
-    const response = await fetch(`${BASE_URL}/auth/register`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ username, email, password }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Registration failed with status: ${response.status}`);
-    }
-
-    return response.json();
+    // Note: Teammate's signup implementation currently expects only (username, password)
+    return await signup(username, password);
   }
 };
