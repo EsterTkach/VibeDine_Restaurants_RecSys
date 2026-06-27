@@ -1,9 +1,13 @@
 import pandas as pd
-
 from api.ml import config
-from api.ml.cf_recommender import recommend_for_user_cf_augmented
-from api.db.restaurant_repository import (get_filtered_restaurants_repo, get_user_online_likes)
+from api.db.restaurant_repository import get_filtered_restaurants_repo
+from api.ml.cf_recommender import compute_cf_scores, get_user_offline_likes, recommend_for_user_cf
+from api.services.users_service import get_user_online_likes
 from api.utils.utils import format_restaurant_for_frontend
+from api.routes.users import get_onboarding_preferences
+from api.ml.cb_recommender import compute_cb_scores, restaurants 
+
+
 
 def get_popular_restaurants(top_k=10):
     """
@@ -71,42 +75,114 @@ def get_popular_restaurants(top_k=10):
 
     return recommendations
 
-def get_recommendations(
-    user_id: str,
-    top_k=10
-):
-    """
-    Main recommendation entrypoint.
-    Handles cold-start users.
-    """
 
-    user_online_likes= get_user_online_likes(user_id)
+"""fix: not done yet"""
+def get_user_onboarding_recommendations(user_id: str, top_k: int = 10):
 
-    recommendations = recommend_for_user_cf_augmented(
-        user_id=user_id,
-        top_k=top_k,
-        online_likes=user_online_likes,
-    )
+    pref = get_onboarding_preferences(user_id)
+    #need to continue, based on 
+    for category in pref["categories"]:
+        restaurants = get_popular_by_category(
+            category=category,
+            page=1,
+            per_page=top_k
+        )
+        if restaurants:
+            return restaurants
 
-    if len(recommendations) == 0:
+""" normalize scores and combine cb and cf scores """
+def min_max_normalize(score_dict, keys=None):
+    if keys is None:
+        keys = list(score_dict.keys())
+    else:
+        keys = list(keys)
 
-        return {
-            "recommendation_type":
-            "cold_start_popular",
+    if not keys:
+        return {}
 
-            "recommendations":
-            get_popular_restaurants(
-                top_k
-            ),
-        }
+    values = [score_dict.get(k, 0.0) for k in keys]
+
+    min_score = min(values)
+    max_score = max(values)
+
+    if max_score == min_score:
+        return {k: 1.0 if score_dict.get(k, 0.0) > 0 else 0.0 for k in keys}
 
     return {
-        "recommendation_type":
-        "collaborative_filtering",
-
-        "recommendations":
-        recommendations,
+        k: (score_dict.get(k, 0.0) - min_score) / (max_score - min_score)
+        for k in keys
     }
+
+"""""
+return a combined dict of cb and cf scores, normalized, with a weight alpha for cf and (1-alpha) for cb
+"""""
+def combine_hybrid_scores(cb_scores, cf_scores, alpha=0.5):
+
+    all_gmap_ids = set(cb_scores.keys()) | set(cf_scores.keys())
+    cb_norm = min_max_normalize(cb_scores, keys=all_gmap_ids)
+    cf_norm = min_max_normalize(cf_scores, keys=all_gmap_ids)
+
+    hybrid_scores = {}
+
+    for gmap_id in all_gmap_ids:
+        cb_score = cb_norm.get(gmap_id, 0.0)
+        cf_score = cf_norm.get(gmap_id, 0.0)
+
+        hybrid_scores[gmap_id] = alpha * cf_score + (1 - alpha) * cb_score
+
+    return hybrid_scores, cb_norm, cf_norm
+
+def get_hybrid_recommendations_for_user(
+    user_id: str,
+    top_k=10,
+    candidate_gmap_ids=None,
+):
+    """
+    Returns recommendations for a user.
+    If the user has no online likes, returns offline likes.
+    If the user has no offline likes, returns popular restaurants.
+    """
+    if get_user_augmented_likes(user_id) == 0:
+        print(f"User {user_id} is cold-start, returning onboarding recommendations")
+        return get_user_onboarding_recommendations(user_id, top_k=top_k)
+    
+    cb_scores = compute_cb_scores(user_id)
+    cf_scores = compute_cf_scores(user_id)
+    alpha = get_user_alpha(user_id)
+
+    print(f"alpha={alpha} for user {user_id}")
+
+    print(f"CB restaurants={len(cb_scores)}")
+
+    print(f"CF restaurants={len(cf_scores)}")
+
+    hybrid_scores = combine_hybrid_scores(cb_scores, cf_scores,alpha)[0]
+
+    print(f"Hybrid restaurants={len(hybrid_scores)}")
+
+    candidate_set = set(candidate_gmap_ids) if candidate_gmap_ids else None
+    #rank recommendations by hybrid score
+    recommendations = []
+    for gmap_id, score in hybrid_scores.items():
+        if candidate_set is not None and gmap_id not in candidate_set:
+            continue
+        row = restaurants[restaurants["gmap_id"] == gmap_id]
+        if row.empty:
+            continue
+
+        recommendations.append(
+            {
+                "gmap_id": gmap_id,
+                "name": row.iloc[0]["name"],
+                "hybrid_score": round(float(score), 3),
+            }
+        )
+
+    recommendations.sort(key=lambda x: x["hybrid_score"], reverse=True)
+    return recommendations[:top_k]
+
+
+    
 
 EXACT_CATEGORY_MAP = {
     "sushi": ["Sushi", "Sushi restaurant", "Sushi takeaway", "Conveyor belt sushi restaurant", "japanese", "japanese restaurant"],
@@ -146,3 +222,46 @@ def get_popular_by_category(category: str, page: int = 1, per_page: int = 15):
     )
     
     return [format_restaurant_for_frontend(r) for r in raw_restaurants]
+
+
+
+
+def get_user_augmented_likes(user_id):
+    """
+    Check if a user is cold-start based on their offline and online likes.
+    A user is considered cold-start if they have no likes in both the offline
+    and online datasets.
+    """
+
+    # Check offline likes
+    offline_likes_count = len(get_user_offline_likes(user_id)["offline_likes"])
+
+    # Check online likes
+    online_likes_count = len(get_user_online_likes(user_id)["online_likes"])
+
+    # If both counts are zero, the user is cold-start
+    return offline_likes_count + online_likes_count
+
+def get_user_alpha(user_id):
+    """
+    Determine the user's alpha value based on their offline and online likes.
+    Alpha is a measure of how much weight to give to the offline vs online
+    recommendations. A user with more online likes will have a higher alpha,
+    while a user with more offline likes will have a lower alpha.
+    """
+
+    # Get counts of offline and online likes
+    alpha = 0.0
+    n = get_user_augmented_likes(user_id)
+
+    # Calculate alpha as the ratio of online likes to total likes
+    if n <= 5: #cold-start user - pure cb
+        alpha = 0.0 
+    elif n <= 20: 
+        alpha = 0.4
+    elif n <= 100: #warm user - hybrid, cf dominates
+        alpha = 0.7
+    else:
+        alpha = 0.85
+
+    return alpha

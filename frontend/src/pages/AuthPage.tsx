@@ -7,6 +7,7 @@ import { demoUsers } from "../data/demoUsers";
 import { authService } from "../api/services"; // Importing centralized auth service
 
 import "./AuthPage.css";
+import { login } from "../api/restaurants";
 
 export default function AuthPage() {
   const navigate = useNavigate();

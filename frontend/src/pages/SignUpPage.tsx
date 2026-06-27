@@ -2,9 +2,9 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import AppShell from "../layouts/AppShell";
-import { demoUsers } from "../data/demoUsers";
 
 import "./AuthPage.css";
+import { signup } from "../api/restaurants";
 
 export default function SignUpPage() {
   const navigate = useNavigate();
@@ -14,20 +14,23 @@ export default function SignUpPage() {
 
   const [error, setError] = useState("");
 
-  const handleSignUp = () => {
-    const exists = demoUsers.some(
-      (user) =>
-        user.username.toLowerCase() ===
-        username.toLowerCase()
-    );
-
-    if (exists) {
-      setError("This username is already taken.");
-      return;
+  const handleSignUp = async () => {
+    try {
+      const response = await signup(username,password);
+      navigate("/onboarding", {
+        replace: true,
+        state: {
+          username,
+          userId: response.user_id,
+        },
+      });
+      localStorage.setItem("userId", response.user_id);
+      localStorage.setItem("username", username);
     }
-
-    navigate("/onboarding", { state: { username } });
-  };
+    catch (error) {
+      setError("this username is already taken.");
+    }
+  }
 
   return (
     <AppShell>

@@ -1,17 +1,20 @@
 from fastapi import APIRouter, HTTPException
 
 from api.ml.cb_recommender import (
+    compute_cb_scores,
     recommend_similar_restaurants,
 )
 
 from api.ml.cf_recommender import (
-    recommend_for_user_cf_augmented,
+    compute_cf_scores,
 )
 
 from api.services.recommendation_service import (
+    get_hybrid_recommendations_for_user,
     get_popular_restaurants,
     get_popular_by_category,
-    get_recommendations,
+    get_user_onboarding_recommendations,
+    get_hybrid_recommendations_for_user,
 )
 
 from api.schemas.group_schema import (
@@ -91,10 +94,11 @@ def get_user_recommendations(
     user_id: str,
     top_k: int = 10
 ):
-    return get_recommendations(
-        user_id=user_id,
-        top_k=top_k
-    )
+    # return get_hybrid_recommendations_for_user(
+    #     user_id=user_id,
+    #     top_k=top_k
+    # )
+    return get_hybrid_recommendations_for_user(user_id)
 
 @router.post("/cf/group")
 def get_group_cf_recommendations(request: GroupRecommendationRequest):

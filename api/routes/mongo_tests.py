@@ -3,6 +3,10 @@ from api.ml.cf_recommender import (
     get_popular_restaurants,
 )
 
+from api.db.mongo import (
+    users_collection,
+    user_interactions_collection
+)
 from api.db.restaurant_repository import get_filtered_restaurants_repo
 
 router = APIRouter(prefix="/mongo", tags=["mongo tests"])
@@ -42,3 +46,17 @@ def get_filtered_restaurants(
         )
     }
 
+
+@router.get("/users")
+def get_all_users():
+    users = users_collection.find(
+        {},
+        {
+            "_id": 0,
+            "user_id": 1,
+            "username": 1,
+            "email": 1,
+        }
+    )
+
+    return list(users)
