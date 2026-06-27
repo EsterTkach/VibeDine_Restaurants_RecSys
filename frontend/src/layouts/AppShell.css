@@ -17,19 +17,25 @@
 .phone-frame {
   width: 100%;
   max-width: 430px;
-  min-height: 90vh;
+  height: 88vh; 
+  max-height: 850px;
 
   background: rgba(255,255,255,0.88);
-
   backdrop-filter: blur(20px);
-
   border-radius: 36px;
 
   overflow-y: auto;
   overflow-x: hidden;
 
-  box-shadow:
-    0 20px 60px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
 
   position: relative;
+  overflow: hidden;
+
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.phone-frame::-webkit-scrollbar {
+  display: none;
 }

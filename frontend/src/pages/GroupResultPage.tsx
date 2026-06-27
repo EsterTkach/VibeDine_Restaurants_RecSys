@@ -163,15 +163,6 @@ export default function GroupResultPage() {
           </div>
         )}
 
-        <div className="hero-image">
-
-          <img
-            src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0"
-            alt="restaurant"
-          />
-
-        </div>
-
         <div className="result-content">
 
           <button

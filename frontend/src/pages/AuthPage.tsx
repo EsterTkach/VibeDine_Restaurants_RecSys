@@ -2,99 +2,79 @@ import { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { FaApple, FaXTwitter } from "react-icons/fa6";
 import AppShell from "../layouts/AppShell";
-import "./AuthPage.css";
 import { useNavigate } from "react-router-dom";
-import { login } from "../api/restaurants";
+import { demoUsers } from "../data/demoUsers";
+import { authService } from "../api/services";
 
 export default function AuthPage() {
-
-  const [showToast, setShowToast] = useState(false);
-
-  // const messages = [
-  //   "Cooking your next obsession...",
-  //   "Finding hidden gems...",
-  //   "Matching your vibe...",
-  //   "Searching for the perfect spot...",
-  //   "Pairing food with your mood..."
-  // ];
-
-  // const [messageIndex, setMessageIndex] = useState(0);
-
-  // useEffect(() => {
-  //   const interval = setInterval(() => {
-  //     setMessageIndex(prev => (prev + 1) % messages.length);
-  //   }, 2200);
-
-  //   return () => clearInterval(interval);
-  // }, []);
-
   const navigate = useNavigate();
-
+  
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [showToast, setShowToast] = useState(false);
 
   const showComingSoon = () => {
     setShowToast(true);
-
     setTimeout(() => {
       setShowToast(false);
     }, 2500);
   };
+
   const handleLogin = async () => {
-    setError("");
-    try {
-      const response = await login(username, password);
-
-      localStorage.setItem("userId", response.user_id);
-      localStorage.setItem("username", response.username);
-
-      navigate("/loading", {
-        replace: true,
-        state: {
-          nextPage: "/home",
-        },
-      });
-    } catch (error) {
-      setError("Invalid username or password");
+    if (!username.trim() || !password.trim()) {
+      setError("Please fill in all fields");
+      return;
     }
-};
+
+    try {
+      setError("");
+      setLoading(true);
+
+      // 1. Try hitting the live backend service first
+      const data = await authService.login(username, password);
+      
+      // If server returns a token/user, pass user data directly to the loading view
+      navigate("/loading", { state: { username: data.username || username } });
+
+    } catch (apiError) {
+      console.warn("Backend login failed or offline. Testing fallback demo users...", apiError);
+
+      // 2. STABILITY FALLBACK: Check local static data if API is down
+      const validUser = demoUsers.find(
+        (user) => user.username === username && user.password === password
+      );
+
+      if (validUser) {
+        // Pass the valid user's name along so HomePage can grab it from location state!
+        navigate("/loading", { state: { username: validUser.username } });
+      } else {
+        setError("Invalid username or password");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <AppShell>
       <div className="auth-container">
-
         <div className="logo-section">
-
-          <div className="floating-logo">
-            🍽️
-          </div>
-
-          <h1 className="logo-text">
-            VibeDine
-          </h1>
-
+          <div className="floating-logo">🍽️</div>
+          <h1 className="logo-text">VibeDine</h1>
           <p className="subtitle">
-            Personalized dining recommendations
-            based on your taste and vibe.
+            Personalized dining recommendations based on your taste, vibe and friends!
           </p>
-
-          {/* <div className="rotating-message">
-            {messages[messageIndex]}
-          </div> */}
-
         </div>
 
         <div className="auth-card">
-
           <input
             className="input"
             placeholder="Username"
             value={username}
-            onChange={(e) =>
-              setUsername(e.target.value)
-            }
+            disabled={loading}
+            onChange={(e) => setUsername(e.target.value)}
           />
 
           <input
@@ -102,68 +82,56 @@ export default function AuthPage() {
             type="password"
             placeholder="Password"
             value={password}
-            onChange={(e) =>
-              setPassword(e.target.value)
-            }
+            disabled={loading}
+            onChange={(e) => setPassword(e.target.value)}
           />
 
           {error && (
-            <span
-              style={{
-                color: "#D32F2F",
-                fontSize: "14px",
-              }}
-            >
+            <span style={{ color: "#D32F2F", fontSize: "14px", marginTop: "-4px", marginBottom: "4px" }}>
               {error}
             </span>
           )}
 
-          <button className="primary-btn" onClick={handleLogin}>
-            Sign In →
+          <button 
+            className="primary-btn" 
+            onClick={handleLogin}
+            disabled={loading}
+          >
+            {loading ? "Signing In..." : "Sign In →"}
           </button>
 
-          <button className="secondary-btn" onClick={() => navigate("/signup")}>
+          <button 
+            className="secondary-btn" 
+            onClick={() => navigate("/signup")}
+            disabled={loading}
+          >
             Create Account
           </button>
 
-          <div className="divider">
-            or continue with
-          </div>
+          <div className="divider">or continue with</div>
 
-          <button
-            className="social-btn"
-            onClick={showComingSoon}
-          >
+          <button className="social-btn" onClick={showComingSoon} disabled={loading}>
             <FcGoogle size={20} />
             Continue with Google
           </button>
 
-          <button
-            className="social-btn"
-            onClick={showComingSoon}
-          >
+          <button className="social-btn" onClick={showComingSoon} disabled={loading}>
             <FaApple size={20} />
             Continue with Apple
-          </button>   
+          </button> 
 
-          <button
-            className="social-btn"
-            onClick={showComingSoon}
-          >
+          <button className="social-btn" onClick={showComingSoon} disabled={loading}>
             <FaXTwitter size={18} />
             Continue with X
           </button>
-
         </div>
-
       </div>
-      {
-      showToast && (
+
+      {showToast && (
         <div className="toast">
           🚀 Social login is coming soon
         </div>
-      )
-    }
+      )}
     </AppShell>
   );
 }

@@ -11,15 +11,6 @@ export default function RestaurantPage() {
     <AppShell>
       <div className="restaurant-page">
 
-        <div className="restaurant-hero">
-
-          <img
-            src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0"
-            alt="Nobu"
-          />
-
-        </div>
-
         <div className="restaurant-content">
 
           <button
