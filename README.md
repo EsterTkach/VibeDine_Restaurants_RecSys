@@ -22,3 +22,15 @@ Docker-
 3) Will open server, front and log if needed. 
 4) First load takes half a minute. Future loads take a few seconds. 
 5) To close follow console instructions. 
+
+for mac users 😁
+1) Run single time: chmod +x start.sh
+2) Then, every time run: ./start.sh
+
+
+Or, regular way will also work: 
+cd api
+python -m venv venv
+source venv/bin/activate        # Mac/Linux
+pip install -r requirements.txt
+python -m uvicorn api.main:app --reload

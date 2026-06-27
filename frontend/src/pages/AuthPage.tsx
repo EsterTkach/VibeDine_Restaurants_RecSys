@@ -4,7 +4,7 @@ import { FaApple, FaXTwitter } from "react-icons/fa6";
 import AppShell from "../layouts/AppShell";
 import "./AuthPage.css";
 import { useNavigate } from "react-router-dom";
-import { demoUsers } from "../data/demoUsers";
+import { login } from "../api/restaurants";
 
 export default function AuthPage() {
 
@@ -42,21 +42,23 @@ export default function AuthPage() {
       setShowToast(false);
     }, 2500);
   };
-  const handleLogin = () => {
-  const validUser = demoUsers.find(
-    (user) =>
-      user.username === username &&
-      user.password === password
-  );
+  const handleLogin = async () => {
+    setError("");
+    try {
+      const response = await login(username, password);
 
-  if (!validUser) {
-    setError(
-      "Invalid username or password"
-    );
-    return;
-  }
+      localStorage.setItem("userId", response.user_id);
+      localStorage.setItem("username", response.username);
 
-  navigate("/loading");
+      navigate("/loading", {
+        replace: true,
+        state: {
+          nextPage: "/home",
+        },
+      });
+    } catch (error) {
+      setError("Invalid username or password");
+    }
 };
 
   return (

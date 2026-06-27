@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate} from "react-router-dom";
 import AppShell from "../layouts/AppShell";
 
 import "./Onboarding.css";
+import { saveOnboardingPreferences } from "../api/restaurants";
 
 const CUISINE_OPTIONS = ["Sushi", "Italian", "Dessert", "Cafe", "Burger", "Mexican", "Seafood", "Fast food"];
 const VIBE_OPTIONS = ["Cozy", "Casual", "Romantic", "Trendy", "Family-friendly", "Upscale"];
@@ -11,8 +12,8 @@ const DIETARY_OPTIONS = ["Gluten Free", "Vegetarian", "Vegan", "None"];
 
 export default function Onboarding() {
   const navigate = useNavigate();
-  const location = useLocation();
-  const username = location.state?.username;
+  const userId = localStorage.getItem("userId");
+  const username = localStorage.getItem("username");
 
   // Multi-select for cuisines and vibes
   const [selectedCuisines, setSelectedCuisines] = useState<string[]>([]);
@@ -33,13 +34,20 @@ export default function Onboarding() {
     );
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
+    if (!userId) {
+    console.error("User is not logged in.");
+    return;
+    }
     const userPreferences = {
       favorite_categories: selectedCuisines,
       favorite_atmospheres: selectedVibes,
       accessibility: accessibility,
       dietary_restrictions: dietary,
     };
+
+    try {
+    await saveOnboardingPreferences(userId, userPreferences);
 
     console.log("Saving preferences:", userPreferences);
 
@@ -48,8 +56,12 @@ export default function Onboarding() {
       state: {
         nextPage: "/home",
       },
+      replace: true,
     });
-  };
+  } catch (error) {
+    console.error("Error saving preferences:", error);
+  }
+};
 
   return (
     <AppShell>

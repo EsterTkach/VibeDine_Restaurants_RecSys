@@ -174,13 +174,3 @@ def build_online_likes_by_user(user_ids):
     return online_likes_by_user
 
 
-def get_user_online_likes(user_id):
-    """
-    Return the user's online liked restaurants.
-    """
-
-    online_likes_by_user = build_online_likes_by_user(
-        user_ids=[user_id]
-    )
-
-    return online_likes_by_user.get(user_id, [])
