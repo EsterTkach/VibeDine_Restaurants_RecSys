@@ -19,7 +19,7 @@ app = FastAPI(
 routers = [
     recommendations_router,
     users_router,
-    mongoTest_router
+    mongoTest_router,
 ]
 
 for router in routers:

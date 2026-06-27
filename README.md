@@ -24,8 +24,8 @@ Docker-
 5) To close follow console instructions. 
 
 for mac users 😁
-1) chmod +x start.sh
-2) ./start.sh
+1) Run single time: chmod +x start.sh
+2) Then, every time run: ./start.sh
 
 
 Or, regular way will also work: 

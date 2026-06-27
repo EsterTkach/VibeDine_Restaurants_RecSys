@@ -38,7 +38,7 @@ def get_user_row(user_id):
     #     online_likes = []
     #     return None
 
-    online_likes = get_user_online_likes(user_id)[online_likes]
+    online_likes = get_user_online_likes(user_id)["online_likes"]
     if online_likes is not None:
 
         for gmap_id in online_likes:
@@ -433,14 +433,15 @@ def recommend_for_user_cf(user_id, top_k=config.TOP_K, candidate_gmap_ids=None, 
 
 
 
+
 ##############
 #### test ####
 ##############
 
-user_id = "108988860387051139127"
-results = recommend_for_user_cf(user_id, top_k=10)
+# user_id = "108988860387051139127"
+# results = recommend_for_user_cf(user_id, top_k=10)
 
-print(f"CF recommendations for user {user_id}:")
+# print(f"CF recommendations for user {user_id}:")
 
-for r in results:
-    print(r)
+# for r in results:
+#     print(r)

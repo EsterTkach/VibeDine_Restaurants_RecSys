@@ -1,5 +1,4 @@
 import pandas as pd
-
 from api.ml import config
 from api.db.restaurant_repository import get_filtered_restaurants_repo
 from api.ml.cf_recommender import compute_cf_scores, get_user_offline_likes, recommend_for_user_cf
@@ -7,6 +6,7 @@ from api.services.users_service import get_user_online_likes
 from api.utils.utils import format_restaurant_for_frontend
 from api.routes.users import get_onboarding_preferences
 from api.ml.cb_recommender import compute_cb_scores, restaurants 
+
 
 
 def get_popular_restaurants(top_k=10):
@@ -113,9 +113,12 @@ def min_max_normalize(score_dict, keys=None):
         for k in keys
     }
 
+"""""
+return a combined dict of cb and cf scores, normalized, with a weight alpha for cf and (1-alpha) for cb
+"""""
 def combine_hybrid_scores(cb_scores, cf_scores, alpha=0.5):
-    all_gmap_ids = set(cb_scores.keys()) | set(cf_scores.keys())
 
+    all_gmap_ids = set(cb_scores.keys()) | set(cf_scores.keys())
     cb_norm = min_max_normalize(cb_scores, keys=all_gmap_ids)
     cf_norm = min_max_normalize(cf_scores, keys=all_gmap_ids)
 
@@ -129,7 +132,6 @@ def combine_hybrid_scores(cb_scores, cf_scores, alpha=0.5):
 
     return hybrid_scores, cb_norm, cf_norm
 
-
 def get_hybrid_recommendations_for_user(
     user_id: str,
     top_k=10,
@@ -140,11 +142,24 @@ def get_hybrid_recommendations_for_user(
     If the user has no online likes, returns offline likes.
     If the user has no offline likes, returns popular restaurants.
     """
+    if get_user_augmented_likes(user_id) == 0:
+        print(f"User {user_id} is cold-start, returning onboarding recommendations")
+        return get_user_onboarding_recommendations(user_id, top_k=top_k)
+    
     cb_scores = compute_cb_scores(user_id)
     cf_scores = compute_cf_scores(user_id)
     alpha = get_user_alpha(user_id)
+
+    print(f"alpha={alpha} for user {user_id}")
+
+    print(f"CB restaurants={len(cb_scores)}")
+
+    print(f"CF restaurants={len(cf_scores)}")
+
     hybrid_scores = combine_hybrid_scores(cb_scores, cf_scores,alpha)[0]
-    
+
+    print(f"Hybrid restaurants={len(hybrid_scores)}")
+
     candidate_set = set(candidate_gmap_ids) if candidate_gmap_ids else None
     #rank recommendations by hybrid score
     recommendations = []
@@ -210,16 +225,8 @@ def get_popular_by_category(category: str, page: int = 1, per_page: int = 15):
 
 
 
-#Test db
-def test_db():
-    return {
-        "count":
-        users_collection.count_documents({})
-    }
 
-#we dont need is_user_coldstart for sure
-
-def is_user_coldstart(user_id):
+def get_user_augmented_likes(user_id):
     """
     Check if a user is cold-start based on their offline and online likes.
     A user is considered cold-start if they have no likes in both the offline
@@ -233,7 +240,7 @@ def is_user_coldstart(user_id):
     online_likes_count = len(get_user_online_likes(user_id)["online_likes"])
 
     # If both counts are zero, the user is cold-start
-    return offline_likes_count == 0 and online_likes_count == 0
+    return offline_likes_count + online_likes_count
 
 def get_user_alpha(user_id):
     """
@@ -244,16 +251,10 @@ def get_user_alpha(user_id):
     """
 
     # Get counts of offline and online likes
-    offline_likes_count = len(get_user_offline_likes(user_id)["offline_likes"])
-    online_likes_count = len(get_user_online_likes(user_id)["online_likes"])
-
-    # If both counts are zero, return None (cold-start user)
-    if offline_likes_count == 0 and online_likes_count == 0:
-        return None
+    alpha = 0.0
+    n = get_user_augmented_likes(user_id)
 
     # Calculate alpha as the ratio of online likes to total likes
-    n = offline_likes_count + online_likes_count
-    
     if n <= 5: #cold-start user - pure cb
         alpha = 0.0 
     elif n <= 20: 

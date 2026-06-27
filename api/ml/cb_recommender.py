@@ -16,6 +16,7 @@ with open(config.MODEL_CB_FILE, "rb") as f:
 print("Model loaded")
 
 restaurants = model["restaurants"]
+restaurant_lookup = restaurants.set_index("gmap_id").to_dict("index")
 tfidf = model["tfidf"]
 tfidf_matrix = model["tfidf_matrix"]
 
@@ -65,7 +66,7 @@ def recommend_similar_restaurants(
 
 def compute_cb_scores(user_id):
 
-    online_likes = get_user_online_likes(user_id)[online_likes]
+    online_likes = get_user_online_likes(user_id)["online_likes"]
     
     user_likes = interactions[
         (interactions["user_id"] == user_id) & (interactions["rating"] >= config.MIN_RATING)
@@ -80,7 +81,7 @@ def compute_cb_scores(user_id):
 
     if len(liked_gmap_ids) == 0:
         print(f"No liked restaurants found for user {user_id}")
-        return []
+        return {}
 
     # Convert liked restaurant IDs to matrix indices
     liked_indices = restaurants[
