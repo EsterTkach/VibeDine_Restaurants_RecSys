@@ -30,7 +30,6 @@ export default function RestaurantRow({ title, emoji, restaurants }: RestaurantR
         position: 'relative'
       }}
     >
-      {/* 🌟 REWORKED STYLE BLOCK: Handles the smooth hover fade effect */}
       <style>{`
         .restaurant-slider::-webkit-scrollbar { 
           display: none !important; 
@@ -146,7 +145,8 @@ export default function RestaurantRow({ title, emoji, restaurants }: RestaurantR
           gap: '16px',
           paddingLeft: '16px',
           paddingRight: '16px',
-          paddingBottom: '16px',   
+          paddingBottom: '16px',
+          paddingTop: '8px',
           width: '100%',
           boxSizing: 'border-box',
           WebkitOverflowScrolling: 'touch',
