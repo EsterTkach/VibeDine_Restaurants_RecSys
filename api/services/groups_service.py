@@ -1,7 +1,7 @@
 from collections import defaultdict
 
 from api.db.restaurant_repository import get_filtered_restaurants_repo
-from recommendation_service import (
+from api.services.recommendation_service import (
     get_hybrid_recommendations_for_user,
 )
 
