@@ -27,7 +27,13 @@ from api.services.groups_service import (
 )
 
 from api.utils.utils import (
-    format_restaurant_for_frontend
+    format_restaurant_for_frontend,
+    get_meal_time_string
+)
+
+from api.db.restaurant_repository import (
+    get_filtered_restaurants_repo,
+    get_user_by_id
 )
 
 router = APIRouter(
@@ -36,10 +42,17 @@ router = APIRouter(
 )
 
 @router.get("/home-carousels")
-def get_home_carousels(user_id: str = "default_user", top_k: int = 10):
+def get_home_carousels(user_id: str = "default_user", top_k: int = 25):
     """
     Returns dynamically structured carousels for the homepage matching the frontend layout. Specific for a user.
     """
+    user_profile = get_user_by_id(user_id)
+    lat = user_profile.get("latitude")
+    long = user_profile.get("longitude")
+    candidate_gmap_ids_by_radius = get_filtered_restaurants_repo(latitude=float(lat), longitude=float(long))
+    candidate_gmap_ids_by_mealtime = get_filtered_restaurants_repo(dining_options=get_meal_time_string())
+    candidate_gmap_ids_by_hidden_gems = get_filtered_restaurants_repo(min_rating=4.5, max_reviews=30)
+
     return {
         "carousels": [
             {
@@ -50,28 +63,22 @@ def get_home_carousels(user_id: str = "default_user", top_k: int = 10):
             {
                 "id": "popular_near_you",
                 "title": "Popular Near You",
-                "items": get_popular_restaurants(top_k=top_k)
+                "items": [format_restaurant_for_frontend(r) for r in get_hybrid_recommendations_for_user(user_id, top_k=top_k, candidate_gmap_ids=candidate_gmap_ids_by_radius)]
             },
             {
                 "id": "popular_at_this_hour",
                 "title": "Popular at this hour",
-                # TODO: Write a small utility to check the current hour on the server 
-                # and return specific meal categories (e.g., Breakfast/Dinner tags)
-                "items": get_popular_by_category(category="cafe", per_page=top_k)
+                "items": [format_restaurant_for_frontend(r) for r in get_hybrid_recommendations_for_user(user_id, top_k=top_k, candidate_gmap_ids=candidate_gmap_ids_by_mealtime)]
             },
             {
                 "id": "you_might_like",
                 "title": "You might like",
-                # TODO: Connect this to your Content-Based Recommender (cb_recommender)
-                # base recommendations on items the user previously clicked or liked
-                "items": get_popular_restaurants(top_k=top_k)
+                "items": [format_restaurant_for_frontend(r) for r in get_hybrid_recommendations_for_user(user_id, top_k= 2*top_k)[top_k:]]
             },
             {
                 "id": "hidden_gems",
                 "title": "Hidden gems",
-                # TODO: Add a service layer function that queries MongoDB for:
-                # high overall rating (avg_rating >= 4.2) but low review count (num_of_reviews < 50)
-                "items": get_popular_restaurants(top_k=top_k)
+                "items": [format_restaurant_for_frontend(r) for r in get_hybrid_recommendations_for_user(user_id, top_k=top_k, candidate_gmap_ids=candidate_gmap_ids_by_hidden_gems)]
             },
         ]
     }

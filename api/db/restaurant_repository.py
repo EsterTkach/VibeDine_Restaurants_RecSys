@@ -12,6 +12,7 @@ def get_filtered_restaurants_repo(
     offerings: list = None,
     min_rating: float = 0.0,
     min_reviews: int = 0,
+    max_reviews: int = None,
     latitude: float = None,
     longitude: float = None,
     radius_km: float = None,
@@ -21,18 +22,23 @@ def get_filtered_restaurants_repo(
 
     This function operates in three distinct phases:
     1. Quality & Geospatial Gateway ($match): Immediately filters out any restaurants 
-       that do not meet the `min_rating` or `min_reviews` thresholds. Additionally, 
-       if geospatial coordinates and a radius are provided, it performs a high-performance 
-       spherical radius filter using MongoDB's native `$geoWithin` operator. This protects 
-       frontend rendering from low-quality or irrelevant results while remaining entirely 
-       optional so as not to blind Machine Learning models fetching broad candidate pools.
+       that do not meet the `min_rating` threshold. It manages review bounds flexibly, 
+       enforcing a minimum requirement (`min_reviews`) and an optional maximum ceiling 
+       (`max_reviews`). This allows the caller to explicitly isolate high-performing 
+       "Hidden Gems" (high stars, low review counts) while maintaining fallback structural 
+       safety. Additionally, if geospatial coordinates and a radius are provided, it performs 
+       a high-performance spherical radius filter using MongoDB's native `$geoWithin` 
+       operator. This protects frontend rendering from low-quality or irrelevant results 
+       while remaining entirely optional so as not to blind Machine Learning models 
+       fetching broad candidate pools.
     2. Tag Scoring ($addFields): Calculates a dynamic `match_score` for every surviving
        restaurant by calculating the intersection between the user's requested tags
        and the restaurant's actual tags using `$setIntersection`.
     3. Global Ranking ($sort & $limit): Sorts the ENTIRE pool of matched restaurants
        by their `match_score` (highest first), using `avg_rating` as a tie-breaker.
-       Only after the definitive top matches are ranked does it slice the requested
-       `limit` to send back to the client.
+       Only after the definitive top matches are ranked does it apply strict client-side
+       projections—safely mapping keys like `cuisine` and `price_level`—and slices the 
+       requested `limit` to send back to the client.
 
     Args:
         skip (int): Pagination offset. Defaults to 0.
@@ -46,37 +52,44 @@ def get_filtered_restaurants_repo(
         offerings (list, optional): Offering tags.
         min_rating (float, optional): The absolute minimum average rating required. Defaults to 0.0.
         min_reviews (int, optional): The absolute minimum number of reviews required. Defaults to 0.
+        max_reviews (int, optional): The absolute maximum number of reviews permitted. Useful for 
+                                     unearthing high-quality, low-exposure "Hidden Gems". Defaults to None.
         latitude (float, optional): Target latitude for center of radius filter.
         longitude (float, optional): Target longitude for center of radius filter.
         radius_km (float, optional): Radius distance threshold in kilometers.
 
     Returns:
         list: A ranked and paginated list of restaurant dictionaries, containing
-              core fields like `_id`, `name`, `avg_rating`, and `match_score`.
+              core fields cleanly projected for direct frontend integration including 
+              `gmap_id`, `name`, `cuisine`, `avg_rating`, `price_level`, and `image_url`.
     """
     # 1. Build the base Match Query
     query = {}
 
-    # Apply Geospatial Radius Filter (requires GeoJSON format and a 2dsphere index)
+    # Apply Geospatial Radius Filter
     if latitude is not None and longitude is not None and radius_km is not None:
-        # MongoDB $centerSphere expects the radius mapped in radians.
-        # Earth's equatorial radius is approximately 6378.1 kilometers.
         radius_in_radians = radius_km / 6378.1
-        
-        # CRITICAL: MongoDB GeoJSON coordinates must be ordered as [longitude, latitude]
         query["location"] = {
             "$geoWithin": {
                 "$centerSphere": [[longitude, latitude], radius_in_radians]
             }
         }
 
-    # Apply quality thresholds ONLY if they are explicitly requested
+    # Apply quality rating thresholds
     if min_rating > 0:
         query["avg_rating"] = {"$gte": min_rating}
+        
+    # Process review count boundaries cleanly
+    review_conditions = {}
     if min_reviews > 0:
-        query["num_of_reviews"] = {"$gte": min_reviews}
+        review_conditions["$gte"] = min_reviews
+    if max_reviews is not None:
+        review_conditions["$lte"] = max_reviews
+        
+    if review_conditions:
+        query["num_of_reviews"] = review_conditions
 
-    # Apply flexible $in filters (Restaurant must match at least ONE tag in the provided list)
+    # Apply flexible $in filters
     if categories:
         query["category"] = {"$in": categories}
     if accessibility:
@@ -92,7 +105,7 @@ def get_filtered_restaurants_repo(
     if offerings:
         query["offerings"] = {"$in": offerings}
 
-    # 2. Build the Projection (Fields to return)
+    # 2. Build the Projection matching your updated interface properties
     projection = {
         "gmap_id": 1,
         "name": 1,
@@ -102,13 +115,13 @@ def get_filtered_restaurants_repo(
         "image_url": 1
     }
 
-    # Dynamically include any fields that were actively filtered
+    # Dynamically include any fields that were actively filtered (excluding base parameters)
     for field in query.keys():
         if field not in [
             "avg_rating",
             "num_of_reviews",
             "location",
-        ]:  # Prevent projection duplication or structural errors
+        ]:  
             projection[field] = 1
 
     # 3. Build the Tag Scoring Math
@@ -118,9 +131,7 @@ def get_filtered_restaurants_repo(
         return {
             "$size": {
                 "$setIntersection": [
-                    {
-                        "$ifNull": [f"${field_name}", []]
-                    },  # Fallback to empty array if DB field is missing
+                    {"$ifNull": [f"${field_name}", []]},  
                     user_list,
                 ]
             }
@@ -148,7 +159,6 @@ def get_filtered_restaurants_repo(
         pipeline.append({"$addFields": {"match_score": {"$add": score_components}}})
         pipeline.extend(
             [
-                # Sort by highest tag match score, break ties with highest rating
                 {"$sort": {"match_score": -1, "avg_rating": -1}},
                 {"$skip": skip},
                 {"$limit": limit},
@@ -156,7 +166,6 @@ def get_filtered_restaurants_repo(
             ]
         )
     else:
-        # Fallback if no specific tags were requested (e.g., just looking for highly rated places)
         pipeline.extend(
             [
                 {"$sort": {"avg_rating": -1, "num_of_reviews": -1}},
@@ -214,7 +223,7 @@ def get_user_by_id(user_id: str) -> dict:
         raise ValueError("A valid user_id must be provided.")
 
     user_doc = users_collection.find_one({"user_id": str(user_id)})
-    
+
     return user_doc or {}
 
 

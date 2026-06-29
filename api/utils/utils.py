@@ -1,4 +1,5 @@
 from api.db.mongo import (restaurants_collection)
+from datetime import datetime
 
 def format_restaurant_for_frontend(restaurant_doc: dict) -> dict:
     """
@@ -38,3 +39,21 @@ def format_restaurant_for_frontend(restaurant_doc: dict) -> dict:
         "image_url": restaurant_doc.get("image_url", ""), 
     }
 
+def get_meal_time_string() -> str:
+    """
+    Checks the current server time and returns 'breakfast', 'lunch', or 'dinner'.
+    
+    Time Windows:
+    - 05:00 to 11:59 -> breakfast
+    - 12:00 to 16:59 -> lunch
+    - 17:00 to 04:59 -> dinner (captures evening and late-night)
+    """
+    # Get the current server hour (0 to 23)
+    current_hour = datetime.now().hour
+
+    if 5 <= current_hour < 12:
+        return "breakfast"
+    elif 12 <= current_hour < 17:
+        return "lunch"
+    else:
+        return "dinner"

@@ -14,6 +14,12 @@ export interface RowConfig {
   restaurants: Restaurant[];
 }
 
+export interface CarouselData {
+  id: string;
+  title: string;
+  items: Restaurant[];
+}
+
 export interface User {
   user_id: string;
   name: string;
