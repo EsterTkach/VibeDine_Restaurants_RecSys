@@ -12,15 +12,20 @@ def get_filtered_restaurants_repo(
     offerings: list = None,
     min_rating: float = 0.0,
     min_reviews: int = 0,
+    latitude: float = None,
+    longitude: float = None,
+    radius_km: float = None,
 ) -> list:
     """
     Retrieves, scores, and ranks restaurants using an advanced MongoDB Aggregation Pipeline.
 
     This function operates in three distinct phases:
-    1. Quality Gateway ($match): Immediately drops any restaurants that do not meet
-       the `min_rating` or `min_reviews` thresholds. This protects frontend rendering
-       from low-quality results while remaining entirely optional (default 0) so as
-       not to blind Machine Learning models fetching broad candidate pools.
+    1. Quality & Geospatial Gateway ($match): Immediately filters out any restaurants 
+       that do not meet the `min_rating` or `min_reviews` thresholds. Additionally, 
+       if geospatial coordinates and a radius are provided, it performs a high-performance 
+       spherical radius filter using MongoDB's native `$geoWithin` operator. This protects 
+       frontend rendering from low-quality or irrelevant results while remaining entirely 
+       optional so as not to blind Machine Learning models fetching broad candidate pools.
     2. Tag Scoring ($addFields): Calculates a dynamic `match_score` for every surviving
        restaurant by calculating the intersection between the user's requested tags
        and the restaurant's actual tags using `$setIntersection`.
@@ -32,7 +37,7 @@ def get_filtered_restaurants_repo(
     Args:
         skip (int): Pagination offset. Defaults to 0.
         limit (int): Maximum number of top documents to return. Defaults to 50.
-        categories (list, optional): Exact-match category strings (e.g., ["Sushi", "Sushi restaurant"]).
+        categories (list, optional): Exact-match category strings (e.g., ["Sushi"]).
         accessibility (list, optional): Accessibility tags.
         service_options (list, optional): Service tags (e.g., ["Delivery", "Takeout"]).
         atmosphere (list, optional): Atmosphere tags (e.g., ["Cozy", "Casual"]).
@@ -41,6 +46,9 @@ def get_filtered_restaurants_repo(
         offerings (list, optional): Offering tags.
         min_rating (float, optional): The absolute minimum average rating required. Defaults to 0.0.
         min_reviews (int, optional): The absolute minimum number of reviews required. Defaults to 0.
+        latitude (float, optional): Target latitude for center of radius filter.
+        longitude (float, optional): Target longitude for center of radius filter.
+        radius_km (float, optional): Radius distance threshold in kilometers.
 
     Returns:
         list: A ranked and paginated list of restaurant dictionaries, containing
@@ -48,6 +56,19 @@ def get_filtered_restaurants_repo(
     """
     # 1. Build the base Match Query
     query = {}
+
+    # Apply Geospatial Radius Filter (requires GeoJSON format and a 2dsphere index)
+    if latitude is not None and longitude is not None and radius_km is not None:
+        # MongoDB $centerSphere expects the radius mapped in radians.
+        # Earth's equatorial radius is approximately 6378.1 kilometers.
+        radius_in_radians = radius_km / 6378.1
+        
+        # CRITICAL: MongoDB GeoJSON coordinates must be ordered as [longitude, latitude]
+        query["location"] = {
+            "$geoWithin": {
+                "$centerSphere": [[longitude, latitude], radius_in_radians]
+            }
+        }
 
     # Apply quality thresholds ONLY if they are explicitly requested
     if min_rating > 0:
@@ -87,7 +108,8 @@ def get_filtered_restaurants_repo(
         if field not in [
             "avg_rating",
             "num_of_reviews",
-        ]:  # Prevent projection duplication errors
+            "location",
+        ]:  # Prevent projection duplication or structural errors
             projection[field] = 1
 
     # 3. Build the Tag Scoring Math
@@ -146,7 +168,6 @@ def get_filtered_restaurants_repo(
         )
 
     return list(restaurants_collection.aggregate(pipeline))
-
 
 def build_online_likes_by_user(user_ids):
     """
