@@ -224,8 +224,6 @@ def get_popular_by_category(category: str, page: int = 1, per_page: int = 15):
     return [format_restaurant_for_frontend(r) for r in raw_restaurants]
 
 
-
-
 def get_user_augmented_likes(user_id):
     """
     Check if a user is cold-start based on their offline and online likes.

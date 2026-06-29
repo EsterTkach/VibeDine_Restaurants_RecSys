@@ -50,22 +50,6 @@
     0 8px 20px rgba(0,0,0,0.08);
 }
 
-.search-bar {
-  background: white;
-
-  border-radius: 18px;
-
-  margin: 16px 16px 24px 16px;
-  padding: 16px;
-
-  color: #999;
-
-  margin-bottom: 30px;
-
-  box-shadow:
-    0 8px 20px rgba(0,0,0,0.05);
-}
-
 section {
   margin-bottom: 34px;
 }
@@ -143,12 +127,12 @@ section h2 {
   margin-top: 6px;
 }
 
-/* Vibe Matcher Button */
 .search-bar {
-  background: white;
+  background: #8B6B4A;
   border-radius: 18px;
+  margin: 16px 16px 24px 16px;
   padding: 16px;
-  color: #8b6b4a;
+  color: #ffffff;
   margin-bottom: 30px;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
   cursor: pointer;
@@ -163,7 +147,7 @@ section h2 {
 .search-bar:hover {
   box-shadow: 0 12px 28px rgba(139, 107, 74, 0.15);
   transform: translateY(-2px);
-  background: #faf8f5;
+  background: #76583B;
 }
 
 .search-bar:active {
