@@ -6,7 +6,7 @@ def format_restaurant_for_frontend(restaurant_doc: dict) -> dict:
     cuisine = categories[0] if isinstance(categories, list) and len(categories) > 0 else "Restaurant"
 
     # Fallback price calculation just in case the real one is missing
-    price_tags = ["$", "$$", "$$$", "$$$$"]
+    price_tags = ["$", "$$", "$$$"]
     num_reviews = restaurant_doc.get("num_of_reviews", 10)
     price_idx = (num_reviews % 3) + 1 
 

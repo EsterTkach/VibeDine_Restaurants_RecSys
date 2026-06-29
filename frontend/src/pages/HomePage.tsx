@@ -7,7 +7,6 @@ import { useNavigate, useLocation } from "react-router-dom";
 import RestaurantRow from '../components/RestaurantRow';
 import type { Restaurant } from '../types';
 
-// CHANGED: Routing through our centralized services module
 import { restaurantService, userService } from "../api/services";
 
 // Keeping your static data import as an absolute fallback
@@ -60,49 +59,49 @@ export default function HomePage() {
   };
 
   // 1. BACKEND INTEGRATION EFFECT
-useEffect(() => {
-  async function fetchDashboardData() {
-    try {
-      setLoading(true);
-      
-      const [restaurantData, profileData] = await Promise.all([
-        restaurantService.getAll(),
-        userService.getProfile().catch(() => ({ name: username }))
-      ]);
+  useEffect(() => {
+    async function fetchDashboardData() {
+      try {
+        setLoading(true);
+        
+        const [restaurantData, profileData] = await Promise.all([
+          restaurantService.getAll(),
+          userService.getProfile().catch(() => ({ name: username }))
+        ]);
 
-      if (restaurantData && restaurantData.length > 0) {
-        // FIX: Safely transform ApiRecommendation[] into full UI-ready Restaurant[]
-        const formattedRestaurants: Restaurant[] = restaurantData.map((item: any) => ({
-          gmap_id: item.gmap_id,
-          name: item.name,
-          avg_rating: item.avg_rating ?? 4.0, // Fallback if missing
-          review_count: item.review_count ?? 0, // Fallback if missing
-          
-          // Provide structural fallbacks for fields the ML backend doesn't output
-          category: item.category ?? "Trending Spot", 
-          image_url: item.image_url ?? "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=500&auto=format&fit=crop&q=60", 
-          price_level: item.price_level ?? "$$",
-          is_open: item.is_open ?? true,
-        }));
+        if (restaurantData && restaurantData.length > 0) {
+          // FIX: Safely transform ApiRecommendation[] into full UI-ready Restaurant[]
+          const formattedRestaurants: Restaurant[] = restaurantData.map((item: any) => ({
+            gmap_id: item.gmap_id,
+            name: item.name,
+            avg_rating: item.avg_rating ?? 4.0, // Fallback if missing
+            review_count: item.review_count ?? 0, // Fallback if missing
+    
+            // Provide structural fallbacks for fields the ML backend doesn't output
+            category: item.category ?? "Trending Spot", 
+            image_url: item.image_url ?? "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=500&auto=format&fit=crop&q=60", 
+            price_level: item.price_level ?? "$$",
+            is_open: item.is_open ?? true,
+          }));
 
-        setLiveRestaurants(formattedRestaurants); // Now matches type constraints perfectly!
+          setLiveRestaurants(formattedRestaurants); // Now matches type constraints perfectly!
+        }
+
+        if (profileData && profileData.name) {
+          setUsername(profileData.name);
+          localStorage.setItem("username", profileData.name);
+        }
+
+      } catch (error) {
+        console.warn("Backend API offline or loading error. Using stable fallbacks...", error);
+        setLiveRestaurants([]);
+      } finally {
+        setLoading(false);
       }
-
-      if (profileData && profileData.name) {
-        setUsername(profileData.name);
-        localStorage.setItem("username", profileData.name);
-      }
-
-    } catch (error) {
-      console.warn("Backend API offline or loading error. Using stable fallbacks...", error);
-      setLiveRestaurants([]);
-    } finally {
-      setLoading(false);
     }
-  }
 
-  fetchDashboardData();
-}, []);
+    fetchDashboardData();
+  }, []);
 
   // 2. Vibe Matcher Navigation State Clearance Effect
   useEffect(() => {
@@ -151,9 +150,20 @@ useEffect(() => {
           </div>
         </div>
 
+        {/* Vibe Matcher Interactive Anchor Container */}
         <div className="search-bar" onClick={handleVibeMatchClick}>
-          <span className="search-icon">✨</span>
+          <span className="search-icon">🪄</span>
           <span className="search-text">Vibe Matcher</span>
+        </div>
+
+        {/* NEW: Plan With Friends button relocated from Profile Page */}
+        <div 
+          className="search-bar" 
+          onClick={() => navigate("/group")}
+          style={{ marginTop: "-10px" }}
+        >
+          <span className="search-icon">👥</span>
+          <span className="search-text">Plan With Friends</span>
         </div>
 
         <div 
@@ -162,7 +172,7 @@ useEffect(() => {
             display: 'flex',
             flexDirection: 'column',
             gap: '36px',
-            marginTop: '10px'
+            marginTop: '24px' // Tweaked layout gap spacing to accommodate the new button cleanly
           }}
         >
           <RestaurantRow 

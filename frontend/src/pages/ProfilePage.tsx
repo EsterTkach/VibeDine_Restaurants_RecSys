@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 
 import AppShell from "../layouts/AppShell";
 import BottomNav from "../components/BottomNav";
@@ -8,7 +7,6 @@ import { userService } from "../api/services";
 import "./ProfilePage.css";
 
 export default function ProfilePage() {
-  const navigate = useNavigate();
 
   // LIVE USER STATE (Defaults to "Mock User" for stability tracking)
   const [profileName, setProfileName] = useState<string>("Mock User");
@@ -104,13 +102,6 @@ export default function ProfilePage() {
             ))}
           </div>
         </div>
-
-        <button
-          className="group-btn"
-          onClick={() => navigate("/group")}
-        >
-          ✨ Plan With Friends
-        </button>
       </div>
 
       <BottomNav />
