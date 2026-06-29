@@ -26,42 +26,52 @@ from api.services.groups_service import (
     get_group_cb_recommendations_service,
 )
 
+from api.utils.utils import (
+    format_restaurant_for_frontend
+)
+
 router = APIRouter(
     prefix="/recommend",
     tags=["Recommendations"]
 )
 
 @router.get("/home-carousels")
-def get_home_carousels(top_k: int = 10):
+def get_home_carousels(user_id: str = "default_user", top_k: int = 10):
     """
-    Returns static, non-personalized carousels for the homepage separated by category.
+    Returns dynamically structured carousels for the homepage matching the frontend layout. Specific for a user.
     """
     return {
         "carousels": [
             {
-                "id": "popular_restaurants",
-                "title": "Popular Restaurants",
+                "id": "recommended_for_you",
+                "title": "Recommended For You",
+                "items": [format_restaurant_for_frontend(r) for r in get_hybrid_recommendations_for_user(user_id)]
+            },
+            {
+                "id": "popular_near_you",
+                "title": "Popular Near You",
                 "items": get_popular_restaurants(top_k=top_k)
             },
             {
-                "id": "popular_cafes",
-                "title": "Popular Cafes",
+                "id": "popular_at_this_hour",
+                "title": "Popular at this hour",
+                # TODO: Write a small utility to check the current hour on the server 
+                # and return specific meal categories (e.g., Breakfast/Dinner tags)
                 "items": get_popular_by_category(category="cafe", per_page=top_k)
             },
             {
-                "id": "popular_sushi",
-                "title": "Popular Sushi",
-                "items": get_popular_by_category(category="sushi", per_page=top_k)
+                "id": "you_might_like",
+                "title": "You might like",
+                # TODO: Connect this to your Content-Based Recommender (cb_recommender)
+                # base recommendations on items the user previously clicked or liked
+                "items": get_popular_restaurants(top_k=top_k)
             },
             {
-                "id": "popular_italian",
-                "title": "Popular Italian",
-                "items": get_popular_by_category(category="italian", per_page=top_k)
-            },
-            {
-                "id": "popular_dessert",
-                "title": "Popular Desserts",
-                "items": get_popular_by_category(category="dessert", per_page=top_k)
+                "id": "hidden_gems",
+                "title": "Hidden gems",
+                # TODO: Add a service layer function that queries MongoDB for:
+                # high overall rating (avg_rating >= 4.2) but low review count (num_of_reviews < 50)
+                "items": get_popular_restaurants(top_k=top_k)
             },
         ]
     }

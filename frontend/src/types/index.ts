@@ -1,15 +1,10 @@
 export interface Restaurant {
   gmap_id: string;
   name: string;
-  category: string;
+  cuisine: string;
   avg_rating: number;
-  review_count: number;
+  price_level: '$' | '$$' | '$$$';
   image_url: string;
-  price_level?: '$' | '$$' | '$$$';
-  service_options?: string[];
-  dining_options?: string[];
-  address?: string;
-  is_open?: boolean;
 }
 
 export interface RowConfig {
@@ -25,7 +20,6 @@ export interface User {
   username: string;
   password: string;
   avatar_url: string;
-  member_since: string;
   liked_restaurants: Restaurant[];
 }
 

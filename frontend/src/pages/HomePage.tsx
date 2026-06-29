@@ -78,7 +78,7 @@ export default function HomePage() {
             review_count: item.review_count ?? 0, // Fallback if missing
     
             // Provide structural fallbacks for fields the ML backend doesn't output
-            category: item.category ?? "Trending Spot", 
+            cuisine: item.category ?? "Trending Spot", 
             image_url: item.image_url ?? "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=500&auto=format&fit=crop&q=60", 
             price_level: item.price_level ?? "$$",
             is_open: item.is_open ?? true,

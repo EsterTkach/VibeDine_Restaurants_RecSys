@@ -1,23 +1,40 @@
+from api.db.mongo import (restaurants_collection)
+
 def format_restaurant_for_frontend(restaurant_doc: dict) -> dict:
-    """Maps database fields to match the frontend React keys precisely."""
-    
-    # Safe cuisine extraction
-    categories = restaurant_doc.get("category", ["Food"])
-    cuisine = categories[0] if isinstance(categories, list) and len(categories) > 0 else "Restaurant"
+    """
+    Maps database fields to match the strict frontend React Restaurant interface precisely.
+    If fields are missing, it uses gmap_id to look up and pull missing data from the database.
+    """
+    # 1. Extract the only strictly necessary field
+    gmap_id = restaurant_doc.get("gmap_id")
+    if not gmap_id:
+        raise ValueError("Missing 'gmap_id': This field is strictly required to process restaurant data.")
 
-    # Fallback price calculation just in case the real one is missing
-    price_tags = ["$", "$$", "$$$"]
-    num_reviews = restaurant_doc.get("num_of_reviews", 10)
-    price_idx = (num_reviews % 3) + 1 
+    # 2. Check if the doc is just a skeleton. If missing core info, query the full record.
+    # We check for 'name' as a proxy indicator for whether the doc has been fully hydrated yet.
+    if "name" not in restaurant_doc or not restaurant_doc.get("name"):
+        full_doc = restaurants_collection.find_one({"gmap_id": gmap_id})
+        if full_doc:
+            # Merge the found database record back into our working document
+            restaurant_doc = {**full_doc, **restaurant_doc}
 
+    # 3. Process Cuisine/Category field safely
+    categories = restaurant_doc.get("category", [])
+    if isinstance(categories, str):
+        cuisine_value = categories
+    else:
+        cuisine_value = categories[0] if isinstance(categories, list) and len(categories) > 0 else ""
+
+    # 4. Process Price Level field safely
+    real_price = restaurant_doc.get("price_level") or restaurant_doc.get("price") or ""
+
+    # 5. Return payload perfectly matched to your strict frontend interface keys
     return {
-        "id": restaurant_doc.get("gmap_id") or str(restaurant_doc.get("_id", "1")),
+        "gmap_id": str(gmap_id),
         "name": restaurant_doc.get("name", "Unknown Spot"),
-        "cuisine": cuisine,
-        "rating": restaurant_doc.get("avg_rating", 4.0),
-        # Prioritizes real data, falls back to the mock logic/links if missing
-        "price": restaurant_doc.get("price") or price_tags[price_idx],
-        "image": restaurant_doc.get("image_url") or "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4", 
+        "cuisine": cuisine_value,
+        "avg_rating": float(restaurant_doc.get("avg_rating", 0.0)),
+        "price_level": real_price,  
+        "image_url": restaurant_doc.get("image_url", ""), 
     }
-
 

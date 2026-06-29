@@ -94,13 +94,12 @@ def get_filtered_restaurants_repo(
 
     # 2. Build the Projection (Fields to return)
     projection = {
-        "_id": 1,
         "gmap_id": 1,
         "name": 1,
+        "cuisine": 1,
         "avg_rating": 1,
-        "num_of_reviews": 1,
-        "category": 1,
         "price": 1,
+        "image_url": 1
     }
 
     # Dynamically include any fields that were actively filtered
@@ -193,5 +192,29 @@ def build_online_likes_by_user(user_ids):
         online_likes_by_user[user_id] = user_doc.get("liked_restaurants", [])
 
     return online_likes_by_user
+
+def get_restaurant_by_gmap_id(gmap_id: str) -> dict:
+    """
+    Fetches the full restaurant document from the database using its gmap_id.
+    Raises an HTTPException if the restaurant cannot be found.
+    """
+    if not gmap_id:
+        raise ValueError("A valid gmap_id must be provided.")
+
+    restaurant_doc = restaurants_collection.find_one({"gmap_id": str(gmap_id)})
+        
+    return restaurant_doc or {}
+
+
+def get_user_by_id(user_id: str) -> dict:
+    """
+    Fetches the full user profile document from the database using their string user_id.
+    """
+    if not user_id:
+        raise ValueError("A valid user_id must be provided.")
+
+    user_doc = users_collection.find_one({"user_id": str(user_id)})
+    
+    return user_doc or {}
 
 
