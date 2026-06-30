@@ -48,8 +48,10 @@ def get_home_carousels(user_id: str = "default_user", top_k: int = 25):
     Returns dynamically structured carousels for the homepage matching the frontend layout. Specific for a user.
     """
     user_profile = get_user_by_id(user_id)
-    lat = user_profile.get("latitude")
-    long = user_profile.get("longitude")
+    user_location = user_profile.get("location", {})
+    coordinates = user_location.get("coordinates", [None, None])
+    long = coordinates[0]
+    lat = coordinates[1]
     candidate_gmap_ids_by_radius = extract_gmap_ids(get_filtered_restaurants_repo(latitude=float(lat), longitude=float(long)))
     candidate_gmap_ids_by_mealtime = extract_gmap_ids(get_filtered_restaurants_repo(dining_options=get_meal_time_string()))
     candidate_gmap_ids_by_hidden_gems = extract_gmap_ids(get_filtered_restaurants_repo(min_rating=4.5, max_reviews=30))
