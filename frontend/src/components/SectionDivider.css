@@ -1,0 +1,30 @@
+.section-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 24px 0;
+}
+
+.section-divider h2 {
+  margin: 0;
+  white-space: nowrap;
+
+  font-size: 18px;
+  font-weight: 600;
+  color: #6b4f3b;
+}
+
+.section-divider .line {
+  flex: 1;
+  height: 1px;
+  background: #d8c6b8;
+  border-radius: 999px;
+}
+
+.section-divider-line {
+  width: 100%;
+  height: 1px;
+  background: #d8c6b8;
+  border-radius: 999px;
+  margin: 24px 0;
+}

@@ -31,6 +31,28 @@
   justify-content: center;
 }
 
+.profile-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.profile-name {
+  margin-top: 14px;
+  margin-bottom: 4px;
+
+  font-size: 24px;
+  font-weight: 700;
+
+  color: #6b4f3b;
+}
+
+.profile-subtitle {
+  margin: 0;
+
+  font-size: 14px;
+  color: #a08c7a;
+}
+
 .profile-header h1 {
   margin-top: 16px;
 }
@@ -42,6 +64,57 @@
 .profile-section {
   margin-top: 40px;
 }
+
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 24px 0;
+}
+
+.section-header h2 {
+  margin: 0;
+  white-space: nowrap;
+
+  font-size: 18px;
+  font-weight: 600;
+  color: #6b4f3b;
+}
+
+.section-header .line {
+  flex: 1;
+  height: 1px;
+  background: #d8c6b8;
+  border-radius: 999px;
+}
+
+
+.empty-state {
+  /* padding: 10px 10px; */
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.empty-state h3 {
+  margin: 0;
+  color: #6b4f3b;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.empty-state p {
+  margin-top: 10px;
+  color: #9a8b80;
+  line-height: 1.5;
+  font-size: 16px;
+}
+
+
 
 .chips {
   display: flex;
@@ -60,8 +133,7 @@
 
   border-radius: 999px;
 
-  box-shadow:
-    0 6px 16px rgba(0,0,0,0.05);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
 }
 
 .group-btn {
@@ -89,7 +161,9 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 16px;
-  margin-top: 16px;
+  margin-top: 30px;  
+  margin-bottom: 50px;
+
 }
 
 .restaurant-favorite-card {
@@ -102,6 +176,9 @@
   position: relative;
   overflow: hidden;
   border: 2px solid transparent;
+  /* transition:
+    opacity 0.35s ease,
+    transform 0.35s ease; */
 }
 
 .restaurant-favorite-card::before {
@@ -116,11 +193,19 @@
 }
 
 .restaurant-favorite-card.liked::before {
-  background: linear-gradient(135deg, rgba(139, 107, 74, 0.05) 0%, rgba(214, 180, 138, 0.1) 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(139, 107, 74, 0.05) 0%,
+    rgba(214, 180, 138, 0.1) 100%
+  );
 }
 
 .restaurant-favorite-card.disliked::before {
-  background: linear-gradient(135deg, rgba(211, 47, 47, 0.05) 0%, rgba(229, 57, 53, 0.1) 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(211, 47, 47, 0.05) 0%,
+    rgba(229, 57, 53, 0.1) 100%
+  );
 }
 
 .restaurant-favorite-card:hover {
@@ -138,6 +223,52 @@
 
 .restaurant-favorite-card.disliked {
   border-color: rgba(211, 47, 47, 0.2);
+}
+
+.restaurant-favorite-card.removing {
+    opacity: 0;
+    transform: scale(.92);
+}
+
+
+
+
+.favorite-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+
+  border: none;
+  background: transparent;
+  padding: 0;
+
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.favorite-btn svg {
+  transition: transform 0.2s ease;
+}
+
+.favorite-btn:hover svg {
+  transform: scale(1.15);
+}
+
+
+.card-image {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.card-image img {
+  width: 70px;
+  height: 70px;
+  border-radius: 12px;
+  object-fit: cover;
 }
 
 .card-emoji {

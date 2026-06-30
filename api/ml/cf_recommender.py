@@ -2,7 +2,6 @@ from api.ml import config
 import pickle
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
-from collections import defaultdict
 from api.services.users_service import get_user_online_likes
 
 ### Load trained model
@@ -185,82 +184,6 @@ def recommend_for_user_cf(user_id, top_k=config.TOP_K, candidate_gmap_ids=None, 
 
     return recommendations
 
-
-def recommend_for_group_cf(user_ids, top_k=10, per_user_k=50, candidate_gmap_ids=None):
-    """
-    Generate recommendations for a group of users
-    using Collaborative Filtering.
-    """
-    
-    if not user_ids:
-        print("Group is empty")
-        return []
-
-    # Store recommendations collected from all users
-    restaurant_scores = defaultdict(
-        lambda: {
-            "name": None,
-            "score_sum": 0.0,
-            "count": 0,
-        }
-    )
-
-    if online_likes_by_user is None:
-        online_likes_by_user = {}
-        
-    # Generate CF recommendations for each user
-    for user_id in user_ids:
-
-        user_recs = recommend_for_user_cf(
-            user_id=user_id,
-            top_k=per_user_k,
-            candidate_gmap_ids=candidate_gmap_ids,
-            online_likes=online_likes_by_user.get(user_id, []),
-        )
-
-        # Collect restaurant scores
-        for rec in user_recs:
-            gmap_id = rec["gmap_id"]
-            restaurant_scores[gmap_id]["name"] = rec["name"]
-            restaurant_scores[gmap_id]["score_sum"] += rec["predicted_rating"]
-            restaurant_scores[gmap_id]["count"] += 1
-
-    # Build final group recommendations
-    group_recommendations = []
-    group_size = len(user_ids)
-
-    # Calculate final score for each restaurant
-    for gmap_id, data in restaurant_scores.items():
-
-        # Average predicted rating
-        avg_score = data["score_sum"] / data["count"]
-
-        # Percentage of group members that received this recommendation
-        coverage = data["count"] / group_size
-
-        # Final group ranking score
-        group_score = avg_score * coverage
-
-        # Save aggregated result
-        group_recommendations.append(
-            {
-                "gmap_id": gmap_id,
-                "name": data["name"],
-                "avg_predicted_rating": round(float(avg_score), 3),
-                "users_supported": data["count"],
-                "coverage": round(float(coverage), 3),
-                "group_score": round(float(group_score), 3),
-            }
-        )
-
-    # Sort recommendations by group score
-    group_recommendations.sort(
-        key=lambda x: x["group_score"],
-        reverse=True
-    )
-
-    # Return Top-K recommendations
-    return group_recommendations[:top_k]
 
 """
 def get_offline_likes(user_id, min_rating=config.MIN_RATING):
