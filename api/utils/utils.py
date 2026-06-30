@@ -19,8 +19,8 @@ def format_restaurant_for_frontend(restaurant_doc: dict) -> dict:
             # Merge the found database record back into our working document
             restaurant_doc = {**full_doc, **restaurant_doc}
 
-    # 3. Process Cuisine/Category field safely
-    categories = restaurant_doc.get("category", [])
+    # 3. Process Cuisine field safely
+    categories = restaurant_doc.get("cuisine", [])
     if isinstance(categories, str):
         cuisine_value = categories
     else:
@@ -35,7 +35,7 @@ def format_restaurant_for_frontend(restaurant_doc: dict) -> dict:
         "name": restaurant_doc.get("name", "Unknown Spot"),
         "cuisine": cuisine_value,
         "avg_rating": float(restaurant_doc.get("avg_rating", 0.0)),
-        "price_level": real_price,  
+        "price": real_price,  
         "image_url": restaurant_doc.get("image_url", ""), 
     }
 
@@ -57,3 +57,19 @@ def get_meal_time_string() -> str:
         return "lunch"
     else:
         return "dinner"
+
+def extract_gmap_ids(restaurants: list) -> list:
+    """
+    Extracts a clean list of gmap_id strings from a list of restaurant dictionaries.
+    
+    Args:
+        restaurants (list): The list of dicts returned by get_filtered_restaurants_repo.
+        
+    Returns:
+        list: A list of gmap_id strings ready for the recommendation engine.
+    """
+    if not restaurants:
+        return []
+        
+    # Standard list comprehension to grab the ID, with a safety check for the key
+    return [res["gmap_id"] for res in restaurants if "gmap_id" in res]

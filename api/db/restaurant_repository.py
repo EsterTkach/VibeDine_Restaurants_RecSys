@@ -61,7 +61,7 @@ def get_filtered_restaurants_repo(
     Returns:
         list: A ranked and paginated list of restaurant dictionaries, containing
               core fields cleanly projected for direct frontend integration including 
-              `gmap_id`, `name`, `cuisine`, `avg_rating`, `price_level`, and `image_url`.
+              `gmap_id`, `name`, `cuisine`, `avg_rating`, `price`, and `image_url`.
     """
     # 1. Build the base Match Query
     query = {}
@@ -105,7 +105,7 @@ def get_filtered_restaurants_repo(
     if offerings:
         query["offerings"] = {"$in": offerings}
 
-    # 2. Build the Projection matching your updated interface properties
+    # 2. Build the return projection
     projection = {
         "gmap_id": 1,
         "name": 1,

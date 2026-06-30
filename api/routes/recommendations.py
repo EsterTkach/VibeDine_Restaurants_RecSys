@@ -28,7 +28,8 @@ from api.services.groups_service import (
 
 from api.utils.utils import (
     format_restaurant_for_frontend,
-    get_meal_time_string
+    get_meal_time_string,
+    extract_gmap_ids
 )
 
 from api.db.restaurant_repository import (
@@ -49,9 +50,9 @@ def get_home_carousels(user_id: str = "default_user", top_k: int = 25):
     user_profile = get_user_by_id(user_id)
     lat = user_profile.get("latitude")
     long = user_profile.get("longitude")
-    candidate_gmap_ids_by_radius = get_filtered_restaurants_repo(latitude=float(lat), longitude=float(long))
-    candidate_gmap_ids_by_mealtime = get_filtered_restaurants_repo(dining_options=get_meal_time_string())
-    candidate_gmap_ids_by_hidden_gems = get_filtered_restaurants_repo(min_rating=4.5, max_reviews=30)
+    candidate_gmap_ids_by_radius = extract_gmap_ids(get_filtered_restaurants_repo(latitude=float(lat), longitude=float(long)))
+    candidate_gmap_ids_by_mealtime = extract_gmap_ids(get_filtered_restaurants_repo(dining_options=get_meal_time_string()))
+    candidate_gmap_ids_by_hidden_gems = extract_gmap_ids(get_filtered_restaurants_repo(min_rating=4.5, max_reviews=30))
 
     return {
         "carousels": [
