@@ -75,8 +75,6 @@ from api.ml.cb_recommender import compute_cb_scores, restaurants
 
 #     return recommendations
 
-
-"""fix: not done yet"""
 def get_user_onboarding_recommendations(user_id: str, top_k: int = 10, candidate_gmap_ids=None):
 
     pref = get_onboarding_preferences(user_id)
