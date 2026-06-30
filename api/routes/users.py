@@ -17,6 +17,8 @@ from api.schemas.user import (
     RestaurantInteractionRequest
 )
 
+from api.services.users_service import (get_user_online_liked_restaurants,)
+
 router = APIRouter(
     prefix="/users",
     tags=["Users"]
@@ -192,7 +194,7 @@ def unlike_restaurant(
 ):
     user_id = request.user_id
 
-    user_interactions_collection.update_one(
+    users_collection.update_one(
         {
             "user_id":
             user_id
@@ -280,3 +282,14 @@ def record_restaurant_view(
         restaurant_id,
     }
 
+
+@router.get("/{user_id}/restaurants/liked")
+def get_liked_restaurants(user_id: str):
+    print('user_id: ', user_id)
+    liked_restaurants = get_user_online_liked_restaurants(user_id)
+    print('liked_restaurants: ', liked_restaurants)
+
+    return {
+        "user_id": user_id,
+        "liked_restaurants": liked_restaurants
+    }

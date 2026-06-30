@@ -1,31 +1,58 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { Heart } from "lucide-react";
 
 import AppShell from "../layouts/AppShell";
 import BottomNav from "../components/BottomNav";
 import { userService } from "../api/services";
+import { useAuth } from "../contexts/AuthContext";
 
 import "./ProfilePage.css";
+import SectionDivider from "../components/SectionDivider";
+import FoodAvatar from "../components/FoodAvatar";
 
 export default function ProfilePage() {
   const navigate = useNavigate();
+  const { username } = useAuth();
 
   // LIVE USER STATE (Defaults to "Mock User" for stability tracking)
-  const [profileName, setProfileName] = useState<string>("Mock User");
+  const [profileName, setProfileName] = useState<string>(
+    username || "Mock User",
+  );
   const [loading, setLoading] = useState<boolean>(true);
 
-  // Mock data for liked restaurants
-  const likedRestaurants = [
-    { id: 1, name: "McDonald's", emoji: "🍔" },
-    { id: 2, name: "Sushi Palace", emoji: "🍱" },
-    { id: 3, name: "Pasta Perfetto", emoji: "🍝" },
-  ];
+  type Restaurant = {
+    gmap_id: string;
+    name: string;
+    image_url: string;
+  };
 
-  // Mock data for disliked restaurants
-  const dislikedRestaurants = [
-    { id: 1, name: "Burgeranch", emoji: "🍔" },
-    { id: 2, name: "Mystery Eats", emoji: "❓" },
-  ];
+  const [likedRestaurants, setLikedRestaurants] = useState<Restaurant[]>([]);
+  const [removingRestaurantIds, setRemovingRestaurantIds] = useState<string[]>(
+    [],
+  );
+
+  useEffect(() => {
+    async function fetchLikedRestaurants() {
+      try {
+        const userId = "112238780620382660297"; // זמני hardcoded לבדיקה  TODO
+
+        const data = await userService.getLikedRestaurants(userId);
+        setLikedRestaurants(data.liked_restaurants);
+        console.log("data.liked_restaurants :", data.liked_restaurants);
+      } catch (error) {
+        console.error("Failed to fetch liked restaurants", error);
+      }
+    }
+
+    fetchLikedRestaurants();
+  }, []);
+
+  useEffect(() => {
+    if (username) {
+      setProfileName(username);
+    }
+  }, [username]);
 
   // Fetch Profile Data on mount
   useEffect(() => {
@@ -35,10 +62,15 @@ export default function ProfilePage() {
         const userData = await userService.getProfile();
         if (userData && userData.name) {
           setProfileName(userData.name);
+        } else if (username) {
+          setProfileName(username);
         }
       } catch (error) {
-        console.error("Backend offline. Profile page defaulting to stability Mock User.", error);
-        setProfileName("Mock User");
+        console.error(
+          "Backend offline. Profile page defaulting to stability Mock User.",
+          error,
+        );
+        setProfileName(username || "Mock User");
       } finally {
         setLoading(false);
       }
@@ -47,70 +79,93 @@ export default function ProfilePage() {
     fetchUserData();
   }, []);
 
-  // Compute first letter of the name dynamically for the avatar icon
-  const avatarLetter = profileName.trim().charAt(0).toUpperCase() || "M";
+  const handleUnlike = async (restaurantId: string) => {
+    setRemovingRestaurantIds((prev) => [...prev, restaurantId]);
+
+    try {
+      const userId = "112238780620382660297";
+
+      await userService.unlikeRestaurant(userId, restaurantId);
+
+      setTimeout(() => {
+        setLikedRestaurants((prev) =>
+          prev.filter((r) => r.gmap_id !== restaurantId),
+        );
+
+        setRemovingRestaurantIds((prev) =>
+          prev.filter((id) => id !== restaurantId),
+        );
+      }, 300);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  console.log("profileName :", profileName);
 
   return (
     <AppShell>
       <div className="profile-page">
         <div className="profile-header">
           <div className="profile-avatar-big">
-            {loading ? "⏳" : avatarLetter}
+            {/* {loading ? "⏳" : avatarLetter} */}
+            <FoodAvatar userId={username} size={110} />
           </div>
-
-          <h1>{profileName}</h1>
-          <p>Food Enthusiast 🍣</p>
-        </div>
-
-        <div className="profile-section">
-          <h2>Favorite Cuisines</h2>
-          <div className="chips">
-            <span>🍣 Sushi</span>
-            <span>🍷 Italian</span>
-            <span>🥐 Brunch</span>
-          </div>
+          <h1 className="profile-name">{profileName}</h1>
+          <p className="profile-subtitle">Food Explorer</p>{" "}
         </div>
 
         {/* Restaurants You Love Section */}
         <div className="profile-section">
-          <h2>❤️ Restaurants You Love</h2>
-          <div className="restaurant-cards-grid">
-            {likedRestaurants.map((restaurant) => (
-              <div key={restaurant.id} className="restaurant-favorite-card liked">
-                <div className="card-emoji">{restaurant.emoji}</div>
-                {/* Visual helper: Appends [Mock] label if we are in stability state */}
-                <div className="card-name">
-                  {profileName === "Mock User" ? `[Mock] ${restaurant.name}` : restaurant.name}
-                </div>
-                <div className="card-badge">Loved</div>
-              </div>
-            ))}
-          </div>
+          <SectionDivider text="Restaurants You Love" />
+          {/* <Heart size={18} fill="#ef4444" color="#ef4444" /> */}{" "}
+          {likedRestaurants.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-icon">🍽️</div>
+
+              <h3>No favorite restaurants yet</h3>
+
+              <p>
+                Start exploring and tap the ❤️
+                <br />
+                to save places you love!
+              </p>
+            </div>
+          ) : (
+            <div className="restaurant-cards-grid">
+              {likedRestaurants.map((restaurant) => {
+                const removing = removingRestaurantIds.includes(
+                  restaurant.gmap_id,
+                );
+                return (
+                  <div
+                    key={restaurant.gmap_id}
+                    className={`restaurant-favorite-card ${
+                      removing ? "removing" : ""
+                    }`}
+                  >
+                    <button
+                      className="favorite-btn"
+                      onClick={() => handleUnlike(restaurant.gmap_id)}
+                    >
+                      <Heart
+                        size={22}
+                        color={removing ? "#9ca3af" : "#ef4444"}
+                        fill={removing ? "none" : "#ef4444"}
+                      />{" "}
+                    </button>
+                    <div className="card-image">
+                      <img src={restaurant.image_url} alt={restaurant.name} />
+                    </div>
+                    <div className="card-name">{restaurant.name}</div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
-        {/* Restaurants You Disliked Section */}
-        <div className="profile-section">
-          <h2>👎 Restaurants You Disliked</h2>
-          <div className="restaurant-cards-grid">
-            {dislikedRestaurants.map((restaurant) => (
-              <div key={restaurant.id} className="restaurant-favorite-card disliked">
-                <div className="card-emoji">{restaurant.emoji}</div>
-                {/* Visual helper: Appends [Mock] label if we are in stability state */}
-                <div className="card-name">
-                  {profileName === "Mock User" ? `[Mock] ${restaurant.name}` : restaurant.name}
-                </div>
-                <div className="card-badge">Disliked</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <button
-          className="group-btn"
-          onClick={() => navigate("/group")}
-        >
-          ✨ Plan With Friends
-        </button>
+        <SectionDivider />
       </div>
 
       <BottomNav />
