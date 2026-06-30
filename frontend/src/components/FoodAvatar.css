@@ -1,0 +1,16 @@
+.food-avatar {
+  border-radius: 50%;
+  background: #fff4ec;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid #f2d2bd;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.14);
+  overflow: hidden;
+}
+
+.food-avatar img {
+  width: 78%;
+  height: 78%;
+  object-fit: contain;
+}

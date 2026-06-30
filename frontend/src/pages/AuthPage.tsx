@@ -5,11 +5,12 @@ import AppShell from "../layouts/AppShell";
 import { useNavigate } from "react-router-dom";
 import { demoUsers } from "../data/demoUsers";
 import { authService } from "../api/services";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function AuthPage() {
   const navigate = useNavigate();
   
-  const [username, setUsername] = useState("");
+  const {username, setUsername} = useAuth();
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
