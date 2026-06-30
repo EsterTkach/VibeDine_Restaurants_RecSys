@@ -51,11 +51,11 @@ def signup(
     users_collection.insert_one(
         user
     )
+    print("Inserted user:", user)
 
     return {
         "message":
         "User created",
-
         "user_id":
         user["user_id"],
         "username":
@@ -67,6 +67,8 @@ def login(
     request:
     UserLoginRequest
 ):
+    print("Username:", request.username)
+    print("Password:", request.password)
 
     user = users_collection.find_one(
         {
@@ -77,6 +79,7 @@ def login(
             request.password,
         }
     )
+    print("User found:", user)
 
     if not user:
         raise HTTPException(

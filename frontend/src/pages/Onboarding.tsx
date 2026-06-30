@@ -13,7 +13,7 @@ const DIETARY_OPTIONS = ["Gluten Free", "Vegetarian", "Vegan", "None"];
 export default function Onboarding() {
   const navigate = useNavigate();
   // Safe fallbacks to local mock attributes if user lands here without a real login session
-  const userId = localStorage.getItem("userId") || "mock_user_123";
+  const userId = localStorage.getItem("user_id");
   const username = localStorage.getItem("username") || "Mock User";
 
   // Multi-select for cuisines and vibes
@@ -37,7 +37,7 @@ export default function Onboarding() {
 
   const handleComplete = async () => {
     if (!userId) {
-      console.error("User is not logged in.");
+      navigate("/login", { replace: true });
       return;
     }
     

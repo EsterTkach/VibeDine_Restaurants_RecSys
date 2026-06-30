@@ -13,7 +13,7 @@ import FoodAvatar from "../components/FoodAvatar";
 
 export default function ProfilePage() {
   const navigate = useNavigate();
-  const { username } = useAuth();
+  const { username, userId } = useAuth();
 
   // LIVE USER STATE (Defaults to "Mock User" for stability tracking)
   const [profileName, setProfileName] = useState<string>(
@@ -56,34 +56,13 @@ export default function ProfilePage() {
 
   // Fetch Profile Data on mount
   useEffect(() => {
-    async function fetchUserData() {
-      try {
-        setLoading(true);
-        const userData = await userService.getProfile();
-        if (userData && userData.name) {
-          setProfileName(userData.name);
-        } else if (username) {
-          setProfileName(username);
-        }
-      } catch (error) {
-        console.error(
-          "Backend offline. Profile page defaulting to stability Mock User.",
-          error,
-        );
-        setProfileName(username || "Mock User");
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchUserData();
-  }, []);
+    setProfileName(username || "User");
+  }, [username]);
 
   const handleUnlike = async (restaurantId: string) => {
     setRemovingRestaurantIds((prev) => [...prev, restaurantId]);
 
     try {
-      const userId = "112238780620382660297";
 
       await userService.unlikeRestaurant(userId, restaurantId);
 

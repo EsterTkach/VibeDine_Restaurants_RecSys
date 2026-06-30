@@ -6,9 +6,11 @@ import ComingSoonModal from "../components/ComingSoonModal";
 import { useNavigate, useLocation } from "react-router-dom";
 import RestaurantRow from '../components/RestaurantRow';
 import type { CarouselData } from '../types';
+import { getHomeCarousels } from "../api/restaurants";
 
-import { userService } from "../api/services";
 import "./HomePage.css";
+
+import { useAuth } from "../contexts/AuthContext";
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -17,9 +19,8 @@ export default function HomePage() {
   const [showComingSoon, setShowComingSoon] = useState(false);
 
   // LIVE DATA STATES
-  const [username, setUsername] = useState<string>(
-    localStorage.getItem("username") || location.state?.username || "User"
-  );
+  
+  const { username } = useAuth();
   const [carousels, setCarousels] = useState<CarouselData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   
@@ -57,32 +58,18 @@ export default function HomePage() {
 
   // BACKEND INTEGRATION EFFECT
   useEffect(() => {
+    console.log("Home useEffect started");
     async function fetchDashboardData() {
       try {
         setLoading(true);
         setErrorMessage(null); // Reset previous errors on reload
         
         const currentUserId = localStorage.getItem("user_id") || "default_user";
-
-        const [carouselRes, profileData] = await Promise.all([
-          fetch(`/home-carousels?user_id=${currentUserId}&top_k=25`),
-          userService.getProfile().catch(() => ({ name: username }))
-        ]);
-
-        if (carouselRes.ok) {
-          const data = await carouselRes.json();
-          setCarousels(data.carousels || []);
-        } else {
-          // Captures 404s or 500s directly from server response
-          setErrorMessage(`Failed to load feed rows (${carouselRes.status}). Please check server routing configuration.`);
+        const data = await getHomeCarousels(currentUserId);
+        setCarousels(data.carousels || []);
         }
 
-        if (profileData && profileData.name) {
-          setUsername(profileData.name);
-          localStorage.setItem("username", profileData.name);
-        }
-
-      } catch (error) {
+        catch (error) {
         console.error("Layout API network connection failure:", error);
         setErrorMessage("Unable to connect to the recommendations server. Please verify your backend is running.");
       } finally {
