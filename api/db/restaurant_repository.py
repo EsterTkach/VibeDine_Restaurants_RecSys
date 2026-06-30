@@ -10,6 +10,7 @@ def get_filtered_restaurants_repo(
     dining_options: list = None,
     crowd: list = None,
     offerings: list = None,
+    dietary_restrictions: list = None,
     min_rating: float = 0.0,
     min_reviews: int = 0,
     max_reviews: int = None,
@@ -50,6 +51,7 @@ def get_filtered_restaurants_repo(
         dining_options (list, optional): Dining tags.
         crowd (list, optional): Crowd tags.
         offerings (list, optional): Offering tags.
+        dietary_restrictions (list, optional): Dietary restriction tags (e.g., ["Halal", "Vegan"]).
         min_rating (float, optional): The absolute minimum average rating required. Defaults to 0.0.
         min_reviews (int, optional): The absolute minimum number of reviews required. Defaults to 0.
         max_reviews (int, optional): The absolute maximum number of reviews permitted. Useful for 
@@ -104,6 +106,8 @@ def get_filtered_restaurants_repo(
         query["crowd"] = {"$in": crowd}
     if offerings:
         query["offerings"] = {"$in": offerings}
+    if dietary_restrictions:
+        query["dietary_restrictions"] = {"$in": dietary_restrictions}
 
     # 2. Build the return projection
     projection = {
@@ -151,6 +155,8 @@ def get_filtered_restaurants_repo(
         score_components.append(add_intersection("crowd", crowd))
     if offerings:
         score_components.append(add_intersection("offerings", offerings))
+    if dietary_restrictions:
+        score_components.append(add_intersection("dietary_restrictions", dietary_restrictions))
 
     # 4. Construct the Aggregation Pipeline
     pipeline = [{"$match": query}]
