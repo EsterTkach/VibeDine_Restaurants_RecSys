@@ -1,15 +1,10 @@
 export interface Restaurant {
   gmap_id: string;
   name: string;
-  category: string;
+  cuisine: string;
   avg_rating: number;
-  review_count: number;
+  price_level: '$' | '$$' | '$$$';
   image_url: string;
-  price_level?: '$' | '$$' | '$$$' | '$$$$';
-  service_options?: string[];
-  dining_options?: string[];
-  address?: string;
-  is_open?: boolean;
 }
 
 export interface RowConfig {
@@ -19,13 +14,18 @@ export interface RowConfig {
   restaurants: Restaurant[];
 }
 
+export interface CarouselData {
+  id: string;
+  title: string;
+  items: Restaurant[];
+}
+
 export interface User {
   user_id: string;
+  name: string;
   username: string;
-  email?: string;
-  avatar_url?: string;
-  member_since?: string;
-  review_count: number;
+  password: string;
+  avatar_url: string;
   liked_restaurants: Restaurant[];
 }
 
@@ -50,7 +50,7 @@ export type PreferenceOption =
   | "distance" 
   | "dineOption";
 
-export type BudgetOption = "$" | "$$" | "$$$" | "$$$$";
+export type BudgetOption = "$" | "$$" | "$$$";
 export type DistanceOption = "Walking Distance" | "Up to 15 Minutes" | "Up to 30 Minutes" | "Anywhere";
 export type AccessibilityOption = "Required" | "Not Required";
 export type DietaryOption = "None" | "Vegetarian" | "Vegan" | "Gluten Free";

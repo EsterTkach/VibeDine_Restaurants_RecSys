@@ -1,9 +1,6 @@
 import apiClient from './client';
 import type { ApiRecommendationResponse } from '../types';
 
-// Set to true to use mock data, false to call the real backend
-export const USE_MOCK = true;
-
 export async function getUserRecommendations(userId: string, topK = 10): Promise<ApiRecommendationResponse> {
   const response = await apiClient.get<ApiRecommendationResponse>(`/recommend/cf/${userId}`, {
     params: { top_k: topK },

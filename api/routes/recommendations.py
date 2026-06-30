@@ -25,42 +25,60 @@ from api.services.groups_service import (
     get_hybrid_recommendations_for_group,
 )
 
+from api.utils.utils import (
+    format_restaurant_for_frontend,
+    get_meal_time_string,
+    extract_gmap_ids
+)
+
+from api.db.restaurant_repository import (
+    get_filtered_restaurants_repo,
+    get_user_by_id
+)
+
 router = APIRouter(
     prefix="/recommend",
     tags=["Recommendations"]
 )
 
 @router.get("/home-carousels")
-def get_home_carousels(top_k: int = 10):
+def get_home_carousels(user_id: str = "default_user", top_k: int = 25):
     """
-    Returns static, non-personalized carousels for the homepage separated by category.
+    Returns dynamically structured carousels for the homepage matching the frontend layout. Specific for a user.
     """
+    user_profile = get_user_by_id(user_id)
+    lat = user_profile.get("latitude")
+    long = user_profile.get("longitude")
+    candidate_gmap_ids_by_radius = extract_gmap_ids(get_filtered_restaurants_repo(latitude=float(lat), longitude=float(long)))
+    candidate_gmap_ids_by_mealtime = extract_gmap_ids(get_filtered_restaurants_repo(dining_options=get_meal_time_string()))
+    candidate_gmap_ids_by_hidden_gems = extract_gmap_ids(get_filtered_restaurants_repo(min_rating=4.5, max_reviews=30))
+
     return {
         "carousels": [
             {
-                "id": "popular_restaurants",
-                "title": "Popular Restaurants",
-                "items": get_popular_restaurants(top_k=top_k)
+                "id": "recommended_for_you",
+                "title": "Recommended For You",
+                "items": [format_restaurant_for_frontend(r) for r in get_hybrid_recommendations_for_user(user_id)]
             },
             {
-                "id": "popular_cafes",
-                "title": "Popular Cafes",
-                "items": get_popular_by_category(category="cafe", per_page=top_k)
+                "id": "popular_near_you",
+                "title": "Popular Near You",
+                "items": [format_restaurant_for_frontend(r) for r in get_hybrid_recommendations_for_user(user_id, top_k=top_k, candidate_gmap_ids=candidate_gmap_ids_by_radius)]
             },
             {
-                "id": "popular_sushi",
-                "title": "Popular Sushi",
-                "items": get_popular_by_category(category="sushi", per_page=top_k)
+                "id": "popular_at_this_hour",
+                "title": "Popular at this hour",
+                "items": [format_restaurant_for_frontend(r) for r in get_hybrid_recommendations_for_user(user_id, top_k=top_k, candidate_gmap_ids=candidate_gmap_ids_by_mealtime)]
             },
             {
-                "id": "popular_italian",
-                "title": "Popular Italian",
-                "items": get_popular_by_category(category="italian", per_page=top_k)
+                "id": "you_might_like",
+                "title": "You might like",
+                "items": [format_restaurant_for_frontend(r) for r in get_hybrid_recommendations_for_user(user_id, top_k= 2*top_k)[top_k:]]
             },
             {
-                "id": "popular_dessert",
-                "title": "Popular Desserts",
-                "items": get_popular_by_category(category="dessert", per_page=top_k)
+                "id": "hidden_gems",
+                "title": "Hidden gems",
+                "items": [format_restaurant_for_frontend(r) for r in get_hybrid_recommendations_for_user(user_id, top_k=top_k, candidate_gmap_ids=candidate_gmap_ids_by_hidden_gems)]
             },
         ]
     }
