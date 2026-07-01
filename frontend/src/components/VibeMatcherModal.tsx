@@ -12,7 +12,7 @@ import "./VibeMatcherModal.css";
 interface VibeMatcherModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: () => void;
+  onSubmit: (filters: any) => void;
 }
 
 export default function VibeMatcherModal({
@@ -33,7 +33,7 @@ export default function VibeMatcherModal({
   const [dietaryOption, setDietaryOption] = useState<DietaryOption | null>(null);
   const [dineOption, setDineOption] = useState<DineOption | null>(null);
 
-  const budgetOptions: BudgetOption[] = ["$", "$$", "$$$", "$$$$"];
+  const budgetOptions: BudgetOption[] = ["$", "$$", "$$$"];
   const distanceOptions: DistanceOption[] = [
     "Walking Distance",
     "Up to 15 Minutes",
@@ -211,7 +211,16 @@ export default function VibeMatcherModal({
         <div className="vibe-modal-footer">
           <button
             className="vibe-match-btn"
-            onClick={onSubmit}
+            onClick={() =>
+              onSubmit({
+              categories: selectedCategories,
+              budget: budgetOption,
+              distance: distanceOption,
+              accessibility: accessibilityOption,
+              dietary: dietaryOption,
+              dineOption: dineOption,
+            })
+          }
             disabled={!hasAnySelection}
           >
             Vibe Match Me ✨

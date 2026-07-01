@@ -17,6 +17,7 @@ def get_filtered_restaurants_repo(
     latitude: float = None,
     longitude: float = None,
     radius_km: float = 15,
+    price: str = None,
 ) -> list:
     """
     Retrieves, scores, and ranks restaurants using an advanced MongoDB Aggregation Pipeline.
@@ -107,6 +108,9 @@ def get_filtered_restaurants_repo(
         
     if review_conditions:
         query["num_of_reviews"] = review_conditions
+
+    if price:
+        query["price"] = price
 
     # Apply flexible $in filters
     if categories:

@@ -44,7 +44,6 @@ export async function login(username: string, password: string): Promise<{ messa
   return response.data;
 }
 
-
 export async function getHomeCarousels(userId: string, topK = 25) {
   const response = await apiClient.get("/recommend/home-carousels", {
     params: {
@@ -52,6 +51,18 @@ export async function getHomeCarousels(userId: string, topK = 25) {
       top_k: topK,
     },
   });
+  
+  return response.data;
+}
 
+export async function getVibeMatchRecommendations(
+  userId: string,
+  filters: any
+) {
+  const response = await apiClient.post(
+    `/recommend/vibe-match/${userId}`,
+    filters
+  );
+  
   return response.data;
 }
