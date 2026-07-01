@@ -1,6 +1,10 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 
+import {
+  submitGroupSessionFeedback,
+  type GroupRecommendation,
+} from "../api/restaurants";
 import AppShell from "../layouts/AppShell";
 
 import "./GroupResultPage.css";
@@ -14,8 +18,23 @@ export default function GroupResultPage() {
 
   const selectedFriends =
     location.state?.selectedFriends || [];
+  const sessionId = location.state?.groupSessionId || "";
+  const currentUserId =
+    location.state?.currentUserId || "default_user_id";
+  const currentUserName =
+    location.state?.currentUserName || "You";
+  const friendUserIdsByName =
+    location.state?.friendUserIdsByName || {};
+
+  const [currentRecommendation, setCurrentRecommendation] =
+    useState<GroupRecommendation | null>(
+      location.state?.recommendation || null
+    );
 
   const [showModal, setShowModal] = useState(false);
+  const [isSubmittingFeedback, setIsSubmittingFeedback] =
+    useState(false);
+  const [feedbackError, setFeedbackError] = useState("");
 
   const [
     selectedFriendsAffected,
@@ -43,20 +62,52 @@ export default function GroupResultPage() {
   const [selectedReason, setSelectedReason] =
     useState("");
 
-  const handleSubmitFeedback = () => {
-    setShowBanner(true);
+  const affectedOptions = [
+    {
+      label: `You (${currentUserName})`,
+      userId: currentUserId,
+    },
+    ...selectedFriends.map((friend: string) => ({
+      label: friend,
+      userId: friendUserIdsByName[friend],
+    })),
+  ];
 
-    setTimeout(() => {
+  const handleSubmitFeedback = async () => {
+    if (!sessionId || !currentRecommendation) {
+      setFeedbackError("Missing group session. Please start again.");
+      return;
+    }
 
-      navigate("/loading", {
-        state: {
-          selectedFriends,
-          nextPage: "/group-result",
-        },
-      });
+    setIsSubmittingFeedback(true);
+    setFeedbackError("");
 
-    }, 2500);
+    try {
+      const affectedUserIds = affectedOptions
+        .filter((option) =>
+          selectedFriendsAffected.includes(option.label)
+        )
+        .map((option) => option.userId)
+        .filter((userId): userId is string => Boolean(userId));
 
+      const response = await submitGroupSessionFeedback(
+        sessionId,
+        currentRecommendation.gmap_id,
+        affectedUserIds,
+        selectedReason
+      );
+
+      setCurrentRecommendation(response.recommendation);
+      setSelectedFriendsAffected([]);
+      setSelectedReason("");
+      setShowModal(false);
+      setShowBanner(true);
+      setTimeout(() => setShowBanner(false), 1800);
+    } catch (err) {
+      setFeedbackError("Could not find a better match. Please try again.");
+    } finally {
+      setIsSubmittingFeedback(false);
+    }
   };
 
   return (
@@ -64,7 +115,7 @@ export default function GroupResultPage() {
       <div className="group-result-page">
         {showBanner && (
           <div className="working-banner">
-            🚀 We're working on it
+            Updated the group recommendation
           </div>
         )}
         {showModal && (
@@ -85,23 +136,20 @@ export default function GroupResultPage() {
 
                 <h4>Who is affected?</h4>
 
-                {[
-                  "You (Aya Rotbart)",
-                  ...selectedFriends,
-                ].map((friend) => (
+                {affectedOptions.map((option) => (
 
                   <button
-                    key={friend}
+                    key={option.label}
                     className={
-                      selectedFriendsAffected.includes(friend)
+                      selectedFriendsAffected.includes(option.label)
                         ? "feedback-option active"
                         : "feedback-option"
                     }
                     onClick={() =>
-                      toggleAffectedFriend(friend)
+                      toggleAffectedFriend(option.label)
                     }
                   >
-                    {friend}
+                    {option.label}
                   </button>
 
                 ))}
@@ -114,7 +162,6 @@ export default function GroupResultPage() {
 
                 {[
                   "Doesn't like this restaurant",
-                  "We visited recently",
                   "Too expensive",
                   "Too far away",
                   "Other",
@@ -142,12 +189,19 @@ export default function GroupResultPage() {
                 className="reserve-btn"
                 disabled={
                   !selectedFriendsAffected.length ||
-                  !selectedReason
+                  !selectedReason ||
+                  isSubmittingFeedback
                 }
                 onClick={handleSubmitFeedback}
               >
-                Find A Better Match →
+                {isSubmittingFeedback ? "Finding..." : "Find A Better Match →"}
               </button>
+
+              {feedbackError && (
+                <p className="feedback-error">
+                  {feedbackError}
+                </p>
+              )}
 
               <button
                 className="close-feedback"
@@ -176,12 +230,14 @@ export default function GroupResultPage() {
             Top Group Recommendation
           </span>
 
-          <h1>Nobu</h1>
+          <h1>
+            {currentRecommendation?.name || "No match found"}
+          </h1>
 
           <p>
-            Recommended from collaborative
-            preference patterns across
-            the selected group.
+            {currentRecommendation
+              ? "Recommended from collaborative preference patterns across the selected group."
+              : "Try changing the group or starting a fresh session."}
           </p>
 
           <div className="member-list">
@@ -192,7 +248,7 @@ export default function GroupResultPage() {
             </h3>
 
             <span>
-              You (Aya Rotbart)
+              You ({currentUserName})
             </span>
 
             {selectedFriends.map(
@@ -211,6 +267,7 @@ export default function GroupResultPage() {
 
           <button
             className="reject-btn"
+            disabled={!currentRecommendation || !sessionId}
             onClick={() =>
               setShowModal(true)
             }

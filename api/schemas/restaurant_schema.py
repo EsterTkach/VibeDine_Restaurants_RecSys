@@ -11,3 +11,7 @@ class FilterRequest(BaseModel):
     offerings: list[str] | None = None
     min_rating: float = 0.0
     min_reviews: int = 0
+    max_price: str | None = None
+    latitude: float | None = None
+    longitude: float | None = None
+    radius_km: float | None = None

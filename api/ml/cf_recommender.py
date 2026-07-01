@@ -215,7 +215,7 @@ def get_popular_restaurants(top_k=config.TOP_K, candidate_gmap_ids=None):
     # Rank restaurants by popularity
     ranked_indices = popularity_scores.argsort()[::-1]
 
-    candidate_set = set(candidate_gmap_ids) if candidate_gmap_ids else None
+    candidate_set = set(candidate_gmap_ids) if candidate_gmap_ids is not None else None
 
     recommendations = []
 

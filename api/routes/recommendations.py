@@ -44,6 +44,71 @@ router = APIRouter(
 )
 
 
+def _dedupe_recommendations(recommendations):
+    seen = set()
+    unique = []
+
+    for recommendation in recommendations:
+        gmap_id = recommendation.get("gmap_id")
+        if not gmap_id or gmap_id in seen:
+            continue
+
+        seen.add(gmap_id)
+        unique.append(recommendation)
+
+    return unique
+
+
+def _with_fallbacks(primary, fallback, ultimate_fallback, top_k):
+    recommendations = primary or fallback or ultimate_fallback or []
+    return _dedupe_recommendations(recommendations)[:top_k]
+
+
+def _get_nearby_candidate_gmap_ids(coordinates):
+    if (
+        not coordinates
+        or len(coordinates) != 2
+        or coordinates[0] is None
+        or coordinates[1] is None
+    ):
+        return None
+
+    long = float(coordinates[0])
+    lat = float(coordinates[1])
+
+    for radius_km in [15, 30, 50, 100]:
+        candidates = extract_gmap_ids(
+            get_filtered_restaurants_repo(
+                latitude=lat,
+                longitude=long,
+                radius_km=radius_km,
+                limit=250,
+            )
+        )
+
+        if candidates:
+            print(f"Near You candidates={len(candidates)} radius_km={radius_km}")
+            return candidates
+
+    print("Near You candidates=0 after radius expansion")
+    return []
+
+
+def _get_mealtime_candidate_gmap_ids():
+    meal_time = get_meal_time_string()
+    dining_options = list({meal_time, meal_time.title()})
+
+    candidates = extract_gmap_ids(
+        get_filtered_restaurants_repo(
+            dining_options=dining_options,
+            limit=250,
+        )
+    )
+
+    print(f"Meal-time candidates={len(candidates)} dining_options={dining_options}")
+    return candidates
+
+
 @router.get("/home-carousels")
 def get_home_carousels(user_id: str = "default_user", top_k: int = 25):
     """
@@ -54,24 +119,16 @@ def get_home_carousels(user_id: str = "default_user", top_k: int = 25):
     user_location = user_profile.get("location", {})
     coordinates = user_location.get("coordinates")
     print(time.perf_counter() - start)
-    candidate_gmap_ids_by_radius = None
-    if (
-        coordinates 
-        and len(coordinates) == 2
-        and coordinates[0] is not None
-        and coordinates[1] is not None
-    ):
-        long = coordinates[0]
-        lat = coordinates[1]
-        candidate_gmap_ids_by_radius = extract_gmap_ids(
-            get_filtered_restaurants_repo(
-                latitude=float(lat),
-                  longitude=float(long),
-                  )
-                )
+    candidate_gmap_ids_by_radius = _get_nearby_candidate_gmap_ids(coordinates)
         
-    candidate_gmap_ids_by_mealtime = extract_gmap_ids(get_filtered_restaurants_repo(dining_options=get_meal_time_string()))
-    candidate_gmap_ids_by_hidden_gems = extract_gmap_ids(get_filtered_restaurants_repo(min_rating=4.5, max_reviews=30))
+    candidate_gmap_ids_by_mealtime = _get_mealtime_candidate_gmap_ids()
+    candidate_gmap_ids_by_hidden_gems = extract_gmap_ids(
+        get_filtered_restaurants_repo(
+            min_rating=4.5,
+            max_reviews=30,
+            limit=250,
+        )
+    )
 
     is_cold_start = get_user_augmented_likes(user_id) == 0
     onboarding_candidate_gmap_ids = None
@@ -89,6 +146,13 @@ def get_home_carousels(user_id: str = "default_user", top_k: int = 25):
         onboarding_candidate_gmap_ids=onboarding_candidate_gmap_ids,
         hybrid_scores=hybrid_scores,
     )
+    ultimate_fallback = get_popular_restaurants(top_k=top_k)
+    recommended = _with_fallbacks(
+        primary=recommended,
+        fallback=None,
+        ultimate_fallback=ultimate_fallback,
+        top_k=top_k,
+    )
     print(f"Recommended: {time.perf_counter() - start:.2f}s")
 
     start = time.perf_counter()
@@ -98,6 +162,12 @@ def get_home_carousels(user_id: str = "default_user", top_k: int = 25):
         candidate_gmap_ids=candidate_gmap_ids_by_radius,
         onboarding_candidate_gmap_ids=onboarding_candidate_gmap_ids,
         hybrid_scores=hybrid_scores,
+    )
+    popular_near_you = _with_fallbacks(
+        primary=popular_near_you,
+        fallback=recommended,
+        ultimate_fallback=ultimate_fallback,
+        top_k=top_k,
     )
     print(f"Near You: {time.perf_counter() - start:.2f}s")
 
@@ -109,6 +179,12 @@ def get_home_carousels(user_id: str = "default_user", top_k: int = 25):
         onboarding_candidate_gmap_ids=onboarding_candidate_gmap_ids,
         hybrid_scores=hybrid_scores,
     )
+    popular_at_this_hour = _with_fallbacks(
+        primary=popular_at_this_hour,
+        fallback=recommended,
+        ultimate_fallback=ultimate_fallback,
+        top_k=top_k,
+    )
     print(f"Popular Now: {time.perf_counter() - start:.2f}s")
 
     start = time.perf_counter()
@@ -118,6 +194,12 @@ def get_home_carousels(user_id: str = "default_user", top_k: int = 25):
         onboarding_candidate_gmap_ids=onboarding_candidate_gmap_ids,
         hybrid_scores=hybrid_scores,
     )[top_k:]
+    you_might_like = _with_fallbacks(
+        primary=you_might_like,
+        fallback=recommended,
+        ultimate_fallback=ultimate_fallback,
+        top_k=top_k,
+    )
     print(f"You Might Like: {time.perf_counter() - start:.2f}s")
 
     start = time.perf_counter()
@@ -127,6 +209,12 @@ def get_home_carousels(user_id: str = "default_user", top_k: int = 25):
         candidate_gmap_ids=candidate_gmap_ids_by_hidden_gems,
         onboarding_candidate_gmap_ids=onboarding_candidate_gmap_ids,
         hybrid_scores=hybrid_scores,
+    )
+    hidden_gems = _with_fallbacks(
+        primary=hidden_gems,
+        fallback=recommended,
+        ultimate_fallback=ultimate_fallback,
+        top_k=top_k,
     )
     print(f"Hidden Gems: {time.perf_counter() - start:.2f}s")  
     return {
@@ -206,4 +294,3 @@ def get_group_recommendations(request: GroupRecommendationRequest):
         per_user_k=request.per_user_k,
         filters=request.filters,
     )
-
