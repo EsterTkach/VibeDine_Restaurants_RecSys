@@ -5,7 +5,7 @@ from api.ml.cf_recommender import compute_cf_scores, get_popular_restaurants, ge
 from api.services.users_service import get_user_online_likes
 from api.utils.utils import extract_gmap_ids, format_restaurant_for_frontend
 from api.routes.users import get_onboarding_preferences
-from api.ml.cb_recommender import compute_cb_scores, restaurants 
+from api.ml.cb_recommender import compute_cb_scores, restaurant_lookup
 
 
 
@@ -75,8 +75,7 @@ from api.ml.cb_recommender import compute_cb_scores, restaurants
 
 #     return recommendations
 
-def get_user_onboarding_recommendations(user_id: str, top_k: int = 10, candidate_gmap_ids=None):
-
+def get_onboarding_candidate_gmap_ids(user_id: str, candidate_gmap_ids=None):
     pref = get_onboarding_preferences(user_id)
 
     categories = pref["preferences"].get("favorite_categories", [])
@@ -91,17 +90,33 @@ def get_user_onboarding_recommendations(user_id: str, top_k: int = 10, candidate
             atmosphere=atmosphere,
             dietary_restrictions=dietary_restrictions,
             limit=1000))
-    
-    if candidate_gmap_ids is not None:
-        candidate_gmap_ids = list(
-            set(candidate_gmap_ids_by_category) & set(candidate_gmap_ids)
+
+    if candidate_gmap_ids is None:
+        return candidate_gmap_ids_by_category
+
+    return list(
+        set(candidate_gmap_ids_by_category) & set(candidate_gmap_ids)
+    )
+
+
+def get_user_onboarding_recommendations(
+    user_id: str,
+    top_k: int = 10,
+    candidate_gmap_ids=None,
+    onboarding_candidate_gmap_ids=None,
+):
+    candidate_ids = onboarding_candidate_gmap_ids
+
+    if candidate_ids is None:
+        candidate_ids = get_onboarding_candidate_gmap_ids(user_id, candidate_gmap_ids)
+    elif candidate_gmap_ids is not None:
+        candidate_ids = list(
+            set(candidate_ids) & set(candidate_gmap_ids)
         )
-    else:
-        candidate_gmap_ids = candidate_gmap_ids_by_category
 
     recommendations = get_popular_restaurants(
         top_k=top_k,
-        candidate_gmap_ids=candidate_gmap_ids,
+        candidate_gmap_ids=candidate_ids,
     )
     recommendations = remove_duplicate_names(recommendations)
 
@@ -153,6 +168,7 @@ def get_hybrid_recommendations_for_user(
     user_id: str,
     top_k=10,
     candidate_gmap_ids=None,
+    onboarding_candidate_gmap_ids=None,
 ):
     """
     Returns recommendations for a user.
@@ -161,7 +177,12 @@ def get_hybrid_recommendations_for_user(
     """
     if get_user_augmented_likes(user_id) == 0:
         print(f"User {user_id} is cold-start, returning onboarding recommendations")
-        return get_user_onboarding_recommendations(user_id, top_k=top_k, candidate_gmap_ids=candidate_gmap_ids)
+        return get_user_onboarding_recommendations(
+            user_id,
+            top_k=top_k,
+            candidate_gmap_ids=candidate_gmap_ids,
+            onboarding_candidate_gmap_ids=onboarding_candidate_gmap_ids,
+        )
     
     cb_scores = compute_cb_scores(user_id)
     cf_scores = compute_cf_scores(user_id)
@@ -183,14 +204,25 @@ def get_hybrid_recommendations_for_user(
     for gmap_id, score in hybrid_scores.items():
         if candidate_set is not None and gmap_id not in candidate_set:
             continue
-        row = restaurants[restaurants["gmap_id"] == gmap_id]
-        if row.empty:
+        # row = restaurants[restaurants["gmap_id"] == gmap_id]
+        # if row.empty:
+        #     continue
+
+        # recommendations.append(
+        #     {
+        #         "gmap_id": gmap_id,
+        #         "name": row.iloc[0]["name"],
+        #         "hybrid_score": round(float(score), 3),
+        #     }
+        # )
+        restaurant = restaurant_lookup.get(gmap_id)
+        if restaurant is None:
             continue
 
         recommendations.append(
             {
                 "gmap_id": gmap_id,
-                "name": row.iloc[0]["name"],
+                "name": restaurant["name"],
                 "hybrid_score": round(float(score), 3),
             }
         )

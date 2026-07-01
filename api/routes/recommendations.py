@@ -11,6 +11,7 @@ from api.ml.cf_recommender import (
 
 from api.services.recommendation_service import (
     get_hybrid_recommendations_for_user,
+    get_onboarding_candidate_gmap_ids,
     get_popular_restaurants,
     get_popular_by_category,
     get_user_augmented_likes,
@@ -42,6 +43,7 @@ router = APIRouter(
     tags=["Recommendations"]
 )
 
+
 @router.get("/home-carousels")
 def get_home_carousels(user_id: str = "default_user", top_k: int = 25):
     """
@@ -70,40 +72,79 @@ def get_home_carousels(user_id: str = "default_user", top_k: int = 25):
         
     candidate_gmap_ids_by_mealtime = extract_gmap_ids(get_filtered_restaurants_repo(dining_options=get_meal_time_string()))
     candidate_gmap_ids_by_hidden_gems = extract_gmap_ids(get_filtered_restaurants_repo(min_rating=4.5, max_reviews=30))
-    print(time.perf_counter() - start)
-    # if get_user_augmented_likes(user_id) == 0:
-    #     base = get_user_onboarding_recommendations(
-    #     user_id,
-    #     top_k=200)
-    #     recommended_for_you_items = base[0:top_k]
 
-    # recommended_for_you_items = get_hybrid_recommendations_for_user(user_id)    
+    onboarding_candidate_gmap_ids = None
+    if get_user_augmented_likes(user_id) == 0:
+        onboarding_candidate_gmap_ids = get_onboarding_candidate_gmap_ids(user_id)
+
+    start = time.perf_counter()
+    recommended = get_hybrid_recommendations_for_user(
+        user_id,
+        top_k=top_k,
+        onboarding_candidate_gmap_ids=onboarding_candidate_gmap_ids,
+    )
+    print(f"Recommended: {time.perf_counter() - start:.2f}s")
+
+    start = time.perf_counter()
+    popular_near_you = get_hybrid_recommendations_for_user(
+        user_id,
+        top_k=top_k,
+        candidate_gmap_ids=candidate_gmap_ids_by_radius,
+        onboarding_candidate_gmap_ids=onboarding_candidate_gmap_ids,
+    )
+    print(f"Near You: {time.perf_counter() - start:.2f}s")
+
+    start = time.perf_counter()
+    popular_at_this_hour = get_hybrid_recommendations_for_user(
+        user_id,
+        top_k=top_k,
+        candidate_gmap_ids=candidate_gmap_ids_by_mealtime,
+        onboarding_candidate_gmap_ids=onboarding_candidate_gmap_ids,
+    )
+    print(f"Popular Now: {time.perf_counter() - start:.2f}s")
+
+    start = time.perf_counter()
+    you_might_like = get_hybrid_recommendations_for_user(
+        user_id,
+        top_k=2 * top_k,
+        onboarding_candidate_gmap_ids=onboarding_candidate_gmap_ids,
+    )[top_k:]
+    print(f"You Might Like: {time.perf_counter() - start:.2f}s")
+
+    start = time.perf_counter()
+    hidden_gems = get_hybrid_recommendations_for_user(
+        user_id,
+        top_k=top_k,
+        candidate_gmap_ids=candidate_gmap_ids_by_hidden_gems,
+        onboarding_candidate_gmap_ids=onboarding_candidate_gmap_ids,
+    )
+    print(f"Hidden Gems: {time.perf_counter() - start:.2f}s")  
     return {
         "carousels": [
             {
                 "id": "recommended_for_you",
                 "title": "Recommended For You",
-                "items": [format_restaurant_for_frontend(r) for r in get_hybrid_recommendations_for_user(user_id)]
+                "items": [format_restaurant_for_frontend(r) for r in recommended]
             },
             {
                 "id": "popular_near_you",
                 "title": "Popular Near You",
-                "items": [format_restaurant_for_frontend(r) for r in get_hybrid_recommendations_for_user(user_id, top_k=top_k, candidate_gmap_ids=candidate_gmap_ids_by_radius)]
+                "items": [format_restaurant_for_frontend(r) for r in popular_near_you]
             },
             {
                 "id": "popular_at_this_hour",
                 "title": "Popular at this hour",
-                "items": [format_restaurant_for_frontend(r) for r in get_hybrid_recommendations_for_user(user_id, top_k=top_k, candidate_gmap_ids=candidate_gmap_ids_by_mealtime)]
+                "items": [format_restaurant_for_frontend(r) for r in popular_at_this_hour]
             },
             {
                 "id": "you_might_like",
                 "title": "You might like",
-                "items": [format_restaurant_for_frontend(r) for r in get_hybrid_recommendations_for_user(user_id, top_k= 2*top_k)[top_k:]]
+                "items": [format_restaurant_for_frontend(r) for r in you_might_like]
             },
             {
                 "id": "hidden_gems",
                 "title": "Hidden gems",
-                "items": [format_restaurant_for_frontend(r) for r in get_hybrid_recommendations_for_user(user_id, top_k=top_k, candidate_gmap_ids=candidate_gmap_ids_by_hidden_gems)]
+                "items": [format_restaurant_for_frontend(r) for r in hidden_gems]
             },
         ]
     }
