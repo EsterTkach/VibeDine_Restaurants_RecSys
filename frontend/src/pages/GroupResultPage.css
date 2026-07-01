@@ -111,6 +111,17 @@
   background: #f3e6d7;
 }
 
+.reject-btn:disabled,
+.reserve-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.feedback-error {
+  color: #b53b32 !important;
+  margin-top: 12px !important;
+}
+
 .working-banner {
   position: fixed;
 
@@ -227,4 +238,3 @@
 
   color: #777;
 }
-

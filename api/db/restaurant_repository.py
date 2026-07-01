@@ -14,6 +14,7 @@ def get_filtered_restaurants_repo(
     min_rating: float = 0.0,
     min_reviews: int = 0,
     max_reviews: int = None,
+    max_price: str = None,
     latitude: float = None,
     longitude: float = None,
     radius_km: float = 15,
@@ -57,6 +58,7 @@ def get_filtered_restaurants_repo(
         min_reviews (int, optional): The absolute minimum number of reviews required. Defaults to 0.
         max_reviews (int, optional): The absolute maximum number of reviews permitted. Useful for 
                                      unearthing high-quality, low-exposure "Hidden Gems". Defaults to None.
+        max_price (str, optional): Maximum allowed price marker, such as "$$". Defaults to None.
         latitude (float, optional): Target latitude for center of radius filter.
         longitude (float, optional): Target longitude for center of radius filter.
         radius_km (float, optional): Radius distance threshold in kilometers.
@@ -111,6 +113,13 @@ def get_filtered_restaurants_repo(
 
     if price:
         query["price"] = price
+    elif max_price:
+        allowed_prices = ["$", "$$", "$$$", "$$$$"]
+        if max_price in allowed_prices:
+            query["$or"] = [
+                {"price": {"$in": allowed_prices[: allowed_prices.index(max_price) + 1]}},
+                {"price_level": {"$in": allowed_prices[: allowed_prices.index(max_price) + 1]}},
+            ]
 
     # Apply flexible $in filters
     if categories:
@@ -146,6 +155,7 @@ def get_filtered_restaurants_repo(
             "avg_rating",
             "num_of_reviews",
             "location",
+            "$or",
         ]:  
             projection[field] = 1
 
@@ -252,5 +262,3 @@ def get_user_by_id(user_id: str) -> dict:
     user_doc = users_collection.find_one({"user_id": str(user_id)})
 
     return user_doc or {}
-
-
