@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AppShell from "../layouts/AppShell";
 import { vibeService } from "../api/services"; // CHANGED: Using centralized architecture
-
+import { preloadHomeData } from "../api/home";
 import "./Onboarding.css";
 
 const CUISINE_OPTIONS = ["Sushi", "Italian", "Dessert", "Cafe", "Burger", "Mexican", "Seafood", "Fast food"];
@@ -58,6 +58,7 @@ export default function Onboarding() {
       console.warn("Backend offline. Simulating local onboarding preferences save...", error);
     } finally {
       // Always advance to home safely regardless of server availability status
+      preloadHomeData(userId);
       navigate("/loading", {
         state: {
           nextPage: "/home",

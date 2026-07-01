@@ -3,9 +3,9 @@ import { FcGoogle } from "react-icons/fc";
 import { FaApple, FaXTwitter } from "react-icons/fa6";
 import AppShell from "../layouts/AppShell";
 import { useNavigate } from "react-router-dom";
-import { demoUsers } from "../data/demoUsers";
 import { authService } from "../api/services";
 import { useAuth } from "../contexts/AuthContext";
+import { preloadHomeData } from "../api/home";
 
 export default function AuthPage() {
   const navigate = useNavigate();
@@ -41,24 +41,13 @@ export default function AuthPage() {
       setUsername(data.username);
       localStorage.setItem("user_id", data.user_id);
       localStorage.setItem("username", data.username);
+      preloadHomeData(data.user_id);
       // If server returns a token/user, pass user data directly to the loading view
       navigate("/loading", { state: { username: data.username } });
 
     } catch (apiError) {
       console.log(apiError);
       console.warn("Backend login failed or offline. Testing fallback demo users...", apiError);
-
-      // 2. STABILITY FALLBACK: Check local static data if API is down
-      const validUser = demoUsers.find(
-        (user) => user.username === username && user.password === password
-      );
-
-      if (validUser) {
-        // Pass the valid user's name along so HomePage can grab it from location state!
-        navigate("/loading", { state: { username: validUser.username } });
-      } else {
-        setError("Invalid username or password");
-      }
     } finally {
       setLoading(false);
     }

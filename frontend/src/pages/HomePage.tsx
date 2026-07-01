@@ -11,6 +11,8 @@ import { getHomeCarousels } from "../api/restaurants";
 import "./HomePage.css";
 
 import { useAuth } from "../contexts/AuthContext";
+import { useHome } from "../contexts/HomeContext";
+import axios from "axios";
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -21,7 +23,12 @@ export default function HomePage() {
   // LIVE DATA STATES
   
   const { username } = useAuth();
-  const [carousels, setCarousels] = useState<CarouselData[]>([]);
+  const {
+    carousels,
+    setCarousels,
+    hasLoadedHome,
+    setHasLoadedHome,
+  } = useHome();
   const [loading, setLoading] = useState<boolean>(true);
   
   // New clean UI error message state tracker
@@ -60,18 +67,35 @@ export default function HomePage() {
   useEffect(() => {
     console.log("Home useEffect started");
     async function fetchDashboardData() {
+      if (hasLoadedHome) {
+        console.log("Home data already loaded, skipping fetch.");
+        setLoading(false);
+        return;
+      }
       try {
         setLoading(true);
         setErrorMessage(null); // Reset previous errors on reload
         
-        const currentUserId = localStorage.getItem("user_id") || "default_user";
+        const currentUserId = localStorage.getItem("user_id");
+        if (!currentUserId) {
+          navigate("/login", { replace: true });
+          return;
+        }
         const data = await getHomeCarousels(currentUserId);
+
+        console.log("Home carousels response:", data);
+
         setCarousels(data.carousels || []);
+        setHasLoadedHome(true);
+        console.log("Carousels:", data.carousels);
+
         }
 
         catch (error) {
-        console.error("Layout API network connection failure:", error);
-        setErrorMessage("Unable to connect to the recommendations server. Please verify your backend is running.");
+        console.error(error);
+        if (axios.isAxiosError(error)) {
+          console.log(error.response);
+}
       } finally {
         setLoading(false);
       }

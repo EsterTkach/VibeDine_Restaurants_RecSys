@@ -16,7 +16,7 @@ def get_filtered_restaurants_repo(
     max_reviews: int = None,
     latitude: float = None,
     longitude: float = None,
-    radius_km: float = None,
+    radius_km: float = 15,
 ) -> list:
     """
     Retrieves, scores, and ranks restaurants using an advanced MongoDB Aggregation Pipeline.
@@ -65,6 +65,23 @@ def get_filtered_restaurants_repo(
               core fields cleanly projected for direct frontend integration including 
               `gmap_id`, `name`, `cuisine`, `avg_rating`, `price`, and `image_url`.
     """
+    # Normalize single values to lists
+    def ensure_list(value):
+        if value is None:
+            return None
+        if isinstance(value, list):
+            return value
+        return [value]
+
+    categories = ensure_list(categories)
+    accessibility = ensure_list(accessibility)
+    service_options = ensure_list(service_options)
+    atmosphere = ensure_list(atmosphere)
+    dining_options = ensure_list(dining_options)
+    crowd = ensure_list(crowd)
+    offerings = ensure_list(offerings)
+    dietary_restrictions = ensure_list(dietary_restrictions)
+    
     # 1. Build the base Match Query
     query = {}
 

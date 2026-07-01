@@ -239,7 +239,7 @@ def get_popular_restaurants(top_k=config.TOP_K, candidate_gmap_ids=None):
                 "popularity_score": round(float(popularity_scores[idx]), 3),
             }
         )
-        if len(recommendations) == top_k:
+        if len(recommendations) == (top_k*3):
             break
 
     return recommendations

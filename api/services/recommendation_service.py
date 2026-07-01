@@ -90,7 +90,7 @@ def get_user_onboarding_recommendations(user_id: str, top_k: int = 10, candidate
             accessibility=accessibility,
             atmosphere=atmosphere,
             dietary_restrictions=dietary_restrictions,
-            limit=100000))
+            limit=1000))
     
     if candidate_gmap_ids is not None:
         candidate_gmap_ids = list(
@@ -99,10 +99,13 @@ def get_user_onboarding_recommendations(user_id: str, top_k: int = 10, candidate
     else:
         candidate_gmap_ids = candidate_gmap_ids_by_category
 
-    return get_popular_restaurants(
+    recommendations = get_popular_restaurants(
         top_k=top_k,
         candidate_gmap_ids=candidate_gmap_ids,
     )
+    recommendations = remove_duplicate_names(recommendations)
+
+    return recommendations[:top_k]
 
 """ normalize scores and combine cb and cf scores """
 def min_max_normalize(score_dict, keys=None):
@@ -191,11 +194,12 @@ def get_hybrid_recommendations_for_user(
                 "hybrid_score": round(float(score), 3),
             }
         )
-        if len(recommendations) == top_k:
+        if len(recommendations) == (top_k*3):
             break
 
     recommendations.sort(key=lambda x: x["hybrid_score"], reverse=True)
-    return recommendations[:top_k]
+    restaurants = remove_duplicate_names(recommendations)
+    return restaurants[:top_k]
 
 
     
@@ -281,3 +285,18 @@ def get_user_alpha(user_id):
         alpha = 0.85
 
     return alpha
+
+def remove_duplicate_names(restaurants):
+    seen = set()
+    unique = []
+
+    for restaurant in restaurants:
+        name = restaurant["name"].strip().lower()
+
+        if name in seen:
+            continue
+
+        seen.add(name)
+        unique.append(restaurant)
+
+    return unique
