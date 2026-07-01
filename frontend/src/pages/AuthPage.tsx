@@ -41,7 +41,7 @@ export default function AuthPage() {
       setUsername(data.username);
       localStorage.setItem("user_id", data.user_id);
       localStorage.setItem("username", data.username);
-      preloadHomeData(data.user_id);
+      //preloadHomeData(data.user_id);
       // If server returns a token/user, pass user data directly to the loading view
       navigate("/loading", { state: { username: data.username } });
 

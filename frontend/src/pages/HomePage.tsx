@@ -62,7 +62,7 @@ export default function HomePage() {
   const handleComingSoonClose = () => {
     setShowComingSoon(false);
   };
-
+  console.log("HomePage render");
   // BACKEND INTEGRATION EFFECT
   useEffect(() => {
     console.log("Home useEffect started");
@@ -100,10 +100,10 @@ export default function HomePage() {
         setLoading(false);
       }
     }
-
+    console.log("fetchDashboardData called");
     fetchDashboardData();
   }, []);
-
+  console.log("HomePage render");
   useEffect(() => {
     if (location.state?.fromVibeMatcher) {
       setShowComingSoon(true);
