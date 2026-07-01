@@ -11,12 +11,12 @@ from api.ml.cf_recommender import (
 
 from api.services.recommendation_service import (
     get_hybrid_recommendations_for_user,
+    get_hybrid_scores_for_user,
     get_onboarding_candidate_gmap_ids,
     get_popular_restaurants,
     get_popular_by_category,
     get_user_augmented_likes,
     get_user_onboarding_recommendations,
-    get_hybrid_recommendations_for_user,
 )
 
 from api.schemas.group_schema import (
@@ -73,15 +73,21 @@ def get_home_carousels(user_id: str = "default_user", top_k: int = 25):
     candidate_gmap_ids_by_mealtime = extract_gmap_ids(get_filtered_restaurants_repo(dining_options=get_meal_time_string()))
     candidate_gmap_ids_by_hidden_gems = extract_gmap_ids(get_filtered_restaurants_repo(min_rating=4.5, max_reviews=30))
 
+    is_cold_start = get_user_augmented_likes(user_id) == 0
     onboarding_candidate_gmap_ids = None
-    if get_user_augmented_likes(user_id) == 0:
+    hybrid_scores = None
+    if is_cold_start:
+        print("User has no augmented likes, fetching onboarding candidate gmap_ids")
         onboarding_candidate_gmap_ids = get_onboarding_candidate_gmap_ids(user_id)
+    else:
+        hybrid_scores = get_hybrid_scores_for_user(user_id)
 
     start = time.perf_counter()
     recommended = get_hybrid_recommendations_for_user(
         user_id,
         top_k=top_k,
         onboarding_candidate_gmap_ids=onboarding_candidate_gmap_ids,
+        hybrid_scores=hybrid_scores,
     )
     print(f"Recommended: {time.perf_counter() - start:.2f}s")
 
@@ -91,6 +97,7 @@ def get_home_carousels(user_id: str = "default_user", top_k: int = 25):
         top_k=top_k,
         candidate_gmap_ids=candidate_gmap_ids_by_radius,
         onboarding_candidate_gmap_ids=onboarding_candidate_gmap_ids,
+        hybrid_scores=hybrid_scores,
     )
     print(f"Near You: {time.perf_counter() - start:.2f}s")
 
@@ -100,6 +107,7 @@ def get_home_carousels(user_id: str = "default_user", top_k: int = 25):
         top_k=top_k,
         candidate_gmap_ids=candidate_gmap_ids_by_mealtime,
         onboarding_candidate_gmap_ids=onboarding_candidate_gmap_ids,
+        hybrid_scores=hybrid_scores,
     )
     print(f"Popular Now: {time.perf_counter() - start:.2f}s")
 
@@ -108,6 +116,7 @@ def get_home_carousels(user_id: str = "default_user", top_k: int = 25):
         user_id,
         top_k=2 * top_k,
         onboarding_candidate_gmap_ids=onboarding_candidate_gmap_ids,
+        hybrid_scores=hybrid_scores,
     )[top_k:]
     print(f"You Might Like: {time.perf_counter() - start:.2f}s")
 
@@ -117,6 +126,7 @@ def get_home_carousels(user_id: str = "default_user", top_k: int = 25):
         top_k=top_k,
         candidate_gmap_ids=candidate_gmap_ids_by_hidden_gems,
         onboarding_candidate_gmap_ids=onboarding_candidate_gmap_ids,
+        hybrid_scores=hybrid_scores,
     )
     print(f"Hidden Gems: {time.perf_counter() - start:.2f}s")  
     return {

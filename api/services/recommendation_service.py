@@ -164,11 +164,51 @@ def combine_hybrid_scores(cb_scores, cf_scores, alpha=0.5):
 
     return hybrid_scores, cb_norm, cf_norm
 
+def get_hybrid_scores_for_user(user_id: str):
+    cb_scores = compute_cb_scores(user_id)
+    cf_scores = compute_cf_scores(user_id)
+    alpha = get_user_alpha(user_id)
+
+    print(f"alpha={alpha} for user {user_id}")
+    print(f"CB restaurants={len(cb_scores)}")
+    print(f"CF restaurants={len(cf_scores)}")
+
+    hybrid_scores = combine_hybrid_scores(cb_scores, cf_scores, alpha)[0]
+    print(f"Hybrid restaurants={len(hybrid_scores)}")
+    return hybrid_scores
+
+
+def rank_hybrid_recommendations(hybrid_scores, top_k=10, candidate_gmap_ids=None):
+    candidate_set = set(candidate_gmap_ids) if candidate_gmap_ids else None
+    recommendations = []
+    for gmap_id, score in hybrid_scores.items():
+        if candidate_set is not None and gmap_id not in candidate_set:
+            continue
+        restaurant = restaurant_lookup.get(gmap_id)
+        if restaurant is None:
+            continue
+
+        recommendations.append(
+            {
+                "gmap_id": gmap_id,
+                "name": restaurant["name"],
+                "hybrid_score": round(float(score), 3),
+            }
+        )
+        if len(recommendations) == (top_k * 3):
+            break
+
+    recommendations.sort(key=lambda x: x["hybrid_score"], reverse=True)
+    restaurants = remove_duplicate_names(recommendations)
+    return restaurants[:top_k]
+
+
 def get_hybrid_recommendations_for_user(
     user_id: str,
     top_k=10,
     candidate_gmap_ids=None,
     onboarding_candidate_gmap_ids=None,
+    hybrid_scores=None,
 ):
     """
     Returns recommendations for a user.
@@ -184,54 +224,14 @@ def get_hybrid_recommendations_for_user(
             onboarding_candidate_gmap_ids=onboarding_candidate_gmap_ids,
         )
     
-    cb_scores = compute_cb_scores(user_id)
-    cf_scores = compute_cf_scores(user_id)
-    alpha = get_user_alpha(user_id)
+    if hybrid_scores is None:
+        hybrid_scores = get_hybrid_scores_for_user(user_id)
 
-    print(f"alpha={alpha} for user {user_id}")
-
-    print(f"CB restaurants={len(cb_scores)}")
-
-    print(f"CF restaurants={len(cf_scores)}")
-
-    hybrid_scores = combine_hybrid_scores(cb_scores, cf_scores,alpha)[0]
-
-    print(f"Hybrid restaurants={len(hybrid_scores)}")
-
-    candidate_set = set(candidate_gmap_ids) if candidate_gmap_ids else None
-    #rank recommendations by hybrid score
-    recommendations = []
-    for gmap_id, score in hybrid_scores.items():
-        if candidate_set is not None and gmap_id not in candidate_set:
-            continue
-        # row = restaurants[restaurants["gmap_id"] == gmap_id]
-        # if row.empty:
-        #     continue
-
-        # recommendations.append(
-        #     {
-        #         "gmap_id": gmap_id,
-        #         "name": row.iloc[0]["name"],
-        #         "hybrid_score": round(float(score), 3),
-        #     }
-        # )
-        restaurant = restaurant_lookup.get(gmap_id)
-        if restaurant is None:
-            continue
-
-        recommendations.append(
-            {
-                "gmap_id": gmap_id,
-                "name": restaurant["name"],
-                "hybrid_score": round(float(score), 3),
-            }
-        )
-        if len(recommendations) == (top_k*3):
-            break
-
-    recommendations.sort(key=lambda x: x["hybrid_score"], reverse=True)
-    restaurants = remove_duplicate_names(recommendations)
-    return restaurants[:top_k]
+    return rank_hybrid_recommendations(
+        hybrid_scores,
+        top_k=top_k,
+        candidate_gmap_ids=candidate_gmap_ids,
+    )
 
 
     

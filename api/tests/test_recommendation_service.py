@@ -29,6 +29,24 @@ class RecommendationServiceColdStartTests(unittest.TestCase):
         mock_filtered_restaurants_repo.assert_not_called()
         mock_extract_gmap_ids.assert_not_called()
 
+    @patch("api.services.recommendation_service.compute_cb_scores", return_value={"abc": 1.0})
+    @patch("api.services.recommendation_service.compute_cf_scores", return_value={"abc": 0.5})
+    @patch("api.services.recommendation_service.get_user_alpha", return_value=0.5)
+    def test_get_hybrid_scores_for_user_computes_once_per_request(
+        self,
+        mock_get_user_alpha,
+        mock_compute_cf_scores,
+        mock_compute_cb_scores,
+    ):
+        from api.services.recommendation_service import get_hybrid_scores_for_user
+
+        hybrid_scores = get_hybrid_scores_for_user("user-2")
+
+        self.assertEqual(hybrid_scores["abc"], 0.75)
+        mock_compute_cb_scores.assert_called_once_with("user-2")
+        mock_compute_cf_scores.assert_called_once_with("user-2")
+        mock_get_user_alpha.assert_called_once_with("user-2")
+
 
 if __name__ == "__main__":
     unittest.main()
