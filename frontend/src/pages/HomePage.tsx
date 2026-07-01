@@ -6,8 +6,7 @@ import ComingSoonModal from "../components/ComingSoonModal";
 import { useNavigate, useLocation } from "react-router-dom";
 import RestaurantRow from '../components/RestaurantRow';
 import type { CarouselData } from '../types';
-import { getHomeCarousels } from "../api/restaurants";
-
+import { getHomeCarousels, getVibeMatchRecommendations } from "../api/restaurants";
 import "./HomePage.css";
 
 import { useAuth } from "../contexts/AuthContext";
@@ -30,6 +29,9 @@ export default function HomePage() {
     setHasLoadedHome,
   } = useHome();
   const [loading, setLoading] = useState<boolean>(true);
+
+  const [vibeMatches, setVibeMatches] = useState<any[]>([]);
+  const [showVibeMatches, setShowVibeMatches] = useState(false);
   
   // New clean UI error message state tracker
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -54,10 +56,67 @@ export default function HomePage() {
     setShowVibeModal(false);
   };
 
-  const handleVibeMatchSubmit = () => {
-    setShowVibeModal(false);
-    navigate("/loading", { state: { fromVibeMatcher: true } });
+  const handleVibeMatchSubmit = async (filters: any) => {
+  setShowVibeModal(false);
+  setLoading(true);
+  setErrorMessage(null);
+
+  const userId =
+    localStorage.getItem("user_id") ||
+    localStorage.getItem("userId") ||
+    "default_user";
+
+  const vibeFilters = {
+    categories: filters.categories?.length
+      ? filters.categories.map((category: string) => `${category} restaurant`)
+      : null,
+
+    price: filters.budget || null,
+
+    accessibility:
+      filters.accessibility === "Required"
+        ? ["Wheelchair accessible entrance"]
+        : null,
+
+    offerings:
+      filters.dietary && filters.dietary !== "None"
+        ? [filters.dietary]
+        : null,
+
+    service_options:
+      filters.dineOption === "Takeout"
+        ? ["Takeout"]
+        : filters.dineOption === "Dine-in"
+        ? ["Dine-in"]
+        : null,
+
+    radius_km:
+      filters.distance === "Walking Distance"
+        ? 2
+        : filters.distance === "Up to 15 Minutes"
+        ? 8
+        : filters.distance === "Up to 30 Minutes"
+        ? 16
+        : null,
+
+    top_k: 5,
   };
+
+  try {
+    const data = await getVibeMatchRecommendations(
+      userId,
+      vibeFilters
+    );
+
+    setVibeMatches(data.recommendations || []);
+    setShowVibeMatches(true);
+  } catch (error) {
+    console.error("Failed to load vibe matches:", error);
+    setErrorMessage("Could not load vibe matches. Please try again.");
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleComingSoonClose = () => {
     setShowComingSoon(false);
@@ -103,13 +162,6 @@ export default function HomePage() {
     console.log("fetchDashboardData called");
     fetchDashboardData();
   }, []);
-  console.log("HomePage render");
-  useEffect(() => {
-    if (location.state?.fromVibeMatcher) {
-      setShowComingSoon(true);
-      window.history.replaceState({}, document.title);
-    }
-  }, [location]);
 
   const emojiMap: Record<string, string> = {
     recommended_for_you: "✨",
@@ -167,6 +219,13 @@ export default function HomePage() {
             marginTop: '24px'
           }}
         >
+          {showVibeMatches && vibeMatches.length > 0 && (
+            <RestaurantRow
+              title="Your Vibe Matches"
+              emoji="🪄"
+              restaurants={vibeMatches}
+          />
+        )}
           {loading ? (
             <div className="text-center p-10 text-gray-400">Loading your customized feed...</div>
           ) : errorMessage ? (

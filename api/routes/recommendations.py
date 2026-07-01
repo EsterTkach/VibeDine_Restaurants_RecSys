@@ -1,5 +1,8 @@
 from fastapi import APIRouter, HTTPException
 import time
+
+from api.schemas.restaurant_schema import FilterRequest
+
 from api.ml.cb_recommender import (
     compute_cb_scores,
     recommend_similar_restaurants,
@@ -207,3 +210,44 @@ def get_group_recommendations(request: GroupRecommendationRequest):
         filters=request.filters,
     )
 
+@router.post("/vibe-match/{user_id}")
+def get_vibe_match_recommendations(
+    user_id: str,
+    filters: FilterRequest
+):
+    filtered_restaurants = get_filtered_restaurants_repo(
+        categories=filters.categories,
+        accessibility=filters.accessibility,
+        service_options=filters.service_options,
+        atmosphere=filters.atmosphere,
+        dining_options=filters.dining_options,
+        crowd=filters.crowd,
+        offerings=filters.offerings or filters.dietary_restrictions,
+        price=filters.price,
+        latitude=filters.latitude,
+        longitude=filters.longitude,
+        radius_km=filters.radius_km,
+        min_rating=filters.min_rating,
+        min_reviews=filters.min_reviews,
+        max_reviews=filters.max_reviews,
+        limit=100
+    )
+
+    candidate_gmap_ids = extract_gmap_ids(
+        filtered_restaurants
+    )
+
+    recommendations = get_hybrid_recommendations_for_user(
+        user_id=user_id,
+        top_k=filters.top_k,
+        candidate_gmap_ids=candidate_gmap_ids
+    )
+
+    return {
+        "recommendation_type": "vibe_match",
+        "filters": filters.dict(),
+        "recommendations": [
+            format_restaurant_for_frontend(r)
+            for r in recommendations
+        ]
+    }
