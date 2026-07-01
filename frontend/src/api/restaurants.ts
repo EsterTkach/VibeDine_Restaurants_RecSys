@@ -43,3 +43,15 @@ export async function login(username: string, password: string): Promise<{ messa
   const response = await apiClient.post('/users/login', { username, password });
   return response.data;
 }
+
+
+export async function getHomeCarousels(userId: string, topK = 25) {
+  const response = await apiClient.get("/recommend/home-carousels", {
+    params: {
+      user_id: userId,
+      top_k: topK,
+    },
+  });
+
+  return response.data;
+}

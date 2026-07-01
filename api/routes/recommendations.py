@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-
+import time
 from api.ml.cb_recommender import (
     compute_cb_scores,
     recommend_similar_restaurants,
@@ -13,6 +13,7 @@ from api.services.recommendation_service import (
     get_hybrid_recommendations_for_user,
     get_popular_restaurants,
     get_popular_by_category,
+    get_user_augmented_likes,
     get_user_onboarding_recommendations,
     get_hybrid_recommendations_for_user,
 )
@@ -46,15 +47,37 @@ def get_home_carousels(user_id: str = "default_user", top_k: int = 25):
     """
     Returns dynamically structured carousels for the homepage matching the frontend layout. Specific for a user.
     """
+    start = time.perf_counter()
     user_profile = get_user_by_id(user_id)
     user_location = user_profile.get("location", {})
-    coordinates = user_location.get("coordinates", [None, None])
-    long = coordinates[0]
-    lat = coordinates[1]
-    candidate_gmap_ids_by_radius = extract_gmap_ids(get_filtered_restaurants_repo(latitude=float(lat), longitude=float(long)))
+    coordinates = user_location.get("coordinates")
+    print(time.perf_counter() - start)
+    candidate_gmap_ids_by_radius = None
+    if (
+        coordinates 
+        and len(coordinates) == 2
+        and coordinates[0] is not None
+        and coordinates[1] is not None
+    ):
+        long = coordinates[0]
+        lat = coordinates[1]
+        candidate_gmap_ids_by_radius = extract_gmap_ids(
+            get_filtered_restaurants_repo(
+                latitude=float(lat),
+                  longitude=float(long),
+                  )
+                )
+        
     candidate_gmap_ids_by_mealtime = extract_gmap_ids(get_filtered_restaurants_repo(dining_options=get_meal_time_string()))
     candidate_gmap_ids_by_hidden_gems = extract_gmap_ids(get_filtered_restaurants_repo(min_rating=4.5, max_reviews=30))
+    print(time.perf_counter() - start)
+    # if get_user_augmented_likes(user_id) == 0:
+    #     base = get_user_onboarding_recommendations(
+    #     user_id,
+    #     top_k=200)
+    #     recommended_for_you_items = base[0:top_k]
 
+    # recommended_for_you_items = get_hybrid_recommendations_for_user(user_id)    
     return {
         "carousels": [
             {

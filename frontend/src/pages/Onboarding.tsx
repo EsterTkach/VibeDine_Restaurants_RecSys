@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AppShell from "../layouts/AppShell";
 import { vibeService } from "../api/services"; // CHANGED: Using centralized architecture
-
+import { preloadHomeData } from "../api/home";
 import "./Onboarding.css";
 
 const CUISINE_OPTIONS = ["Sushi", "Italian", "Dessert", "Cafe", "Burger", "Mexican", "Seafood", "Fast food"];
@@ -13,7 +13,7 @@ const DIETARY_OPTIONS = ["Gluten Free", "Vegetarian", "Vegan", "None"];
 export default function Onboarding() {
   const navigate = useNavigate();
   // Safe fallbacks to local mock attributes if user lands here without a real login session
-  const userId = localStorage.getItem("userId") || "mock_user_123";
+  const userId = localStorage.getItem("user_id");
   const username = localStorage.getItem("username") || "Mock User";
 
   // Multi-select for cuisines and vibes
@@ -37,7 +37,7 @@ export default function Onboarding() {
 
   const handleComplete = async () => {
     if (!userId) {
-      console.error("User is not logged in.");
+      navigate("/login", { replace: true });
       return;
     }
     
@@ -58,6 +58,7 @@ export default function Onboarding() {
       console.warn("Backend offline. Simulating local onboarding preferences save...", error);
     } finally {
       // Always advance to home safely regardless of server availability status
+      preloadHomeData(userId);
       navigate("/loading", {
         state: {
           nextPage: "/home",

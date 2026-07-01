@@ -10,17 +10,15 @@ import { useAuth } from "../contexts/AuthContext";
 import "./ProfilePage.css";
 import SectionDivider from "../components/SectionDivider";
 import FoodAvatar from "../components/FoodAvatar";
+import { useHome } from "../contexts/HomeContext";
 
 export default function ProfilePage() {
   const navigate = useNavigate();
-  const { username } = useAuth();
+  const { username, userId } = useAuth();
 
-  // LIVE USER STATE (Defaults to "Mock User" for stability tracking)
-  const [profileName, setProfileName] = useState<string>(
-    username || "Mock User",
-  );
-  const [loading, setLoading] = useState<boolean>(true);
-
+  const [profileName, setProfileName] = useState<string>(username);
+  //const [loading, setLoading] = useState<boolean>(true);
+  const { setHasLoadedHome } = useHome();
   type Restaurant = {
     gmap_id: string;
     name: string;
@@ -35,8 +33,10 @@ export default function ProfilePage() {
   useEffect(() => {
     async function fetchLikedRestaurants() {
       try {
-        const userId = "112238780620382660297"; // זמני hardcoded לבדיקה  TODO
-
+        if (!userId) {
+          console.warn("No user ID found. Cannot fetch liked restaurants.");
+          return;
+        }
         const data = await userService.getLikedRestaurants(userId);
         setLikedRestaurants(data.liked_restaurants);
         console.log("data.liked_restaurants :", data.liked_restaurants);
@@ -54,39 +54,13 @@ export default function ProfilePage() {
     }
   }, [username]);
 
-  // Fetch Profile Data on mount
-  useEffect(() => {
-    async function fetchUserData() {
-      try {
-        setLoading(true);
-        const userData = await userService.getProfile();
-        if (userData && userData.name) {
-          setProfileName(userData.name);
-        } else if (username) {
-          setProfileName(username);
-        }
-      } catch (error) {
-        console.error(
-          "Backend offline. Profile page defaulting to stability Mock User.",
-          error,
-        );
-        setProfileName(username || "Mock User");
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchUserData();
-  }, []);
-
   const handleUnlike = async (restaurantId: string) => {
     setRemovingRestaurantIds((prev) => [...prev, restaurantId]);
 
     try {
-      const userId = "112238780620382660297";
 
       await userService.unlikeRestaurant(userId, restaurantId);
-
+      setHasLoadedHome(false);
       setTimeout(() => {
         setLikedRestaurants((prev) =>
           prev.filter((r) => r.gmap_id !== restaurantId),
@@ -100,8 +74,6 @@ export default function ProfilePage() {
       console.error(err);
     }
   };
-
-  console.log("profileName :", profileName);
 
   return (
     <AppShell>
