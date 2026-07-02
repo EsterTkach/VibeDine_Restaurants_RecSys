@@ -297,4 +297,3 @@ def get_group_recommendations(request: GroupRecommendationRequest):
         per_user_k=request.per_user_k,
         filters=request.filters,
     )
-

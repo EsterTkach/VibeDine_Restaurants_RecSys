@@ -15,6 +15,7 @@ def get_filtered_restaurants_repo(
     min_reviews: int = 0,
     max_reviews: int = None,
     max_price: str = None,
+    max_price: str = None,
     latitude: float = None,
     longitude: float = None,
     radius_km: float = 15,
@@ -58,6 +59,7 @@ def get_filtered_restaurants_repo(
         min_reviews (int, optional): The absolute minimum number of reviews required. Defaults to 0.
         max_reviews (int, optional): The absolute maximum number of reviews permitted. Useful for 
                                      unearthing high-quality, low-exposure "Hidden Gems". Defaults to None.
+        max_price (str, optional): Maximum allowed price marker, such as "$$". Defaults to None.
         max_price (str, optional): Maximum allowed price marker, such as "$$". Defaults to None.
         latitude (float, optional): Target latitude for center of radius filter.
         longitude (float, optional): Target longitude for center of radius filter.

@@ -110,3 +110,48 @@ export async function submitGroupSessionFeedback(
 
   return response.data;
 }
+
+
+export type GroupRecommendation = {
+  gmap_id: string;
+  name: string;
+  avg_hybrid_score?: number;
+  users_supported?: number;
+  coverage?: number;
+  group_score?: number;
+};
+
+export type GroupSessionResponse = {
+  session_id: string;
+  recommendation: GroupRecommendation | null;
+};
+
+export async function createGroupSession(userIds: string[]) {
+  const response = await apiClient.post<GroupSessionResponse>("/groups/session", {
+    user_ids: userIds,
+    top_k: 1,
+    per_user_k: 50,
+  });
+
+  return response.data;
+}
+
+export async function submitGroupSessionFeedback(
+  sessionId: string,
+  currentRestaurant: string,
+  affectedUserIds: string[],
+  reason: string,
+) {
+  const response = await apiClient.post<GroupSessionResponse>(
+    `/groups/session/${sessionId}/feedback`,
+    {
+      current_restaurant: currentRestaurant,
+      affected_user_ids: affectedUserIds,
+      reason,
+      top_k: 1,
+      per_user_k: 50,
+    },
+  );
+
+  return response.data;
+}
