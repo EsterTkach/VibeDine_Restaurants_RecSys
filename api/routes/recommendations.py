@@ -26,10 +26,6 @@ from api.schemas.group_schema import (
     GroupRecommendationRequest,
 )
 
-from api.services.groups_service import (
-    get_hybrid_recommendations_for_group,
-)
-
 from api.utils.utils import (
     format_restaurant_for_frontend,
     get_meal_time_string,
@@ -286,14 +282,14 @@ def get_user_recommendations(
 
 
 
-@router.get("/group")
-def get_group_recommendations(request: GroupRecommendationRequest):
-    if not request.user_ids:
-        raise HTTPException(status_code=400, detail="user_ids cannot be empty")
+# @router.get("/group")
+# def get_group_recommendations(request: GroupRecommendationRequest):
+#     if not request.user_ids:
+#         raise HTTPException(status_code=400, detail="user_ids cannot be empty")
 
-    return get_hybrid_recommendations_for_group(
-        user_ids=request.user_ids,
-        top_k=request.top_k,
-        per_user_k=request.per_user_k,
-        filters=request.filters,
-    )
+#     return get_hybrid_recommendations_for_group(
+#         user_ids=request.user_ids,
+#         top_k=request.top_k,
+#         per_user_k=request.per_user_k,
+#         filters=request.filters,
+#     )
