@@ -134,7 +134,7 @@ def get_filtered_restaurants_repo(
     projection = {
         "gmap_id": 1,
         "name": 1,
-        "cuisine": 1,
+        "cuisines": 1,
         "avg_rating": 1,
         "price": 1,
         "image_url": 1
@@ -252,5 +252,19 @@ def get_user_by_id(user_id: str) -> dict:
     user_doc = users_collection.find_one({"user_id": str(user_id)})
 
     return user_doc or {}
+
+def get_restaurants_by_gmap_ids(gmap_ids: list[str]) -> dict:
+    """
+    Fetches multiple restaurants by ID in a single batch query.
+    Returns a dictionary mapping gmap_id -> restaurant_doc for fast O(1) lookups.
+    """
+    if not gmap_ids:
+        return {}
+        
+    # Query MongoDB exactly ONCE
+    cursor = restaurants_collection.find({"gmap_id": {"$in": gmap_ids}})
+    
+    # Return the dictionary lookup
+    return {doc.get("gmap_id"): doc for doc in cursor}
 
 

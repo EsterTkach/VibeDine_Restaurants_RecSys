@@ -33,12 +33,14 @@ from api.services.groups_service import (
 from api.utils.utils import (
     format_restaurant_for_frontend,
     get_meal_time_string,
-    extract_gmap_ids
+    extract_gmap_ids,
+    enrich_restaurants
 )
 
 from api.db.restaurant_repository import (
     get_filtered_restaurants_repo,
-    get_user_by_id
+    get_user_by_id,
+    get_restaurants_by_gmap_ids
 )
 
 router = APIRouter(
@@ -131,33 +133,45 @@ def get_home_carousels(user_id: str = "default_user", top_k: int = 25):
         onboarding_candidate_gmap_ids=onboarding_candidate_gmap_ids,
         hybrid_scores=hybrid_scores,
     )
-    print(f"Hidden Gems: {time.perf_counter() - start:.2f}s")  
+    print(f"Hidden Gems: {time.perf_counter() - start:.2f}s")
+
+    start = time.perf_counter()
+
+    # 1. Gather every unique gmap_id from all carousels
+    all_ml_results = recommended + popular_near_you + popular_at_this_hour + you_might_like + hidden_gems
+    unique_gmap_ids = list({r.get("gmap_id") for r in all_ml_results if r.get("gmap_id")})
+
+    # 2. Call your clean repository helper
+    full_docs_dict = get_restaurants_by_gmap_ids(unique_gmap_ids)
+    
+    print(f"Batch DB Fetch: {time.perf_counter() - start:.2f}s")
+
     return {
         "carousels": [
             {
                 "id": "recommended_for_you",
                 "title": "Recommended For You",
-                "items": [format_restaurant_for_frontend(r) for r in recommended]
+                "items": [format_restaurant_for_frontend(r) for r in enrich_restaurants(recommended, full_docs_dict)]
             },
             {
                 "id": "popular_near_you",
                 "title": "Popular Near You",
-                "items": [format_restaurant_for_frontend(r) for r in popular_near_you]
+                "items": [format_restaurant_for_frontend(r) for r in enrich_restaurants(popular_near_you, full_docs_dict)]
             },
             {
                 "id": "popular_at_this_hour",
                 "title": "Popular at this hour",
-                "items": [format_restaurant_for_frontend(r) for r in popular_at_this_hour]
+                "items": [format_restaurant_for_frontend(r) for r in enrich_restaurants(popular_at_this_hour, full_docs_dict)]
             },
             {
                 "id": "you_might_like",
                 "title": "You might like",
-                "items": [format_restaurant_for_frontend(r) for r in you_might_like]
+                "items": [format_restaurant_for_frontend(r) for r in enrich_restaurants(you_might_like, full_docs_dict)]
             },
             {
                 "id": "hidden_gems",
                 "title": "Hidden gems",
-                "items": [format_restaurant_for_frontend(r) for r in hidden_gems]
+                "items": [format_restaurant_for_frontend(r) for r in enrich_restaurants(hidden_gems, full_docs_dict)]
             },
         ]
     }
