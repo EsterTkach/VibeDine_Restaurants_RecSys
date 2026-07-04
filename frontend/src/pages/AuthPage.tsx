@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { FaApple, FaXTwitter } from "react-icons/fa6";
 import AppShell from "../layouts/AppShell";
@@ -15,6 +15,12 @@ export default function AuthPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showToast, setShowToast] = useState(false);
+
+  useEffect(() => {
+    setUsername("");
+    setError("");
+    setPassword("");
+  }, [setUsername]);
 
   const showComingSoon = () => {
     setShowToast(true);
@@ -46,8 +52,14 @@ export default function AuthPage() {
       navigate("/loading", { state: { username: data.username } });
 
     } catch (apiError) {
+      const status = (apiError as any)?.response?.status;
+      if (status === 401) {
+        setError("Invalid username or password, please try again");
+      } else {
+        setError("Login failed. Please try again.");
+      }
       console.log(apiError);
-      console.warn("Backend login failed or offline. Testing fallback demo users...", apiError);
+      console.warn("Backend login failed or offline.", apiError);
     } finally {
       setLoading(false);
     }
