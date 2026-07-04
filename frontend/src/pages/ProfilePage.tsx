@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { Heart } from "lucide-react";
 
 import AppShell from "../layouts/AppShell";
@@ -13,7 +12,6 @@ import FoodAvatar from "../components/FoodAvatar";
 import { useHome } from "../contexts/HomeContext";
 
 export default function ProfilePage() {
-  const navigate = useNavigate();
   const { username, userId } = useAuth();
 
   const [profileName, setProfileName] = useState<string>(username);

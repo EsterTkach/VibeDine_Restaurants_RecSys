@@ -3,9 +3,8 @@ import AppShell from "../layouts/AppShell";
 import BottomNav from "../components/BottomNav";
 import VibeMatcherModal from "../components/VibeMatcherModal";
 import ComingSoonModal from "../components/ComingSoonModal";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import RestaurantRow from '../components/RestaurantRow';
-import type { CarouselData } from '../types';
 import { getHomeCarousels, getVibeMatchRecommendations } from "../api/restaurants";
 import "./HomePage.css";
 
@@ -15,13 +14,12 @@ import axios from "axios";
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const location = useLocation();
   const [showVibeModal, setShowVibeModal] = useState(false);
   const [showComingSoon, setShowComingSoon] = useState(false);
 
   // LIVE DATA STATES
   
-  const { username } = useAuth();
+  const { username, setUsername, setUserId } = useAuth();
   const {
     carousels,
     setCarousels,
@@ -29,6 +27,7 @@ export default function HomePage() {
     setHasLoadedHome,
   } = useHome();
   const [loading, setLoading] = useState<boolean>(true);
+  const [showAccountMenu, setShowAccountMenu] = useState(false);
 
   const [vibeMatches, setVibeMatches] = useState<any[]>([]);
   const [showVibeMatches, setShowVibeMatches] = useState(false);
@@ -121,6 +120,15 @@ export default function HomePage() {
   const handleComingSoonClose = () => {
     setShowComingSoon(false);
   };
+
+  const handleLogout = () => {
+    setUserId("");
+    setUsername("");
+    setCarousels([]);
+    setHasLoadedHome(false);
+    setShowAccountMenu(false);
+    navigate("/login", { replace: true });
+  };
   console.log("HomePage render");
   // BACKEND INTEGRATION EFFECT
   useEffect(() => {
@@ -183,15 +191,29 @@ export default function HomePage() {
           </div>
 
           <div className="profile-avatar-container">
-            {loading && !errorMessage ? (
-              <div className="profile-avatar-loader">⏳</div>
-            ) : (
-              <img 
-                src={trueAvatarUrl} 
-                alt={`${username}'s Profile Avatar`} 
-                className="profile-avatar"
-                style={{ width: "44px", height: "44px", borderRadius: "50%", objectFit: "cover" }}
-              />
+            <button
+              className="profile-avatar-button"
+              onClick={() => setShowAccountMenu((value) => !value)}
+              aria-label="Open account menu"
+            >
+              {loading && !errorMessage ? (
+                <div className="profile-avatar-loader">⏳</div>
+              ) : (
+                <img 
+                  src={trueAvatarUrl} 
+                  alt={`${username}'s Profile Avatar`} 
+                  className="profile-avatar"
+                  style={{ width: "44px", height: "44px", borderRadius: "50%", objectFit: "cover" }}
+                />
+              )}
+            </button>
+
+            {showAccountMenu && (
+              <div className="account-menu">
+                <button className="account-menu-button" onClick={handleLogout}>
+                  Sign out
+                </button>
+              </div>
             )}
           </div>
         </div>

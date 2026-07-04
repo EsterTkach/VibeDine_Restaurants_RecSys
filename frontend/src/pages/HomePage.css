@@ -29,6 +29,41 @@
 .profile-avatar-container {
   flex-shrink: 0;
   margin-left: 16px;
+  position: relative;
+}
+
+.profile-avatar-button {
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+
+.account-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+  border: 1px solid #f0e6d8;
+  min-width: 120px;
+  z-index: 20;
+}
+
+.account-menu-button {
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 12px 14px;
+  text-align: left;
+  font-size: 14px;
+  color: #7a5330;
+  cursor: pointer;
+}
+
+.account-menu-button:hover {
+  background: #f8f0e8;
 }
 
 .home-header h1 {

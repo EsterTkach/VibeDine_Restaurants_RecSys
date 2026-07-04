@@ -5,7 +5,6 @@ import AppShell from "../layouts/AppShell";
 import { useNavigate } from "react-router-dom";
 import { authService } from "../api/services";
 import { useAuth } from "../contexts/AuthContext";
-import { preloadHomeData } from "../api/home";
 
 export default function AuthPage() {
   const navigate = useNavigate();
@@ -20,7 +19,7 @@ export default function AuthPage() {
     setUsername("");
     setError("");
     setPassword("");
-  }, [setUsername]);
+  }, []);
 
   const showComingSoon = () => {
     setShowToast(true);
@@ -45,8 +44,6 @@ export default function AuthPage() {
       console.log("Login response:", username,password);
       setUserId(data.user_id);
       setUsername(data.username);
-      localStorage.setItem("user_id", data.user_id);
-      localStorage.setItem("username", data.username);
       //preloadHomeData(data.user_id);
       // If server returns a token/user, pass user data directly to the loading view
       navigate("/loading", { state: { username: data.username } });
