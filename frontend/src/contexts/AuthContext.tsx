@@ -7,7 +7,7 @@ type AuthContextType = {
   setUserData: React.Dispatch<React.SetStateAction<UserData>>;
 };
 
-const defaultUserData: UserData = {
+export const defaultUserData: UserData = {
   user_id: "",
   username: "",
   avatar_index: 0,
