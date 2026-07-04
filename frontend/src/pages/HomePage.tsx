@@ -25,11 +25,9 @@ export default function HomePage() {
   const { userData, setUserData } = useAuth();
   const userId = userData.user_id;
 
-
    const trueAvatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(
     userData.name
   )}&background=3d2817&color=fff&bold=true&rounded=true`;
-
 
    const {
     carousels,
@@ -144,7 +142,7 @@ export default function HomePage() {
   useEffect(() => {
     console.log("Home useEffect started");
     async function fetchDashboardData() {
-      if (hasLoadedHome) {
+      if (hasLoadedHome || carousels.length > 0) {
         console.log("Home data already loaded, skipping fetch.");
         setLoading(false);
         return;
@@ -175,7 +173,7 @@ export default function HomePage() {
     }
     console.log("fetchDashboardData called");
     fetchDashboardData();
-  }, [userId, hasLoadedHome, navigate, setCarousels, setHasLoadedHome]);
+  }, [userId, hasLoadedHome, carousels.length, navigate, setCarousels, setHasLoadedHome]);
 
   const emojiMap: Record<string, string> = {
     recommended_for_you: "✨",
