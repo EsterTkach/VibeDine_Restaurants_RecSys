@@ -1,18 +1,21 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import AppShell from "../layouts/AppShell";
-import { getFriends } from "../api/restaurants";
+import { getFriends, createGroupSession } from "../api/restaurants";
+import { useAuth } from "../contexts/AuthContext";
 import type { Friend } from "../types";
 
 import "./GroupPage.css";
 
 export default function GroupPage() {
   const navigate = useNavigate();
-  const userId = localStorage.getItem("user_id") || "";
+  const { userId, username } = useAuth();
 
   const [friends, setFriends] = useState<Friend[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedFriends, setSelectedFriends] = useState<Friend[]>([]);
+  const [isCreatingSession, setIsCreatingSession] = useState(false);
+  const [error, setError] = useState("");
 
   const [budget, setBudget] = useState("");
   const [distance, setDistance] = useState("");
@@ -39,6 +42,30 @@ export default function GroupPage() {
 
   const hasFriends = !loading && friends.length > 0;
   const noFriends = !loading && friends.length === 0;
+
+  const handleFindMatch = async () => {
+    setIsCreatingSession(true);
+    setError("");
+    try {
+      const groupUserIds = [userId, ...selectedFriends.map((f) => f.user_id)];
+      const session = await createGroupSession(groupUserIds);
+      navigate("/loading", {
+        state: {
+          selectedFriends,
+          currentUserId: userId,
+          currentUserName: username || "You",
+          groupUserIds,
+          groupSessionId: session.session_id,
+          recommendation: session.recommendation,
+          nextPage: "/group-result",
+        },
+      });
+    } catch (err) {
+      setError("Could not start a group session. Please try again.");
+    } finally {
+      setIsCreatingSession(false);
+    }
+  };
 
   return (
     <AppShell>
@@ -150,16 +177,14 @@ export default function GroupPage() {
               </div>
             </div>
 
+            {error && <p className="group-error">{error}</p>}
+
             <button
               className="find-match-btn"
-              disabled={selectedFriends.length === 0}
-              onClick={() =>
-                navigate("/loading", {
-                  state: { selectedFriends, nextPage: "/group-result" },
-                })
-              }
+              disabled={selectedFriends.length === 0 || isCreatingSession}
+              onClick={handleFindMatch}
             >
-              Find Perfect Match →
+              {isCreatingSession ? "Finding..." : "Find Perfect Match →"}
             </button>
           </>
         )}

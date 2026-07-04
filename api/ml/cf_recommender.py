@@ -201,7 +201,7 @@ def get_offline_likes(user_id, min_rating=config.MIN_RATING):
 ##    return int((user_row.data >= min_rating).sum())
 """
 
-def get_popular_restaurants(top_k=config.TOP_K):
+def get_popular_restaurants(top_k=config.TOP_K, candidate_gmap_ids=None):
     """
     Return the Top-K most popular restaurants
     based on offline positive ratings.
@@ -215,11 +215,16 @@ def get_popular_restaurants(top_k=config.TOP_K):
     # Rank restaurants by popularity
     ranked_indices = popularity_scores.argsort()[::-1]
 
+    candidate_set = set(candidate_gmap_ids) if candidate_gmap_ids is not None else None
+
     recommendations = []
 
     # Build recommendation list
-    for idx in ranked_indices[:top_k]:
+    for idx in ranked_indices:
         gmap_id = index_to_item_id[idx]
+
+        if candidate_set is not None and gmap_id not in candidate_set:
+            continue
 
         name = (
             restaurant_lookup.loc[gmap_id]["name"]
@@ -234,6 +239,8 @@ def get_popular_restaurants(top_k=config.TOP_K):
                 "popularity_score": round(float(popularity_scores[idx]), 3),
             }
         )
+        if len(recommendations) == (top_k*3):
+            break
 
     return recommendations
 

@@ -1,94 +1,130 @@
 import pandas as pd
 from api.ml import config
 from api.db.restaurant_repository import get_filtered_restaurants_repo
-from api.ml.cf_recommender import compute_cf_scores, get_user_offline_likes, recommend_for_user_cf
+from api.ml.cf_recommender import compute_cf_scores, get_popular_restaurants, get_user_offline_likes, recommend_for_user_cf
 from api.services.users_service import get_user_online_likes
-from api.utils.utils import format_restaurant_for_frontend
+from api.utils.utils import extract_gmap_ids, format_restaurant_for_frontend
 from api.routes.users import get_onboarding_preferences
-from api.ml.cb_recommender import compute_cb_scores, restaurants 
+from api.ml.cb_recommender import compute_cb_scores, restaurant_lookup
 
 
 
-def get_popular_restaurants(top_k=10):
-    """
-    Fallback recommendations for cold-start users.
-    Returns most popular restaurants.
-    """
+# def get_popular_restaurants(top_k=10):
+#     """
+#     Fallback recommendations for cold-start users.
+#     Returns most popular restaurants.
+#     """
 
-    interactions = pd.read_parquet(
-        config.INTERACTIONS_FILE
-    )
+#     interactions = pd.read_parquet(
+#         config.INTERACTIONS_FILE
+#     )
 
-    popular = (
-        interactions.groupby("gmap_id")
-        .agg(
-            avg_rating=("rating", "mean"),
-            review_count=("rating", "count"),
-        )
-        .reset_index()
-    )
+#     popular = (
+#         interactions.groupby("gmap_id")
+#         .agg(
+#             avg_rating=("rating", "mean"),
+#             review_count=("rating", "count"),
+#         )
+#         .reset_index()
+#     )
 
-    # avoid restaurants with very few reviews
-    popular = popular[
-        popular["review_count"] >= 20
-    ]
+#     # avoid restaurants with very few reviews
+#     popular = popular[
+#         popular["review_count"] >= 20
+#     ]
 
-    # weighted ranking
-    popular["score"] = (
-        popular["avg_rating"]
-        * popular["review_count"]
-    )
+#     # weighted ranking
+#     popular["score"] = (
+#         popular["avg_rating"]
+#         * popular["review_count"]
+#     )
 
-    popular = popular.sort_values(
-        by="score",
-        ascending=False
-    )
+#     popular = popular.sort_values(
+#         by="score",
+#         ascending=False
+#     )
 
-    restaurants = pd.read_parquet(
-        config.CBF_FEATURES_FILE
-    )
+#     restaurants = pd.read_parquet(
+#         config.CBF_FEATURES_FILE
+#     )
 
-    merged = popular.merge(
-        restaurants[
-            ["gmap_id", "name"]
-        ],
-        on="gmap_id",
-        how="left"
-    )
+#     merged = popular.merge(
+#         restaurants[
+#             ["gmap_id", "name"]
+#         ],
+#         on="gmap_id",
+#         how="left"
+#     )
 
-    recommendations = []
+#     recommendations = []
 
-    for _, row in merged.head(top_k).iterrows():
+#     for _, row in merged.head(top_k).iterrows():
 
-        recommendations.append(
-            {
-                "gmap_id": row["gmap_id"],
-                "name": row["name"],
-                "avg_rating": round(
-                    float(row["avg_rating"]), 2
-                ),
-                "review_count": int(
-                    row["review_count"]
-                ),
-            }
-        )
+#         recommendations.append(
+#             {
+#                 "gmap_id": row["gmap_id"],
+#                 "name": row["name"],
+#                 "avg_rating": round(
+#                     float(row["avg_rating"]), 2
+#                 ),
+#                 "review_count": int(
+#                     row["review_count"]
+#                 ),
+#             }
+#         )
 
-    return recommendations
+#     return recommendations
 
-
-"""fix: not done yet"""
-def get_user_onboarding_recommendations(user_id: str, top_k: int = 10):
-
+def get_onboarding_candidate_gmap_ids(user_id: str, candidate_gmap_ids=None):
     pref = get_onboarding_preferences(user_id)
-    #need to continue, based on 
-    for category in pref["categories"]:
-        restaurants = get_popular_by_category(
-            category=category,
-            page=1,
-            per_page=top_k
+    preferences = pref.get("preferences", {})
+
+    if not preferences:
+        return candidate_gmap_ids
+
+    categories = preferences.get("favorite_categories", [])
+    atmosphere = preferences.get("favorite_atmospheres", [])
+    accessibility = preferences.get("accessibility", [])
+    dietary_restrictions = preferences.get("dietary_restrictions", [])
+
+    candidate_gmap_ids_by_category = extract_gmap_ids(
+        get_filtered_restaurants_repo(
+            categories=categories,
+            accessibility=accessibility,
+            atmosphere=atmosphere,
+            dietary_restrictions=dietary_restrictions,
+            limit=1000))
+
+    if candidate_gmap_ids is None:
+        return candidate_gmap_ids_by_category
+
+    return list(
+        set(candidate_gmap_ids_by_category) & set(candidate_gmap_ids)
+    )
+
+
+def get_user_onboarding_recommendations(
+    user_id: str,
+    top_k: int = 10,
+    candidate_gmap_ids=None,
+    onboarding_candidate_gmap_ids=None,
+):
+    candidate_ids = onboarding_candidate_gmap_ids
+
+    if candidate_ids is None:
+        candidate_ids = get_onboarding_candidate_gmap_ids(user_id, candidate_gmap_ids)
+    elif candidate_gmap_ids is not None:
+        candidate_ids = list(
+            set(candidate_ids) & set(candidate_gmap_ids)
         )
-        if restaurants:
-            return restaurants
+
+    recommendations = get_popular_restaurants(
+        top_k=top_k,
+        candidate_gmap_ids=candidate_ids,
+    )
+    recommendations = remove_duplicate_names(recommendations)
+
+    return recommendations[:top_k]
 
 """ normalize scores and combine cb and cf scores """
 def min_max_normalize(score_dict, keys=None):
@@ -132,10 +168,51 @@ def combine_hybrid_scores(cb_scores, cf_scores, alpha=0.5):
 
     return hybrid_scores, cb_norm, cf_norm
 
+def get_hybrid_scores_for_user(user_id: str):
+    cb_scores = compute_cb_scores(user_id)
+    cf_scores = compute_cf_scores(user_id)
+    alpha = get_user_alpha(user_id)
+
+    print(f"alpha={alpha} for user {user_id}")
+    print(f"CB restaurants={len(cb_scores)}")
+    print(f"CF restaurants={len(cf_scores)}")
+
+    hybrid_scores = combine_hybrid_scores(cb_scores, cf_scores, alpha)[0]
+    print(f"Hybrid restaurants={len(hybrid_scores)}")
+    return hybrid_scores
+
+
+def rank_hybrid_recommendations(hybrid_scores, top_k=10, candidate_gmap_ids=None):
+    candidate_set = set(candidate_gmap_ids) if candidate_gmap_ids is not None else None
+    recommendations = []
+    for gmap_id, score in hybrid_scores.items():
+        if candidate_set is not None and gmap_id not in candidate_set:
+            continue
+        restaurant = restaurant_lookup.get(gmap_id)
+        if restaurant is None:
+            continue
+
+        recommendations.append(
+            {
+                "gmap_id": gmap_id,
+                "name": restaurant["name"],
+                "hybrid_score": round(float(score), 3),
+            }
+        )
+        if len(recommendations) == (top_k * 3):
+            break
+
+    recommendations.sort(key=lambda x: x["hybrid_score"], reverse=True)
+    restaurants = remove_duplicate_names(recommendations)
+    return restaurants[:top_k]
+
+
 def get_hybrid_recommendations_for_user(
     user_id: str,
     top_k=10,
     candidate_gmap_ids=None,
+    onboarding_candidate_gmap_ids=None,
+    hybrid_scores=None,
 ):
     """
     Returns recommendations for a user.
@@ -144,42 +221,21 @@ def get_hybrid_recommendations_for_user(
     """
     if get_user_augmented_likes(user_id) == 0:
         print(f"User {user_id} is cold-start, returning onboarding recommendations")
-        return get_user_onboarding_recommendations(user_id, top_k=top_k)
-    
-    cb_scores = compute_cb_scores(user_id)
-    cf_scores = compute_cf_scores(user_id)
-    alpha = get_user_alpha(user_id)
-
-    print(f"alpha={alpha} for user {user_id}")
-
-    print(f"CB restaurants={len(cb_scores)}")
-
-    print(f"CF restaurants={len(cf_scores)}")
-
-    hybrid_scores = combine_hybrid_scores(cb_scores, cf_scores,alpha)[0]
-
-    print(f"Hybrid restaurants={len(hybrid_scores)}")
-
-    candidate_set = set(candidate_gmap_ids) if candidate_gmap_ids else None
-    #rank recommendations by hybrid score
-    recommendations = []
-    for gmap_id, score in hybrid_scores.items():
-        if candidate_set is not None and gmap_id not in candidate_set:
-            continue
-        row = restaurants[restaurants["gmap_id"] == gmap_id]
-        if row.empty:
-            continue
-
-        recommendations.append(
-            {
-                "gmap_id": gmap_id,
-                "name": row.iloc[0]["name"],
-                "hybrid_score": round(float(score), 3),
-            }
+        return get_user_onboarding_recommendations(
+            user_id,
+            top_k=top_k,
+            candidate_gmap_ids=candidate_gmap_ids,
+            onboarding_candidate_gmap_ids=onboarding_candidate_gmap_ids,
         )
+    
+    if hybrid_scores is None:
+        hybrid_scores = get_hybrid_scores_for_user(user_id)
 
-    recommendations.sort(key=lambda x: x["hybrid_score"], reverse=True)
-    return recommendations[:top_k]
+    return rank_hybrid_recommendations(
+        hybrid_scores,
+        top_k=top_k,
+        candidate_gmap_ids=candidate_gmap_ids,
+    )
 
 
     
@@ -220,8 +276,10 @@ def get_popular_by_category(category: str, page: int = 1, per_page: int = 15):
         min_rating=4.0,
         min_reviews=30
     )
-    
+
     return [format_restaurant_for_frontend(r) for r in raw_restaurants]
+
+
 
 
 def get_user_augmented_likes(user_id):
@@ -263,3 +321,18 @@ def get_user_alpha(user_id):
         alpha = 0.85
 
     return alpha
+
+def remove_duplicate_names(restaurants):
+    seen = set()
+    unique = []
+
+    for restaurant in restaurants:
+        name = restaurant["name"].strip().lower()
+
+        if name in seen:
+            continue
+
+        seen.add(name)
+        unique.append(restaurant)
+
+    return unique

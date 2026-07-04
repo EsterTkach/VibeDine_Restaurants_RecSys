@@ -1,4 +1,4 @@
-from api.db.mongo import (restaurants_collection)
+from api.db.mongo import restaurants_collection
 from datetime import datetime
 
 def format_restaurant_for_frontend(restaurant_doc: dict) -> dict:
@@ -6,21 +6,27 @@ def format_restaurant_for_frontend(restaurant_doc: dict) -> dict:
     Maps database fields to match the strict frontend React Restaurant interface precisely.
     If fields are missing, it uses gmap_id to look up and pull missing data from the database.
     """
-    # 1. Extract the only strictly necessary field
+    # 1. Extract the only strictly required field
     gmap_id = restaurant_doc.get("gmap_id")
     if not gmap_id:
         raise ValueError("Missing 'gmap_id': This field is strictly required to process restaurant data.")
 
-    # 2. Check if the doc is just a skeleton. If missing core info, query the full record.
-    # We check for 'name' as a proxy indicator for whether the doc has been fully hydrated yet.
-    if "name" not in restaurant_doc or not restaurant_doc.get("name"):
+    # 2. Check if the doc is just a skeleton. 
+    # We now check for 'image_url' or 'avg_rating' instead of 'name', 
+    # because the ML model returns the name but omits the images/ratings.
+    if (
+        "image_url" not in restaurant_doc 
+        or not restaurant_doc.get("image_url") 
+        or "avg_rating" not in restaurant_doc
+    ):
         full_doc = restaurants_collection.find_one({"gmap_id": gmap_id})
         if full_doc:
             # Merge the found database record back into our working document
-            restaurant_doc = {**full_doc, **restaurant_doc}
+            # full_doc overwrites restaurant_doc for missing/empty fields
+            restaurant_doc = {**restaurant_doc, **full_doc}
 
     # 3. Process Cuisine field safely
-    categories = restaurant_doc.get("cuisine", [])
+    categories = restaurant_doc.get("cuisines", [])
     if isinstance(categories, str):
         cuisine_value = categories
     else:
@@ -73,3 +79,19 @@ def extract_gmap_ids(restaurants: list) -> list:
         
     # Standard list comprehension to grab the ID, with a safety check for the key
     return [res["gmap_id"] for res in restaurants if "gmap_id" in res]
+
+def enrich_restaurants(restaurant_list: list, full_docs_dict: dict) -> list:
+    """
+    Merges ML skeleton restaurant data with full database documents in memory.
+    This prevents N+1 database queries when formatting data for the frontend.
+    """
+    enriched_list = []
+    for r in restaurant_list:
+        gmap_id = r.get("gmap_id")
+        if gmap_id in full_docs_dict:
+            # Merge the live DB doc on top of the skeleton
+            enriched_list.append({**r, **full_docs_dict[gmap_id]})
+        else:
+            enriched_list.append(r)
+            
+    return enriched_list

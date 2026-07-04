@@ -5,6 +5,7 @@ import {
   getUserRecommendations,
   getSimilarRestaurants,
   saveOnboardingPreferences,
+  getHomeCarousels,
 } from "./restaurants";
 
 const BASE_URL = "http://localhost:8000";
@@ -42,16 +43,13 @@ export const restaurantService = {
   // Bridges to teammate's Content-Based matching endpoint
   getSimilar: (restaurantName: string) => getSimilarRestaurants(restaurantName),
 
+  getHomeCarousels: (userId: string) => getHomeCarousels(userId),
+
   getById: (id: string) => handleRequest<any>(`/restaurants/${id}`),
+
 };
 
 export const userService = {
-  getProfile: () => handleRequest<{ name: string }>("/user/profile"),
-  updateProfile: (data: any) =>
-    handleRequest("/user/profile", {
-      method: "PUT",
-      body: JSON.stringify(data),
-    }),
 
   getLikedRestaurants: (userId: string | number) =>
     handleRequest<{
@@ -92,7 +90,7 @@ export const authService = {
   },
 
   // Bridges directly to teammate's signup method
-  register: async (username: string, email: string, password: string) => {
+  register: async (username: string, password: string) => {
     // Note: Teammate's signup implementation currently expects only (username, password)
     return await signup(username, password);
   }

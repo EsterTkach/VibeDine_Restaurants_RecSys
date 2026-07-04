@@ -3,25 +3,34 @@ import AppShell from "../layouts/AppShell";
 import BottomNav from "../components/BottomNav";
 import VibeMatcherModal from "../components/VibeMatcherModal";
 import ComingSoonModal from "../components/ComingSoonModal";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import RestaurantRow from '../components/RestaurantRow';
-import type { CarouselData } from '../types';
-
-import { userService } from "../api/services";
+import { getHomeCarousels, getVibeMatchRecommendations } from "../api/restaurants";
 import "./HomePage.css";
+
+import { useAuth } from "../contexts/AuthContext";
+import { useHome } from "../contexts/HomeContext";
+import axios from "axios";
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const location = useLocation();
   const [showVibeModal, setShowVibeModal] = useState(false);
   const [showComingSoon, setShowComingSoon] = useState(false);
 
   // LIVE DATA STATES
-  const [username, setUsername] = useState<string>(
-    localStorage.getItem("username") || location.state?.username || "User"
-  );
-  const [carousels, setCarousels] = useState<CarouselData[]>([]);
+  
+  const { username, setUsername, setUserId } = useAuth();
+  const {
+    carousels,
+    setCarousels,
+    hasLoadedHome,
+    setHasLoadedHome,
+  } = useHome();
   const [loading, setLoading] = useState<boolean>(true);
+  const [showAccountMenu, setShowAccountMenu] = useState(false);
+
+  const [vibeMatches, setVibeMatches] = useState<any[]>([]);
+  const [showVibeMatches, setShowVibeMatches] = useState(false);
   
   // New clean UI error message state tracker
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -46,59 +55,121 @@ export default function HomePage() {
     setShowVibeModal(false);
   };
 
-  const handleVibeMatchSubmit = () => {
-    setShowVibeModal(false);
-    navigate("/loading", { state: { fromVibeMatcher: true } });
+  const handleVibeMatchSubmit = async (filters: any) => {
+  setShowVibeModal(false);
+  setLoading(true);
+  setErrorMessage(null);
+
+  const userId =
+    localStorage.getItem("user_id") ||
+    localStorage.getItem("userId") ||
+    "default_user";
+
+  const vibeFilters = {
+    categories: filters.categories?.length
+      ? filters.categories.map((category: string) => `${category} restaurant`)
+      : null,
+
+    price: filters.budget || null,
+
+    accessibility:
+      filters.accessibility === "Required"
+        ? ["Wheelchair accessible entrance"]
+        : null,
+
+    offerings:
+      filters.dietary && filters.dietary !== "None"
+        ? [filters.dietary]
+        : null,
+
+    service_options:
+      filters.dineOption === "Takeout"
+        ? ["Takeout"]
+        : filters.dineOption === "Dine-in"
+        ? ["Dine-in"]
+        : null,
+
+    radius_km:
+      filters.distance === "Walking Distance"
+        ? 2
+        : filters.distance === "Up to 15 Minutes"
+        ? 8
+        : filters.distance === "Up to 30 Minutes"
+        ? 16
+        : null,
+
+    top_k: 5,
   };
+
+  try {
+    const data = await getVibeMatchRecommendations(
+      userId,
+      vibeFilters
+    );
+
+    setVibeMatches(data.recommendations || []);
+    setShowVibeMatches(true);
+  } catch (error) {
+    console.error("Failed to load vibe matches:", error);
+    setErrorMessage("Could not load vibe matches. Please try again.");
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleComingSoonClose = () => {
     setShowComingSoon(false);
   };
 
+  const handleLogout = () => {
+    setUserId("");
+    setUsername("");
+    setCarousels([]);
+    setHasLoadedHome(false);
+    setShowAccountMenu(false);
+    navigate("/login", { replace: true });
+  };
+  console.log("HomePage render");
   // BACKEND INTEGRATION EFFECT
   useEffect(() => {
+    console.log("Home useEffect started");
     async function fetchDashboardData() {
+      if (hasLoadedHome) {
+        console.log("Home data already loaded, skipping fetch.");
+        setLoading(false);
+        return;
+      }
       try {
         setLoading(true);
         setErrorMessage(null); // Reset previous errors on reload
         
-        const currentUserId = localStorage.getItem("user_id") || "default_user";
+        const currentUserId = localStorage.getItem("user_id");
+        if (!currentUserId) {
+          navigate("/login", { replace: true });
+          return;
+        }
+        const data = await getHomeCarousels(currentUserId);
 
-        const [carouselRes, profileData] = await Promise.all([
-          fetch(`/home-carousels?user_id=${currentUserId}&top_k=25`),
-          userService.getProfile().catch(() => ({ name: username }))
-        ]);
+        console.log("Home carousels response:", data);
 
-        if (carouselRes.ok) {
-          const data = await carouselRes.json();
-          setCarousels(data.carousels || []);
-        } else {
-          // Captures 404s or 500s directly from server response
-          setErrorMessage(`Failed to load feed rows (${carouselRes.status}). Please check server routing configuration.`);
+        setCarousels(data.carousels || []);
+        setHasLoadedHome(true);
+        console.log("Carousels:", data.carousels);
+
         }
 
-        if (profileData && profileData.name) {
-          setUsername(profileData.name);
-          localStorage.setItem("username", profileData.name);
-        }
-
-      } catch (error) {
-        console.error("Layout API network connection failure:", error);
-        setErrorMessage("Unable to connect to the recommendations server. Please verify your backend is running.");
+        catch (error) {
+        console.error(error);
+        if (axios.isAxiosError(error)) {
+          console.log(error.response);
+}
       } finally {
         setLoading(false);
       }
     }
-
+    console.log("fetchDashboardData called");
     fetchDashboardData();
   }, []);
-
-  useEffect(() => {
-    if (location.state?.fromVibeMatcher) {
-      setShowComingSoon(true);
-      window.history.replaceState({}, document.title);
-    }
-  }, [location]);
 
   const emojiMap: Record<string, string> = {
     recommended_for_you: "✨",
@@ -120,15 +191,29 @@ export default function HomePage() {
           </div>
 
           <div className="profile-avatar-container">
-            {loading && !errorMessage ? (
-              <div className="profile-avatar-loader">⏳</div>
-            ) : (
-              <img 
-                src={trueAvatarUrl} 
-                alt={`${username}'s Profile Avatar`} 
-                className="profile-avatar"
-                style={{ width: "44px", height: "44px", borderRadius: "50%", objectFit: "cover" }}
-              />
+            <button
+              className="profile-avatar-button"
+              onClick={() => setShowAccountMenu((value) => !value)}
+              aria-label="Open account menu"
+            >
+              {loading && !errorMessage ? (
+                <div className="profile-avatar-loader">⏳</div>
+              ) : (
+                <img 
+                  src={trueAvatarUrl} 
+                  alt={`${username}'s Profile Avatar`} 
+                  className="profile-avatar"
+                  style={{ width: "44px", height: "44px", borderRadius: "50%", objectFit: "cover" }}
+                />
+              )}
+            </button>
+
+            {showAccountMenu && (
+              <div className="account-menu">
+                <button className="account-menu-button" onClick={handleLogout}>
+                  Log out
+                </button>
+              </div>
             )}
           </div>
         </div>
@@ -156,6 +241,13 @@ export default function HomePage() {
             marginTop: '24px'
           }}
         >
+          {showVibeMatches && vibeMatches.length > 0 && (
+            <RestaurantRow
+              title="Your Vibe Matches"
+              emoji="🪄"
+              restaurants={vibeMatches}
+          />
+        )}
           {loading ? (
             <div className="text-center p-10 text-gray-400">Loading your customized feed...</div>
           ) : errorMessage ? (

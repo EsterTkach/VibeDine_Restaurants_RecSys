@@ -8,6 +8,9 @@ from api.routes.recommendations import (
 from api.routes.users import (
     router as users_router
 )
+from api.routes.groups import (
+    router as groups_router
+)
 from api.routes.mongo_tests import (
     router as mongoTest_router
 )
@@ -30,6 +33,7 @@ app.add_middleware(
 routers = [
     recommendations_router,
     users_router,
+    groups_router,
     mongoTest_router,
 ]
 
@@ -40,4 +44,3 @@ for router in routers:
 @app.get("/")
 def root():
     return {"message": "VibeDine API is running"}
-
