@@ -1,48 +1,39 @@
 import { createContext, useContext, useState } from "react";
 
+import type { UserData } from "../types";
+
 type AuthContextType = {
-  userId: string;
-  username: string;
-  setUserId: (userId: string) => void;
-  setUsername: (username: string) => void;
+  userData: UserData;
+  setUserData: React.Dispatch<React.SetStateAction<UserData>>;
+};
+
+export const defaultUserData: UserData = {
+  user_id: "",
+  username: "",
+  avatar_index: 0,
+  name: "",
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-const getStoredUserId = () => localStorage.getItem("user_id") || localStorage.getItem("userId") || "";
-const getStoredUsername = () => localStorage.getItem("username") || "";
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [userId, setUserIdState] = useState(getStoredUserId);
-  const [username, setUsernameState] = useState(getStoredUsername);
+  const [userData, setUserData] = useState<UserData>(() => {
+    const stored = localStorage.getItem("user_data");
 
-  const setUserId = (nextUserId: string) => {
-    setUserIdState(nextUserId);
-    if (nextUserId) {
-      localStorage.setItem("user_id", nextUserId);
-      localStorage.setItem("userId", nextUserId);
-    } else {
-      localStorage.removeItem("user_id");
-      localStorage.removeItem("userId");
-    }
-  };
+    if (!stored) return defaultUserData;
 
-  const setUsername = (nextUsername: string) => {
-    setUsernameState(nextUsername);
-    if (nextUsername) {
-      localStorage.setItem("username", nextUsername);
-    } else {
-      localStorage.removeItem("username");
+    try {
+      return JSON.parse(stored) as UserData;
+    } catch {
+      return defaultUserData;
     }
-  };
+  });
 
   return (
     <AuthContext.Provider
       value={{
-        userId,
-        setUserId,
-        username,
-        setUsername,
+        userData,
+        setUserData,
       }}
     >
       {children}

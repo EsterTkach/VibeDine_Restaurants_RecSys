@@ -1,9 +1,11 @@
+import "./Onboarding.css";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AppShell from "../layouts/AppShell";
 import { vibeService } from "../api/services"; // CHANGED: Using centralized architecture
 import { preloadHomeData } from "../api/home";
-import "./Onboarding.css";
+
+import { useAuth } from "../contexts/AuthContext";
 
 const CUISINE_OPTIONS = ["Sushi", "Italian", "Dessert", "Cafe", "Burger", "Mexican", "Seafood", "Fast food"];
 const VIBE_OPTIONS = ["Cozy", "Casual", "Romantic", "Trendy", "Family-friendly", "Upscale"];
@@ -13,8 +15,10 @@ const DIETARY_OPTIONS = ["Gluten Free", "Vegetarian", "Vegan", "None"];
 export default function Onboarding() {
   const navigate = useNavigate();
   // Safe fallbacks to local mock attributes if user lands here without a real login session
-  const userId = localStorage.getItem("user_id");
-  const username = localStorage.getItem("username") || "Mock User";
+
+  const { userData } = useAuth();
+  const userId = userData.user_id;
+  const username = userData.username || "Mock User";
 
   // Multi-select for cuisines and vibes
   const [selectedCuisines, setSelectedCuisines] = useState<string[]>([]);
@@ -26,13 +30,13 @@ export default function Onboarding() {
 
   const toggleSelection = (
     item: string,
-    setList: React.Dispatch<React.SetStateAction<string[]>>
+    setList: React.Dispatch<React.SetStateAction<string[]>>,
   ) => {
     setList((prev) =>
       prev.includes(item)
-        ? prev.filter((i) => i !== item)
-        : [...prev, item]
-    );
+              ? prev.filter((i) => i !== item)
+              : [...prev, item]
+          );  
   };
 
   const handleComplete = async () => {
@@ -40,7 +44,7 @@ export default function Onboarding() {
       navigate("/login", { replace: true });
       return;
     }
-    
+
     const userPreferences = {
       favorite_categories: selectedCuisines,
       favorite_atmospheres: selectedVibes,
@@ -50,19 +54,19 @@ export default function Onboarding() {
 
     try {
       // 1. Try hitting the central service wrapper mapped to your teammate's backend
-      await vibeService.submitMatch(userPreferences);
+      await vibeService.submitMatch(userId, userPreferences);
       console.log("Successfully saved backend preferences:", userPreferences);
 
     } catch (error) {
       // 2. STABILITY FALLBACK: Intercept 404/Connection errors gracefully
-      console.warn("Backend offline. Simulating local onboarding preferences save...", error);
+            console.warn("Backend offline. Simulating local onboarding preferences save...", error);
     } finally {
       // Always advance to home safely regardless of server availability status
       preloadHomeData(userId);
       navigate("/loading", {
         state: {
           nextPage: "/home",
-          username: username // Propagate the username down to the home layout state
+          username: userData.username  // Propagate the username down to the home layout state
         },
         replace: true,
       });
@@ -73,7 +77,7 @@ export default function Onboarding() {
     <AppShell>
       <div className="onboarding-page">
         <h1>Welcome{username ? `, ${username}` : ""}!</h1>
-        <p>Please pick a few of your favorites so we can recommend the best places for you 😊</p>
+          <p>Please pick a few of your favorites so we can recommend the best places for you 😊</p>
 
         <div className="filters">
           <div className="preference-group">

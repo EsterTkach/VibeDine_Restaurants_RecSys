@@ -1,22 +1,21 @@
+import "./AuthPage.css";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AppShell from "../layouts/AppShell";
 import { authService } from "../api/services";
 import { useAuth } from "../contexts/AuthContext";
 
-import "./AuthPage.css";
-
 export default function SignUpPage() {
   const navigate = useNavigate();
-  const { setUserId, setUsername: setAuthUsername } = useAuth();
 
-  const [username, setUsername] = useState("");
+  const { userData, setUserData } = useAuth();
+
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const handleSignUp = async () => {
-    if (!username.trim() || !password.trim()) {
+    if (!userData.username.trim() || !password.trim()) {
       setError("Please fill in all fields");
       return;
     }
@@ -24,35 +23,38 @@ export default function SignUpPage() {
     try {
       setError("");
       setLoading(true);
-      
-      // 1. Try routing the sign up request to the live backend server
-      const response = await authService.register(username, password); // Email is empty string for now
-      
-      setUserId(response.user_id);
-      setAuthUsername(username);
-      console.log("Saved user_id:", localStorage.getItem("user_id"));
+
+      const response = await authService.register(userData.username, password); // Email is empty string for now
+      setUserData(response.user_data);
+
+      localStorage.setItem("user_data", JSON.stringify(response.user_data));
 
       navigate("/onboarding", {
         replace: true,
         state: {
-          username,
-          userId: response.user_id,
+          userData: response.user_data,
         },
       });
     } catch (apiError) {
-      console.warn("Backend sign up failed or offline. Using local development fallback simulation...", apiError);
+        console.warn("Backend sign up failed or offline. Using local development fallback simulation...", apiError);
 
       // 2. STABILITY FALLBACK: Generate a fake local session so your UI workflow doesn't block
-      const fallbackId = `mock_user_${Math.floor(Math.random() * 10000)}`;
-      setUserId(fallbackId);
-      setAuthUsername(username);
+      const fallbackUser = {
+        user_id: `mock_user_${Math.floor(Math.random() * 10000)}`,
+        username: userData.username,
+        avatar_index: 0,
+        name: "",
+      };
+
+      setUserData(fallbackUser);
+      localStorage.setItem("user_data", JSON.stringify(fallbackUser));
 
       navigate("/onboarding", {
         replace: true,
         state: {
-          username,
-          userId: fallbackId,
-        },
+          userData: fallbackUser,
+
+        }
       });
     } finally {
       setLoading(false);
@@ -72,9 +74,14 @@ export default function SignUpPage() {
           <input
             className="input"
             placeholder="Username"
-            value={username}
+            value={userData.username}
             disabled={loading}
-            onChange={(e) => setUsername(e.target.value)}
+            onChange={(e) =>
+              setUserData({
+                ...userData,
+                username: e.target.value,
+              })
+            }
           />
 
           <input

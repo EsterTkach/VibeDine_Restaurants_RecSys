@@ -1,6 +1,7 @@
 from fastapi import (
     APIRouter,
-    HTTPException
+    HTTPException,
+    Query
 )
 
 from uuid import uuid4
@@ -14,7 +15,8 @@ from api.schemas.user import (
     UserSignupRequest,
     UserLoginRequest,
     OnboardingPreferencesRequest,
-    RestaurantInteractionRequest
+    RestaurantInteractionRequest,
+    AddFriendRequest
 )
 
 from api.services.users_service import (get_user_online_liked_restaurants,)
@@ -29,38 +31,40 @@ def signup(
     request:
     UserSignupRequest
 ):
+    new_user_id = str(uuid4())
 
     user = {
-        "user_id":
-        str(uuid4()),
-
-        "username":
-        request.username,
-
-        "password":
-        request.password,
+        "_id": new_user_id,
+        "user_id": new_user_id,
+        "name": request.username,
+        "username": request.username,
+        "password": request.password,
+        "liked_restaurants": [],
+        "friends": [],
+        "preferences": [],
+        "location": {
+            "type": "Point",
+            "coordinates": [0, 0],
+        },
+        "avatar_index": 0,
     }
-    existing_user = users_collection.find_one(
-    {"username": request.username})
-    if existing_user:
-        raise HTTPException(
-            status_code=409,
-            detail="Username already exists"
-        )
 
-    users_collection.insert_one(
-        user
-    )
-    print("Inserted user:", user)
+    existing_user = users_collection.find_one({"username": request.username})
+    if existing_user:
+        raise HTTPException(status_code=409, detail="Username already exists")
+
+    users_collection.insert_one(user)
 
     return {
-        "message":
-        "User created",
-        "user_id":
-        user["user_id"],
-        "username":
-        user["username"],
+        "message": "User created",
+        "user_data": {
+            "user_id": user["user_id"],
+            "username": user["username"],
+            "avatar_index": user["avatar_index"],
+            "name": user["name"],
+        },
     }
+
 
 @router.post("/login")
 def login(
@@ -88,14 +92,15 @@ def login(
         )
 
     return {
-        "message":
-        "Login successful",
-
-        "user_id":
-        user["user_id"],
-        "username":
-        user["username"],
+        "message": "Login successful",
+        "user_data": {
+            "user_id": user["user_id"],
+            "username": user["username"],
+            "avatar_index": user["avatar_index"],
+            "name": user["name"],
+        },
     }
+
 
 @router.post("/{user_id}/onboarding-preferences")
 def save_onboarding_preferences(
@@ -286,11 +291,68 @@ def record_restaurant_view(
     }
 
 
+@router.get("/search")
+def search_users(
+    username: str = Query(..., min_length=1),
+    user_id: str = Query(...)
+):
+    results = users_collection.find(
+        {
+            "username": {"$regex": username, "$options": "i"},
+            "user_id": {"$ne": user_id}
+        },
+        {"_id": 0, "user_id": 1, "name": 1, "username": 1, "avatar_index": 1}
+    ).limit(20)
+    return [
+        {
+            "user_id": u["user_id"],
+            "name": u.get("name") or u.get("username", ""),
+            "username": u.get("username", ""),
+            "avatar_index": u.get("avatar_index", 0),
+        }
+        for u in results
+    ]
+
+
+@router.get("/{user_id}/friends")
+def get_friends(user_id: str):
+    user = users_collection.find_one({"user_id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    friend_ids = user.get("friends", [])
+    if not friend_ids:
+        return []
+
+    friends = users_collection.find(
+        {"user_id": {"$in": friend_ids}},
+        {"_id": 0, "user_id": 1, "name": 1, "username": 1, "avatar_index": 1}
+    )
+    return [
+        {
+            "user_id": f["user_id"],
+            "name": f.get("name") or f.get("username", ""),
+            "username": f.get("username", ""),
+            "avatar_index": f.get("avatar_index", 0),
+        }
+        for f in friends
+    ]
+
+
+@router.post("/{user_id}/friends")
+def add_friend(user_id: str, request: AddFriendRequest):
+    result = users_collection.update_one(
+        {"user_id": user_id},
+        {"$addToSet": {"friends": request.friend_id}}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="User not found — please log out and log in again")
+    return {"message": "Friend added"}
+
+
 @router.get("/{user_id}/restaurants/liked")
 def get_liked_restaurants(user_id: str):
-    print('user_id: ', user_id)
     liked_restaurants = get_user_online_liked_restaurants(user_id)
-    print('liked_restaurants: ', liked_restaurants)
 
     return {
         "user_id": user_id,

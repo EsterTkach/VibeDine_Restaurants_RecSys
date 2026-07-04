@@ -1,3 +1,4 @@
+import axios from "axios";
 import { useState, useEffect } from "react";
 import AppShell from "../layouts/AppShell";
 import BottomNav from "../components/BottomNav";
@@ -8,9 +9,11 @@ import RestaurantRow from '../components/RestaurantRow';
 import { getHomeCarousels, getVibeMatchRecommendations } from "../api/restaurants";
 import "./HomePage.css";
 
-import { useAuth } from "../contexts/AuthContext";
+import { defaultUserData, useAuth } from "../contexts/AuthContext";
 import { useHome } from "../contexts/HomeContext";
-import axios from "axios";
+import FoodAvatar from "../components/FoodAvatar";
+
+
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -18,9 +21,17 @@ export default function HomePage() {
   const [showComingSoon, setShowComingSoon] = useState(false);
 
   // LIVE DATA STATES
-  
-  const { username, setUsername, setUserId } = useAuth();
-  const {
+
+  const { userData, setUserData } = useAuth();
+  const userId = userData.user_id;
+
+
+   const trueAvatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+    userData.name
+  )}&background=3d2817&color=fff&bold=true&rounded=true`;
+
+
+   const {
     carousels,
     setCarousels,
     hasLoadedHome,
@@ -28,13 +39,9 @@ export default function HomePage() {
   } = useHome();
   const [loading, setLoading] = useState<boolean>(true);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
-  
+
   // New clean UI error message state tracker
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  const trueAvatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(
-    username
-  )}&background=3d2817&color=fff&bold=true&rounded=true`;
 
   const getGreeting = (): string => {
     const hour = new Date().getHours();
@@ -53,42 +60,80 @@ export default function HomePage() {
   };
 
   const handleVibeMatchSubmit = async (filters: any) => {
-  setLoading(true);
-  setErrorMessage(null);
-
-  const userId =
-    localStorage.getItem("user_id") ||
-    localStorage.getItem("userId") ||
-    "default_user";
-
-  try {
-    const data = await getVibeMatchRecommendations(
-      userId,
-      filters
-    );
     setShowVibeModal(false);
-    navigate("/loading", {
-      state: {
-        nextPage: "/vibe-match",
-        recommendations: data.recommendations || [],
-        filters,
-      },
-    });
-  } catch (error) {
-    console.error("Failed to load vibe matches:", error);
-    setErrorMessage("Could not load vibe matches. Please try again.");
-  } finally {
-    setLoading(false);
-  }
-};
+    setLoading(true);
+    setErrorMessage(null);
+
+    if (!userId) {
+      navigate("/login", { replace: true });
+      return;
+    }
+
+    const vibeFilters = {
+      categories: filters.categories?.length
+        ? filters.categories.map((category: string) => `${category} restaurant`)
+        : null,
+
+      price: filters.budget || null,
+
+      accessibility:
+        filters.accessibility === "Required"
+          ? ["Wheelchair accessible entrance"]
+          : null,
+
+      offerings:
+        filters.dietary && filters.dietary !== "None"
+          ? [filters.dietary]
+          : null,
+
+      service_options:
+        filters.dineOption === "Takeout"
+          ? ["Takeout"]
+          : filters.dineOption === "Dine-in"
+            ? ["Dine-in"]
+            : null,
+
+      radius_km:
+        filters.distance === "Walking Distance"
+          ? 2
+          : filters.distance === "Up to 15 Minutes"
+            ? 8
+            : filters.distance === "Up to 30 Minutes"
+              ? 16
+              : null,
+
+      top_k: 5,
+    };
+
+    try {
+      const data = await getVibeMatchRecommendations(
+        userId, 
+        vibeFilters
+    );
+
+      navigate("/loading", {
+        state: {
+          nextPage: "/vibe-match",
+          recommendations: data.recommendations || [],
+          filters: vibeFilters,
+        },
+      });
+    } catch (error) {
+      console.error("Failed to load vibe matches:", error);
+      setErrorMessage("Could not load vibe matches. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleComingSoonClose = () => {
     setShowComingSoon(false);
   };
 
   const handleLogout = () => {
-    setUserId("");
-    setUsername("");
+    setUserData(defaultUserData);
+    localStorage.removeItem("user_data");
+
     setCarousels([]);
     setHasLoadedHome(false);
     setShowAccountMenu(false);
@@ -107,50 +152,47 @@ export default function HomePage() {
       try {
         setLoading(true);
         setErrorMessage(null); // Reset previous errors on reload
-        
-        const currentUserId = localStorage.getItem("user_id");
-        if (!currentUserId) {
+
+        if (!userId) {
           navigate("/login", { replace: true });
           return;
         }
-        const data = await getHomeCarousels(currentUserId);
+        const data = await getHomeCarousels(userId);
 
         console.log("Home carousels response:", data);
 
         setCarousels(data.carousels || []);
         setHasLoadedHome(true);
         console.log("Carousels:", data.carousels);
-
-        }
-
-        catch (error) {
+      } catch (error) {
         console.error(error);
         if (axios.isAxiosError(error)) {
           console.log(error.response);
-}
+        }
       } finally {
         setLoading(false);
       }
     }
     console.log("fetchDashboardData called");
     fetchDashboardData();
-  }, []);
+  }, [userId, hasLoadedHome, navigate, setCarousels, setHasLoadedHome]);
 
   const emojiMap: Record<string, string> = {
     recommended_for_you: "✨",
     popular_near_you: "🔥",
     popular_at_this_hour: "⏰",
     you_might_like: "👍",
-    hidden_gems: "💎"
+    hidden_gems: "💎",
   };
 
   return (
     <AppShell>
       <div className="home-page">
         <div className="home-header">
-          <div>
-            <h1>
-              {getGreeting()}, {username}!👋
+          <div className="home-text">
+            <h1 className="greeting">
+              <span>{getGreeting()},</span>
+              <span>{userData.name}! 👋</span>
             </h1>
             <p>Find your next favorite spot</p>
           </div>
@@ -164,12 +206,7 @@ export default function HomePage() {
               {loading && !errorMessage ? (
                 <div className="profile-avatar-loader">⏳</div>
               ) : (
-                <img 
-                  src={trueAvatarUrl} 
-                  alt={`${username}'s Profile Avatar`} 
-                  className="profile-avatar"
-                  style={{ width: "44px", height: "44px", borderRadius: "50%", objectFit: "cover" }}
-                />
+                <FoodAvatar avatar_index={userData.avatar_index} size={90} />
               )}
             </button>
 
@@ -184,20 +221,20 @@ export default function HomePage() {
         </div>
 
         <div className="search-bar" onClick={handleVibeMatchClick}>
+          <span className="search-text">Vibe Matcher</span>{" "}
           <span className="search-icon">🪄</span>
-          <span className="search-text">Vibe Matcher</span>
         </div>
 
-        <div 
-          className="search-bar" 
+        <div
+          className="search-bar"
           onClick={() => navigate("/group")}
           style={{ marginTop: "-10px" }}
         >
+          <span className="search-text">Plan With Friends</span>{" "}
           <span className="search-icon">👥</span>
-          <span className="search-text">Plan With Friends</span>
         </div>
 
-        <div 
+        <div
           className="carousels-container"
           style={{
             display: 'flex',
@@ -217,11 +254,11 @@ export default function HomePage() {
             </div>
           ) : (
             carousels.map((carousel) => (
-              <RestaurantRow 
+              <RestaurantRow
                 key={carousel.id}
-                title={carousel.title} 
-                emoji={emojiMap[carousel.id] || "📍"} 
-                restaurants={carousel.items} 
+                title={carousel.title}
+                emoji={emojiMap[carousel.id] || "📍"}
+                restaurants={carousel.items}
               />
             ))
           )}
