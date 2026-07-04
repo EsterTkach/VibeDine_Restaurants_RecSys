@@ -58,73 +58,54 @@ export default function HomePage() {
   const handleVibeModalClose = () => {
     setShowVibeModal(false);
   };
-
   const handleVibeMatchSubmit = async (filters: any) => {
-    setShowVibeModal(false);
-    setLoading(true);
-    setErrorMessage(null);
+  setShowVibeModal(false);
+  setLoading(true);
+  setErrorMessage(null);
 
-    if (!userId) {
-      navigate("/login", { replace: true });
-      return;
-    }
+  if (!userId) {
+    navigate("/login", { replace: true });
+    return;
+  }
 
-    const vibeFilters = {
-      categories: filters.categories?.length
-        ? filters.categories.map((category: string) => `${category} restaurant`)
-        : null,
+  try {
+    const data = await getVibeMatchRecommendations(userId, filters);
 
-      price: filters.budget || null,
-
-      accessibility:
-        filters.accessibility === "Required"
-          ? ["Wheelchair accessible entrance"]
-          : null,
-
-      offerings:
-        filters.dietary && filters.dietary !== "None"
-          ? [filters.dietary]
-          : null,
-
-      service_options:
-        filters.dineOption === "Takeout"
-          ? ["Takeout"]
-          : filters.dineOption === "Dine-in"
-            ? ["Dine-in"]
-            : null,
-
-      radius_km:
-        filters.distance === "Walking Distance"
-          ? 2
-          : filters.distance === "Up to 15 Minutes"
-            ? 8
-            : filters.distance === "Up to 30 Minutes"
-              ? 16
-              : null,
-
-      top_k: 5,
-    };
-
-    try {
-      const data = await getVibeMatchRecommendations(
-        userId, 
-        vibeFilters
+    navigate("/loading", {
+      state: {
+        nextPage: "/vibe-match",
+        recommendations: data.recommendations || [],
+        filters,
+      },
+    });
+  } catch (error) {
+    console.error("Failed to load vibe matches:", error);
+    setErrorMessage("Could not load vibe matches. Please try again.");
+  } finally {
+    setLoading(false);
+  }
+};
+  try {
+    const data = await getVibeMatchRecommendations(
+      userId,
+      filters
     );
-
-      navigate("/loading", {
-        state: {
-          nextPage: "/vibe-match",
-          recommendations: data.recommendations || [],
-          filters: vibeFilters,
-        },
-      });
-    } catch (error) {
-      console.error("Failed to load vibe matches:", error);
-      setErrorMessage("Could not load vibe matches. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
+    setShowVibeModal(false);
+    navigate("/loading", {
+      state: {
+        nextPage: "/vibe-match",
+        recommendations: data.recommendations || [],
+        filters,
+      },
+    });
+  } catch (error) {
+    console.error("Failed to load vibe matches:", error);
+    setErrorMessage("Could not load vibe matches. Please try again.");
+  } finally {
+    setLoading(false);
+  }
+};
+>>>>>>> 721b177 (vibematch)
 
   const handleComingSoonClose = () => {
     setShowComingSoon(false);
