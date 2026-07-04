@@ -25,8 +25,15 @@ export interface User {
   name: string;
   username: string;
   password: string;
-  avatar_url: string;
+  avatar_index: number;
   liked_restaurants: Restaurant[];
+}
+
+export interface Friend {
+  user_id: string;
+  name: string;
+  username: string;
+  avatar_index: number;
 }
 
 export interface ApiRecommendation {

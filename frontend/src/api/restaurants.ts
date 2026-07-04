@@ -1,5 +1,5 @@
 import apiClient from './client';
-import type { ApiRecommendationResponse } from '../types';
+import type { ApiRecommendationResponse, Friend } from '../types';
 
 export async function getUserRecommendations(userId: string, topK = 10): Promise<ApiRecommendationResponse> {
   const response = await apiClient.get<ApiRecommendationResponse>(`/recommend/cf/${userId}`, {
@@ -31,11 +31,8 @@ export async function saveOnboardingPreferences(
 ) {
   const response = await apiClient.post(
     `/users/${userId}/onboarding-preferences`,
-    {
-      preferences,
-    }
+    { preferences }
   );
-
   return response.data;
 }
 
@@ -44,29 +41,37 @@ export async function login(username: string, password: string): Promise<{ messa
   return response.data;
 }
 
+// Friends
+export async function getFriends(userId: string): Promise<Friend[]> {
+  const response = await apiClient.get<Friend[]>(`/users/${userId}/friends`);
+  return response.data;
+}
+
+export async function searchUsers(query: string, currentUserId: string): Promise<Friend[]> {
+  const response = await apiClient.get<Friend[]>('/users/search', {
+    params: { username: query, user_id: currentUserId },
+  });
+  return response.data;
+}
+
+export async function addFriend(userId: string, friendId: string): Promise<void> {
+  await apiClient.post(`/users/${userId}/friends`, { friend_id: friendId });
+}
+
+// Home carousels
 export async function getHomeCarousels(userId: string, topK = 25) {
   const response = await apiClient.get("/recommend/home-carousels", {
-    params: {
-      user_id: userId,
-      top_k: topK,
-    },
+    params: { user_id: userId, top_k: topK },
   });
-  
   return response.data;
 }
 
-export async function getVibeMatchRecommendations(
-  userId: string,
-  filters: any
-) {
-  const response = await apiClient.post(
-    `/recommend/vibe-match/${userId}`,
-    filters
-  );
-  
+export async function getVibeMatchRecommendations(userId: string, filters: any) {
+  const response = await apiClient.post(`/recommend/vibe-match/${userId}`, filters);
   return response.data;
 }
 
+// Group sessions
 export type GroupRecommendation = {
   gmap_id: string;
   name: string;
@@ -87,7 +92,6 @@ export async function createGroupSession(userIds: string[]) {
     top_k: 1,
     per_user_k: 50,
   });
-
   return response.data;
 }
 
@@ -107,51 +111,5 @@ export async function submitGroupSessionFeedback(
       per_user_k: 50,
     },
   );
-
   return response.data;
 }
-
-
-// export type GroupRecommendation = {
-//   gmap_id: string;
-//   name: string;
-//   avg_hybrid_score?: number;
-//   users_supported?: number;
-//   coverage?: number;
-//   group_score?: number;
-// };
-
-// export type GroupSessionResponse = {
-//   session_id: string;
-//   recommendation: GroupRecommendation | null;
-// };
-
-// export async function createGroupSession(userIds: string[]) {
-//   const response = await apiClient.post<GroupSessionResponse>("/groups/session", {
-//     user_ids: userIds,
-//     top_k: 1,
-//     per_user_k: 50,
-//   });
-
-//   return response.data;
-// }
-
-// export async function submitGroupSessionFeedback(
-//   sessionId: string,
-//   currentRestaurant: string,
-//   affectedUserIds: string[],
-//   reason: string,
-// ) {
-//   const response = await apiClient.post<GroupSessionResponse>(
-//     `/groups/session/${sessionId}/feedback`,
-//     {
-//       current_restaurant: currentRestaurant,
-//       affected_user_ids: affectedUserIds,
-//       reason,
-//       top_k: 1,
-//       per_user_k: 50,
-//     },
-//   );
-
-//   return response.data;
-// }

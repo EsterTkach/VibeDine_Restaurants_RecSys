@@ -24,35 +24,25 @@ export default function SignUpPage() {
     try {
       setError("");
       setLoading(true);
-      
-      // 1. Try routing the sign up request to the live backend server
-      const response = await authService.register(username, password); // Email is empty string for now
-      
+
+      const response = await authService.register(username, password);
       setUserId(response.user_id);
       setAuthUsername(username);
-      console.log("Saved user_id:", localStorage.getItem("user_id"));
 
       navigate("/onboarding", {
         replace: true,
-        state: {
-          username,
-          userId: response.user_id,
-        },
+        state: { username, userId: response.user_id },
       });
     } catch (apiError) {
-      console.warn("Backend sign up failed or offline. Using local development fallback simulation...", apiError);
+      console.warn("Backend sign up failed or offline.", apiError);
 
-      // 2. STABILITY FALLBACK: Generate a fake local session so your UI workflow doesn't block
       const fallbackId = `mock_user_${Math.floor(Math.random() * 10000)}`;
       setUserId(fallbackId);
       setAuthUsername(username);
 
       navigate("/onboarding", {
         replace: true,
-        state: {
-          username,
-          userId: fallbackId,
-        },
+        state: { username, userId: fallbackId },
       });
     } finally {
       setLoading(false);

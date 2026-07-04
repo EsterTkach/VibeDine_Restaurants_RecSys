@@ -8,8 +8,8 @@ import { useAuth } from "../contexts/AuthContext";
 
 export default function AuthPage() {
   const navigate = useNavigate();
-  
-  const {username, setUsername, setUserId} = useAuth();
+
+  const { username, setUsername, setUserId } = useAuth();
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -23,9 +23,7 @@ export default function AuthPage() {
 
   const showComingSoon = () => {
     setShowToast(true);
-    setTimeout(() => {
-      setShowToast(false);
-    }, 2500);
+    setTimeout(() => setShowToast(false), 2500);
   };
 
   const handleLogin = async () => {
@@ -38,14 +36,10 @@ export default function AuthPage() {
       setError("");
       setLoading(true);
 
-      console.log("Trying login:", username, password);
-      // 1. Try hitting the live backend service first
       const data = await authService.login(username, password);
-      console.log("Login response:", username,password);
       setUserId(data.user_id);
       setUsername(data.username);
-      //preloadHomeData(data.user_id);
-      // If server returns a token/user, pass user data directly to the loading view
+
       navigate("/loading", { state: { username: data.username } });
 
     } catch (apiError) {
@@ -55,7 +49,6 @@ export default function AuthPage() {
       } else {
         setError("Login failed. Please try again.");
       }
-      console.log(apiError);
       console.warn("Backend login failed or offline.", apiError);
     } finally {
       setLoading(false);
@@ -97,16 +90,16 @@ export default function AuthPage() {
             </span>
           )}
 
-          <button 
-            className="primary-btn" 
+          <button
+            className="primary-btn"
             onClick={handleLogin}
             disabled={loading}
           >
             {loading ? "Signing In..." : "Sign In →"}
           </button>
 
-          <button 
-            className="secondary-btn" 
+          <button
+            className="secondary-btn"
             onClick={() => navigate("/signup")}
             disabled={loading}
           >
@@ -123,7 +116,7 @@ export default function AuthPage() {
           <button className="social-btn" onClick={showComingSoon} disabled={loading}>
             <FaApple size={20} />
             Continue with Apple
-          </button> 
+          </button>
 
           <button className="social-btn" onClick={showComingSoon} disabled={loading}>
             <FaXTwitter size={18} />
