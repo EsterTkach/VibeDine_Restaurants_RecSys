@@ -1,45 +1,60 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import AppShell from "../layouts/AppShell";
+import apiClient from "../api/client";
+import { likeRestaurant, unlikeRestaurant } from "../api/restaurants";
+import { useAuth } from "../contexts/AuthContext";
 import "./RestaurantPage.css";
-// import api from "../api/client"; // Adjust to your actual API client import
 
 export default function RestaurantPage() {
   const navigate = useNavigate();
-  const { id } = useParams<{ id: string }>(); 
-  
+  const { id } = useParams<{ id: string }>();
+  const { userId } = useAuth();
+
   const [restaurant, setRestaurant] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [liked, setLiked] = useState(false);
+  const [likeLoading, setLikeLoading] = useState(false);
 
   useEffect(() => {
-    // Replace this with your actual API call
-    const fetchRestaurant = async () => {
-      try {
-        setLoading(true);
-        // const response = await api.get(`/restaurants/${id}`);
-        // setRestaurant(response.data);
-        
-        // TEMPORARY MOCK DATA to test the new layout until your API is hooked up:
-        setTimeout(() => {
-          setRestaurant({
-            name: "Sushi Nakazawa",
-            avg_rating: 4.8,
-            price: "$$$",
-            cuisine: "Japanese",
-            description: "An upscale, omakase-only sushi experience crafted by an apprentice of Jiro Ono.",
-            image_url: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&w=800&q=80",
-            address: "123 Culinary Lane, Food City"
-          });
-          setLoading(false);
-        }, 800);
-      } catch (error) {
-        console.error("Failed to fetch restaurant", error);
-        setLoading(false);
-      }
-    };
-
-    if (id) fetchRestaurant();
+    if (!id) return;
+    setLoading(true);
+    apiClient
+      .get(`/restaurants/${id}`)
+      .then((res) => setRestaurant(res.data))
+      .catch(() => setRestaurant(null))
+      .finally(() => setLoading(false));
   }, [id]);
+
+  const handleLikeToggle = async () => {
+    if (!userId || !id || likeLoading) return;
+    setLikeLoading(true);
+    try {
+      if (liked) {
+        await unlikeRestaurant(userId, id);
+        setLiked(false);
+      } else {
+        await likeRestaurant(userId, id);
+        setLiked(true);
+      }
+    } catch {
+      // silent
+    } finally {
+      setLikeLoading(false);
+    }
+  };
+
+  const getCuisineDisplay = () => {
+    if (!restaurant?.cuisines?.length) return null;
+    return restaurant.cuisines.slice(0, 2).join(" · ");
+  };
+
+  const getTodayHours = () => {
+    if (!restaurant?.hours) return null;
+    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const today = days[new Date().getDay()];
+    return restaurant.hours[today] || null;
+  };
 
   return (
     <AppShell>
@@ -50,7 +65,6 @@ export default function RestaurantPage() {
           <div className="error-state">Restaurant not found.</div>
         ) : (
           <>
-            {/* HERO IMAGE */}
             <div className="restaurant-hero">
               <button className="back-btn floating-back" onClick={() => navigate(-1)}>
                 ← Back
@@ -64,27 +78,41 @@ export default function RestaurantPage() {
               <h1>{restaurant.name}</h1>
 
               <div className="restaurant-meta">
-                <span>⭐ {restaurant.avg_rating}</span>
+                {restaurant.avg_rating && <span>⭐ {restaurant.avg_rating}</span>}
+                {restaurant.num_of_reviews && (
+                  <span>• {restaurant.num_of_reviews.toLocaleString()} reviews</span>
+                )}
                 {restaurant.price && <span>• {restaurant.price}</span>}
-                {restaurant.cuisine && <span>• {restaurant.cuisine}</span>}
+                {getCuisineDisplay() && <span>• {getCuisineDisplay()}</span>}
               </div>
 
-              {/* Assuming you pass the tag via state or calculate it */}
-              <div className="recommendation-tag">Recommended For You</div>
+              {getTodayHours() && (
+                <div className="restaurant-hours">🕐 Today: {getTodayHours()}</div>
+              )}
 
-              <p className="restaurant-description">
-                {restaurant.description || "A fantastic local spot worth checking out."}
-              </p>
+              {restaurant.address && (
+                <div className="restaurant-address">📍 {restaurant.address}</div>
+              )}
 
-              {/* BUTTON GRID */}
               <div className="actions-row">
-                <button className="action-btn">❤️ Like</button>
-                <button className="action-btn secondary">👎 Dislike</button>
+                <button
+                  className={`action-btn${liked ? " liked" : ""}`}
+                  onClick={handleLikeToggle}
+                  disabled={likeLoading}
+                >
+                  {liked ? "❤️ Liked" : "🤍 Like"}
+                </button>
               </div>
 
-              <button 
+              <button
                 className="maps-btn"
-                onClick={() => window.open(`https://maps.google.com/?q=${restaurant.name} ${restaurant.address || ''}`)}
+                onClick={() =>
+                  window.open(
+                    `https://maps.google.com/?q=${encodeURIComponent(
+                      restaurant.name + (restaurant.address ? ` ${restaurant.address}` : "")
+                    )}`
+                  )
+                }
               >
                 📍 Open In Maps
               </button>

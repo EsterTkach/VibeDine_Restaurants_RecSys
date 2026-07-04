@@ -20,6 +20,7 @@ from api.schemas.user import (
 )
 
 from api.services.users_service import (get_user_online_liked_restaurants,)
+from api.services.hybrid_cache import invalidate as invalidate_hybrid_cache
 
 router = APIRouter(
     prefix="/users",
@@ -179,6 +180,8 @@ def like_restaurant(
         upsert=True
     )
 
+    invalidate_hybrid_cache(user_id)
+
     return {
         "message":
         "Restaurant liked",
@@ -199,7 +202,7 @@ def unlike_restaurant(
 ):
     user_id = request.user_id
 
-    users_collection.update_one(
+    user_interactions_collection.update_one(
         {
             "user_id":
             user_id
@@ -211,6 +214,8 @@ def unlike_restaurant(
             }
         }
     )
+
+    invalidate_hybrid_cache(user_id)
 
     return {
         "message":
@@ -345,6 +350,17 @@ def add_friend(user_id: str, request: AddFriendRequest):
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="User not found — please log out and log in again")
     return {"message": "Friend added"}
+
+
+@router.delete("/{user_id}/friends/{friend_id}")
+def remove_friend(user_id: str, friend_id: str):
+    result = users_collection.update_one(
+        {"user_id": user_id},
+        {"$pull": {"friends": friend_id}}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {"message": "Friend removed"}
 
 
 @router.get("/{user_id}/restaurants/liked")

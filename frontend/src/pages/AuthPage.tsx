@@ -37,6 +37,9 @@ export default function AuthPage() {
       setLoading(true);
 
       const data = await authService.login(username, password);
+      // Clear any stale session data from a previous user before setting new one
+      localStorage.removeItem("user_id");
+      localStorage.removeItem("userId");
       setUserId(data.user_id);
       setUsername(data.username);
 

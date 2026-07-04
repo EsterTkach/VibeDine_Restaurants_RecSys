@@ -37,7 +37,7 @@ def get_user_online_likes(
 
 def get_user_online_liked_restaurants(user_id: str):
     print('user_id: ', user_id)
-    user = users_collection.find_one(
+    user = user_interactions_collection.find_one(
         {"user_id": user_id}
     )
     print('user: ', user)
