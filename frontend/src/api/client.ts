@@ -3,7 +3,7 @@ import axios from 'axios';
 // Points to FastAPI backend via Vite proxy (/api → http://localhost:8000)
 const apiClient = axios.create({
   baseURL: '/api',
-  timeout: 30000,
+  timeout: 50000,
   headers: { 'Content-Type': 'application/json' },
 });
 
