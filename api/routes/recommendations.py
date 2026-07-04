@@ -26,25 +26,88 @@ from api.schemas.group_schema import (
     GroupRecommendationRequest,
 )
 
-from api.services.groups_service import (
-    get_hybrid_recommendations_for_group,
-)
-
 from api.utils.utils import (
     format_restaurant_for_frontend,
     get_meal_time_string,
-    extract_gmap_ids
+    extract_gmap_ids,
+    enrich_restaurants
 )
 
 from api.db.restaurant_repository import (
     get_filtered_restaurants_repo,
-    get_user_by_id
+    get_user_by_id,
+    get_restaurants_by_gmap_ids
 )
 
 router = APIRouter(
     prefix="/recommend",
     tags=["Recommendations"]
 )
+
+
+def _dedupe_recommendations(recommendations):
+    seen = set()
+    unique = []
+
+    for recommendation in recommendations:
+        gmap_id = recommendation.get("gmap_id")
+        if not gmap_id or gmap_id in seen:
+            continue
+
+        seen.add(gmap_id)
+        unique.append(recommendation)
+
+    return unique
+
+
+def _with_fallbacks(primary, fallback, ultimate_fallback, top_k):
+    recommendations = primary or fallback or ultimate_fallback or []
+    return _dedupe_recommendations(recommendations)[:top_k]
+
+
+def _get_nearby_candidate_gmap_ids(coordinates):
+    if (
+        not coordinates
+        or len(coordinates) != 2
+        or coordinates[0] is None
+        or coordinates[1] is None
+    ):
+        return None
+
+    long = float(coordinates[0])
+    lat = float(coordinates[1])
+
+    for radius_km in [15, 30, 50, 100]:
+        candidates = extract_gmap_ids(
+            get_filtered_restaurants_repo(
+                latitude=lat,
+                longitude=long,
+                radius_km=radius_km,
+                limit=250,
+            )
+        )
+
+        if candidates:
+            print(f"Near You candidates={len(candidates)} radius_km={radius_km}")
+            return candidates
+
+    print("Near You candidates=0 after radius expansion")
+    return []
+
+
+def _get_mealtime_candidate_gmap_ids():
+    meal_time = get_meal_time_string()
+    dining_options = list({meal_time, meal_time.title()})
+
+    candidates = extract_gmap_ids(
+        get_filtered_restaurants_repo(
+            dining_options=dining_options,
+            limit=250,
+        )
+    )
+
+    print(f"Meal-time candidates={len(candidates)} dining_options={dining_options}")
+    return candidates
 
 
 @router.get("/home-carousels")
@@ -57,24 +120,16 @@ def get_home_carousels(user_id: str = "default_user", top_k: int = 25):
     user_location = user_profile.get("location", {})
     coordinates = user_location.get("coordinates")
     print(time.perf_counter() - start)
-    candidate_gmap_ids_by_radius = None
-    if (
-        coordinates 
-        and len(coordinates) == 2
-        and coordinates[0] is not None
-        and coordinates[1] is not None
-    ):
-        long = coordinates[0]
-        lat = coordinates[1]
-        candidate_gmap_ids_by_radius = extract_gmap_ids(
-            get_filtered_restaurants_repo(
-                latitude=float(lat),
-                  longitude=float(long),
-                  )
-                )
+    candidate_gmap_ids_by_radius = _get_nearby_candidate_gmap_ids(coordinates)
         
-    candidate_gmap_ids_by_mealtime = extract_gmap_ids(get_filtered_restaurants_repo(dining_options=get_meal_time_string()))
-    candidate_gmap_ids_by_hidden_gems = extract_gmap_ids(get_filtered_restaurants_repo(min_rating=4.5, max_reviews=30))
+    candidate_gmap_ids_by_mealtime = _get_mealtime_candidate_gmap_ids()
+    candidate_gmap_ids_by_hidden_gems = extract_gmap_ids(
+        get_filtered_restaurants_repo(
+            min_rating=4.5,
+            max_reviews=30,
+            limit=250,
+        )
+    )
 
     is_cold_start = get_user_augmented_likes(user_id) == 0
     onboarding_candidate_gmap_ids = None
@@ -92,6 +147,13 @@ def get_home_carousels(user_id: str = "default_user", top_k: int = 25):
         onboarding_candidate_gmap_ids=onboarding_candidate_gmap_ids,
         hybrid_scores=hybrid_scores,
     )
+    ultimate_fallback = get_popular_restaurants(top_k=top_k)
+    recommended = _with_fallbacks(
+        primary=recommended,
+        fallback=None,
+        ultimate_fallback=ultimate_fallback,
+        top_k=top_k,
+    )
     print(f"Recommended: {time.perf_counter() - start:.2f}s")
 
     start = time.perf_counter()
@@ -101,6 +163,12 @@ def get_home_carousels(user_id: str = "default_user", top_k: int = 25):
         candidate_gmap_ids=candidate_gmap_ids_by_radius,
         onboarding_candidate_gmap_ids=onboarding_candidate_gmap_ids,
         hybrid_scores=hybrid_scores,
+    )
+    popular_near_you = _with_fallbacks(
+        primary=popular_near_you,
+        fallback=recommended,
+        ultimate_fallback=ultimate_fallback,
+        top_k=top_k,
     )
     print(f"Near You: {time.perf_counter() - start:.2f}s")
 
@@ -112,6 +180,12 @@ def get_home_carousels(user_id: str = "default_user", top_k: int = 25):
         onboarding_candidate_gmap_ids=onboarding_candidate_gmap_ids,
         hybrid_scores=hybrid_scores,
     )
+    popular_at_this_hour = _with_fallbacks(
+        primary=popular_at_this_hour,
+        fallback=recommended,
+        ultimate_fallback=ultimate_fallback,
+        top_k=top_k,
+    )
     print(f"Popular Now: {time.perf_counter() - start:.2f}s")
 
     start = time.perf_counter()
@@ -121,6 +195,12 @@ def get_home_carousels(user_id: str = "default_user", top_k: int = 25):
         onboarding_candidate_gmap_ids=onboarding_candidate_gmap_ids,
         hybrid_scores=hybrid_scores,
     )[top_k:]
+    you_might_like = _with_fallbacks(
+        primary=you_might_like,
+        fallback=recommended,
+        ultimate_fallback=ultimate_fallback,
+        top_k=top_k,
+    )
     print(f"You Might Like: {time.perf_counter() - start:.2f}s")
 
     start = time.perf_counter()
@@ -131,33 +211,52 @@ def get_home_carousels(user_id: str = "default_user", top_k: int = 25):
         onboarding_candidate_gmap_ids=onboarding_candidate_gmap_ids,
         hybrid_scores=hybrid_scores,
     )
+    hidden_gems = _with_fallbacks(
+        primary=hidden_gems,
+        fallback=recommended,
+        ultimate_fallback=ultimate_fallback,
+        top_k=top_k,
+    )
     print(f"Hidden Gems: {time.perf_counter() - start:.2f}s")  
+    print(f"Hidden Gems: {time.perf_counter() - start:.2f}s")
+
+    start = time.perf_counter()
+
+    # 1. Gather every unique gmap_id from all carousels
+    all_ml_results = recommended + popular_near_you + popular_at_this_hour + you_might_like + hidden_gems
+    unique_gmap_ids = list({r.get("gmap_id") for r in all_ml_results if r.get("gmap_id")})
+
+    # 2. Call your clean repository helper
+    full_docs_dict = get_restaurants_by_gmap_ids(unique_gmap_ids)
+    
+    print(f"Batch DB Fetch: {time.perf_counter() - start:.2f}s")
+
     return {
         "carousels": [
             {
                 "id": "recommended_for_you",
                 "title": "Recommended For You",
-                "items": [format_restaurant_for_frontend(r) for r in recommended]
+                "items": [format_restaurant_for_frontend(r) for r in enrich_restaurants(recommended, full_docs_dict)]
             },
             {
                 "id": "popular_near_you",
                 "title": "Popular Near You",
-                "items": [format_restaurant_for_frontend(r) for r in popular_near_you]
+                "items": [format_restaurant_for_frontend(r) for r in enrich_restaurants(popular_near_you, full_docs_dict)]
             },
             {
                 "id": "popular_at_this_hour",
                 "title": "Popular at this hour",
-                "items": [format_restaurant_for_frontend(r) for r in popular_at_this_hour]
+                "items": [format_restaurant_for_frontend(r) for r in enrich_restaurants(popular_at_this_hour, full_docs_dict)]
             },
             {
                 "id": "you_might_like",
                 "title": "You might like",
-                "items": [format_restaurant_for_frontend(r) for r in you_might_like]
+                "items": [format_restaurant_for_frontend(r) for r in enrich_restaurants(you_might_like, full_docs_dict)]
             },
             {
                 "id": "hidden_gems",
                 "title": "Hidden gems",
-                "items": [format_restaurant_for_frontend(r) for r in hidden_gems]
+                "items": [format_restaurant_for_frontend(r) for r in enrich_restaurants(hidden_gems, full_docs_dict)]
             },
         ]
     }
@@ -198,56 +297,14 @@ def get_user_recommendations(
 
 
 
-@router.get("/group")
-def get_group_recommendations(request: GroupRecommendationRequest):
-    if not request.user_ids:
-        raise HTTPException(status_code=400, detail="user_ids cannot be empty")
+# @router.get("/group")
+# def get_group_recommendations(request: GroupRecommendationRequest):
+#     if not request.user_ids:
+#         raise HTTPException(status_code=400, detail="user_ids cannot be empty")
 
-    return get_hybrid_recommendations_for_group(
-        user_ids=request.user_ids,
-        top_k=request.top_k,
-        per_user_k=request.per_user_k,
-        filters=request.filters,
-    )
-
-@router.post("/vibe-match/{user_id}")
-def get_vibe_match_recommendations(
-    user_id: str,
-    filters: FilterRequest
-):
-    filtered_restaurants = get_filtered_restaurants_repo(
-        categories=filters.categories,
-        accessibility=filters.accessibility,
-        service_options=filters.service_options,
-        atmosphere=filters.atmosphere,
-        dining_options=filters.dining_options,
-        crowd=filters.crowd,
-        offerings=filters.offerings or filters.dietary_restrictions,
-        price=filters.price,
-        latitude=filters.latitude,
-        longitude=filters.longitude,
-        radius_km=filters.radius_km,
-        min_rating=filters.min_rating,
-        min_reviews=filters.min_reviews,
-        max_reviews=filters.max_reviews,
-        limit=100
-    )
-
-    candidate_gmap_ids = extract_gmap_ids(
-        filtered_restaurants
-    )
-
-    recommendations = get_hybrid_recommendations_for_user(
-        user_id=user_id,
-        top_k=filters.top_k,
-        candidate_gmap_ids=candidate_gmap_ids
-    )
-
-    return {
-        "recommendation_type": "vibe_match",
-        "filters": filters.dict(),
-        "recommendations": [
-            format_restaurant_for_frontend(r)
-            for r in recommendations
-        ]
-    }
+#     return get_hybrid_recommendations_for_group(
+#         user_ids=request.user_ids,
+#         top_k=request.top_k,
+#         per_user_k=request.per_user_k,
+#         filters=request.filters,
+#     )

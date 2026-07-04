@@ -1,23 +1,40 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import { createGroupSession } from "../api/restaurants";
+import { useAuth } from "../contexts/AuthContext";
 import AppShell from "../layouts/AppShell";
 
 import "./GroupPage.css";
 
 const friends = [
-  "Aya Rotbart",
-  "Ester Tkach",
-  "Yuval Hazut",
-  "Liora Yacob",
-  "Yuval Namir Barr",
+  {
+    id: "ester_tkach",
+    name: "Ester Tkach",
+  },
+  {
+    id: "yuval_hazut",
+    name: "Yuval Hazut",
+  },
+  {
+    id: "liora_yacob",
+    name: "Liora Yacob",
+  },
+  {
+    id: "yuval_namir_barr",
+    name: "Yuval Namir Barr",
+  },
 ];
 
 export default function GroupPage() {
   const navigate = useNavigate();
+  const { userId, username } = useAuth();
 
   const [selectedFriends, setSelectedFriends] =
     useState<string[]>([]);
+  const [isCreatingSession, setIsCreatingSession] =
+    useState(false);
+  const [error, setError] = useState("");
 
 const [budget, setBudget] = useState("");
 
@@ -38,6 +55,43 @@ const [dietary, setDietary] =
     );
   };
 
+  const handleFindMatch = async () => {
+    setIsCreatingSession(true);
+    setError("");
+
+    try {
+      const currentUserId = userId || "default_user_id";
+      const selectedFriendProfiles = friends.filter((friend) =>
+        selectedFriends.includes(friend.name)
+      );
+      const groupUserIds = [
+        currentUserId,
+        ...selectedFriendProfiles.map((friend) => friend.id),
+      ];
+
+      const session = await createGroupSession(groupUserIds);
+
+      navigate("/loading", {
+        state: {
+          selectedFriends,
+          currentUserId,
+          currentUserName: username || "You",
+          friendUserIdsByName: Object.fromEntries(
+            selectedFriendProfiles.map((friend) => [friend.name, friend.id])
+          ),
+          groupUserIds,
+          groupSessionId: session.session_id,
+          recommendation: session.recommendation,
+          nextPage: "/group-result",
+        },
+      });
+    } catch (err) {
+      setError("Could not start a group session. Please try again.");
+    } finally {
+      setIsCreatingSession(false);
+    }
+  };
+
   return (
     <AppShell>
       <div className="group-page">
@@ -52,18 +106,18 @@ const [dietary, setDietary] =
 
           {friends.map((friend) => (
             <button
-              key={friend}
+              key={friend.id}
               className={
-                selectedFriends.includes(friend)
+                selectedFriends.includes(friend.name)
                   ? "friend-select selected"
                   : "friend-select"
               }
               onClick={() =>
-                toggleFriend(friend)
+                toggleFriend(friend.name)
               }
             >
               <div>
-                <strong>{friend}</strong>
+                <strong>{friend.name}</strong>
 
                 <div className="friend-subtitle">
                   Food Explorer 🍜
@@ -71,7 +125,7 @@ const [dietary, setDietary] =
               </div>
 
               <div className="friend-icon">
-                {selectedFriends.includes(friend)
+                {selectedFriends.includes(friend.name)
                   ? "✓"
                   : "+"}
               </div>
@@ -189,22 +243,16 @@ const [dietary, setDietary] =
 
         </div>
 
+        {error && <p className="group-error">{error}</p>}
+
         <button
           className="find-match-btn"
           disabled={
-            selectedFriends.length === 0
+            selectedFriends.length === 0 || isCreatingSession
           }
-          onClick={() =>
-            navigate("/loading", {
-              state: {
-                selectedFriends,
-                nextPage:
-                  "/group-result",
-              },
-            })
-          }
+          onClick={handleFindMatch}
         >
-          Find Perfect Match →
+          {isCreatingSession ? "Finding..." : "Find Perfect Match →"}
         </button>
 
       </div>

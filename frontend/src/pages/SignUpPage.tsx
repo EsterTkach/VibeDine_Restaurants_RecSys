@@ -2,11 +2,13 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AppShell from "../layouts/AppShell";
 import { authService } from "../api/services";
+import { useAuth } from "../contexts/AuthContext";
 
 import "./AuthPage.css";
 
 export default function SignUpPage() {
   const navigate = useNavigate();
+  const { setUserId, setUsername: setAuthUsername } = useAuth();
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -26,8 +28,8 @@ export default function SignUpPage() {
       // 1. Try routing the sign up request to the live backend server
       const response = await authService.register(username, password); // Email is empty string for now
       
-      localStorage.setItem("user_id", response.user_id);
-      localStorage.setItem("username", username);
+      setUserId(response.user_id);
+      setAuthUsername(username);
       console.log("Saved user_id:", localStorage.getItem("user_id"));
 
       navigate("/onboarding", {
@@ -42,8 +44,8 @@ export default function SignUpPage() {
 
       // 2. STABILITY FALLBACK: Generate a fake local session so your UI workflow doesn't block
       const fallbackId = `mock_user_${Math.floor(Math.random() * 10000)}`;
-      localStorage.setItem("user_id", fallbackId);
-      localStorage.setItem("username", username);
+      setUserId(fallbackId);
+      setAuthUsername(username);
 
       navigate("/onboarding", {
         replace: true,

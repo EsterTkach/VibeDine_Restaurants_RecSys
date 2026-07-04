@@ -9,21 +9,42 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+const getStoredUserId = () => localStorage.getItem("user_id") || localStorage.getItem("userId") || "";
+const getStoredUsername = () => localStorage.getItem("username") || "";
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [userId, setUserId] = useState(
-    localStorage.getItem("user_id") || "");
-  const [username, setUsername] = useState(
-    localStorage.getItem("username") || "");
+  const [userId, setUserIdState] = useState(getStoredUserId);
+  const [username, setUsernameState] = useState(getStoredUsername);
+
+  const setUserId = (nextUserId: string) => {
+    setUserIdState(nextUserId);
+    if (nextUserId) {
+      localStorage.setItem("user_id", nextUserId);
+      localStorage.setItem("userId", nextUserId);
+    } else {
+      localStorage.removeItem("user_id");
+      localStorage.removeItem("userId");
+    }
+  };
+
+  const setUsername = (nextUsername: string) => {
+    setUsernameState(nextUsername);
+    if (nextUsername) {
+      localStorage.setItem("username", nextUsername);
+    } else {
+      localStorage.removeItem("username");
+    }
+  };
 
   return (
     <AuthContext.Provider
       value={{
-      userId,
-      setUserId,
-      username,
-      setUsername,
+        userId,
+        setUserId,
+        username,
+        setUsername,
       }}
-      >
+    >
       {children}
     </AuthContext.Provider>
   );
