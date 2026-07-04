@@ -4,6 +4,11 @@ def get_filtered_restaurants_repo(
     skip: int = 0,
     limit: int = 50,
     categories: list = None,
+    establishment_types: list = None,
+    meal_types: list = None,
+    dining_styles: list = None,
+    popular_items: list = None,
+    dietary_preferences: list = None,
     accessibility: list = None,
     service_options: list = None,
     atmosphere: list = None,
@@ -75,6 +80,11 @@ def get_filtered_restaurants_repo(
         return [value]
 
     categories = ensure_list(categories)
+    establishment_types = ensure_list(establishment_types)
+    meal_types = ensure_list(meal_types)
+    dining_styles = ensure_list(dining_styles)
+    popular_items = ensure_list(popular_items)
+    dietary_preferences = ensure_list(dietary_preferences)
     accessibility = ensure_list(accessibility)
     service_options = ensure_list(service_options)
     atmosphere = ensure_list(atmosphere)
@@ -114,7 +124,17 @@ def get_filtered_restaurants_repo(
 
     # Apply flexible $in filters
     if categories:
-        query["category"] = {"$in": categories}
+        query["cuisines"] = {"$in": categories}
+    if establishment_types:
+        query["establishment_types"] = {"$in": establishment_types}
+    if meal_types:
+        query["meal_types"] = {"$in": meal_types}
+    if dining_styles:
+        query["dining_styles"] = {"$in": dining_styles}
+    if popular_items:
+        query["popular_items"] = {"$in": popular_items}
+    if dietary_preferences:
+        query["dietary_preferences"] = {"$in": dietary_preferences}
     if accessibility:
         query["accessibility"] = {"$in": accessibility}
     if service_options:
@@ -163,7 +183,17 @@ def get_filtered_restaurants_repo(
         }
 
     if categories:
-        score_components.append(add_intersection("category", categories))
+        score_components.append(add_intersection("cuisines", categories))
+    if establishment_types:
+        score_components.append(add_intersection("establishment_types", establishment_types))
+    if meal_types:
+        score_components.append(add_intersection("meal_types", meal_types))
+    if dining_styles:
+        score_components.append(add_intersection("dining_styles", dining_styles))
+    if popular_items:
+        score_components.append(add_intersection("popular_items", popular_items))
+    if dietary_preferences:
+        score_components.append(add_intersection("dietary_preferences", dietary_preferences))
     if accessibility:
         score_components.append(add_intersection("accessibility", accessibility))
     if service_options:
