@@ -2,47 +2,30 @@ import { useNavigate } from "react-router-dom";
 import type { Restaurant } from "../types";
 
 interface Props {
-  restaurant: Restaurant | {
-    id: number;
-    name: string;
-    cuisine: string;
-    rating: number;
-    price: string;
-    image: string;
-  };
+  restaurant: Restaurant;
 }
 
-export default function RestaurantCard({
-  restaurant,
-}: Props) {
+export default function RestaurantCard({ restaurant }: Props) {
   const navigate = useNavigate();
-
-  // Support both field name conventions - use as any to avoid strict type errors
-  const r = restaurant as any;
-  const imageUrl = r.image || r.image_url;
-  const cuisineCategory = r.cuisine || r.category;
-  const rating = r.rating || r.avg_rating || 0;
-  const price = r.price || r.price_level;
 
   return (
     <div className="restaurant-card-home">
       <img
-        src={imageUrl}
+        src={restaurant.image_url}
         alt={restaurant.name}
-        onClick={() =>
-          navigate("/restaurant")
-        }
+        onClick={() => navigate(`/restaurant/${restaurant.gmap_id}`)}
+        style={{ cursor: "pointer" }}
       />
 
       <div className="restaurant-card-content">
         <h3>{restaurant.name}</h3>
 
         <span>
-          ⭐ {rating}
+          ⭐ {Number(restaurant.avg_rating || 0).toFixed(1)}
         </span>
 
         <p>
-          {cuisineCategory} • {price}
+          {restaurant.cuisine} {restaurant.price ? `• ${restaurant.price}` : ""}
         </p>
       </div>
     </div>
