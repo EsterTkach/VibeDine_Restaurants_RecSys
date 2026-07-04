@@ -2,6 +2,17 @@
   padding: 28px;
 }
 
+.back-btn {
+  border: none;
+  background: none;
+  color: #8b6b4a;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 8px;
+}
+
 .group-page h1 {
   margin-top: 20px;
 }
@@ -107,6 +118,39 @@
 .find-match-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.group-empty-state {
+  margin-top: 60px;
+  text-align: center;
+  padding: 0 12px;
+}
+
+.group-empty-icon {
+  font-size: 56px;
+  margin-bottom: 16px;
+}
+
+.group-empty-state h2 {
+  font-size: 22px;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.group-empty-state p {
+  color: #888;
+  font-size: 15px;
+  margin-bottom: 28px;
+}
+
+.go-friends-btn {
+  border: none;
+  background: #8b6b4a;
+  color: white;
+  padding: 14px 28px;
+  border-radius: 16px;
+  font-size: 15px;
+  cursor: pointer;
 }
 
 /* Vibe Matcher Style */

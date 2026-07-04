@@ -26,7 +26,7 @@ export default function SignUpPage() {
       // 1. Try routing the sign up request to the live backend server
       const response = await authService.register(username, "", password); // Email is empty string for now
       
-      localStorage.setItem("userId", response.user_id);
+      localStorage.setItem("user_id", response.user_id);
       localStorage.setItem("username", username);
 
       navigate("/onboarding", {
@@ -41,7 +41,7 @@ export default function SignUpPage() {
 
       // 2. STABILITY FALLBACK: Generate a fake local session so your UI workflow doesn't block
       const fallbackId = `mock_user_${Math.floor(Math.random() * 10000)}`;
-      localStorage.setItem("userId", fallbackId);
+      localStorage.setItem("user_id", fallbackId);
       localStorage.setItem("username", username);
 
       navigate("/onboarding", {

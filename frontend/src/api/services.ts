@@ -78,7 +78,7 @@ export const userService = {
 export const vibeService = {
   submitMatch: async (preferences: any) => {
     // Dynamically grab the userId stored by your teammate's login block
-    const userId = localStorage.getItem("userId") || "default_user_id";
+    const userId = localStorage.getItem("user_id") || "default_user_id";
 
     // Clean & simple: directly call the imported function!
     return await saveOnboardingPreferences(userId, preferences);

@@ -35,7 +35,9 @@ export default function AuthPage() {
 
       // 1. Try hitting the live backend service first
       const data = await authService.login(username, password);
-      
+      localStorage.setItem("user_id", data.user_id);
+      localStorage.setItem("username", data.username || username);
+
       // If server returns a token/user, pass user data directly to the loading view
       navigate("/loading", { state: { username: data.username || username } });
 

@@ -1,5 +1,5 @@
 import apiClient from './client';
-import type { ApiRecommendationResponse } from '../types';
+import type { ApiRecommendationResponse, Friend } from '../types';
 
 export async function getUserRecommendations(userId: string, topK = 10): Promise<ApiRecommendationResponse> {
   const response = await apiClient.get<ApiRecommendationResponse>(`/recommend/cf/${userId}`, {
@@ -42,4 +42,20 @@ export async function saveOnboardingPreferences(
 export async function login(username: string, password: string): Promise<{ message: string; user_id: string; username: string }> {
   const response = await apiClient.post('/users/login', { username, password });
   return response.data;
+}
+
+export async function getFriends(userId: string): Promise<Friend[]> {
+  const response = await apiClient.get<Friend[]>(`/users/${userId}/friends`);
+  return response.data;
+}
+
+export async function searchUsers(query: string, currentUserId: string): Promise<Friend[]> {
+  const response = await apiClient.get<Friend[]>('/users/search', {
+    params: { username: query, user_id: currentUserId },
+  });
+  return response.data;
+}
+
+export async function addFriend(userId: string, friendId: string): Promise<void> {
+  await apiClient.post(`/users/${userId}/friends`, { friend_id: friendId });
 }
