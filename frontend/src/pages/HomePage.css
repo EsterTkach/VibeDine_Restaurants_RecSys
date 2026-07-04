@@ -26,8 +26,18 @@
   margin-bottom: 24px;
 }
 
+.profile-avatar-container {
+  flex-shrink: 0;
+  margin-left: 16px;
+}
+
 .home-header h1 {
   font-size: 28px;
+  word-break: break-word;
+}
+
+.home-header > div:first-child {
+  min-width: 0; 
 }
 
 .home-header p {

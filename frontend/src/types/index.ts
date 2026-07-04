@@ -3,7 +3,7 @@ export interface Restaurant {
   name: string;
   cuisine: string;
   avg_rating: number;
-  price_level: '$' | '$$' | '$$$';
+  price: '$' | '$$' | '$$$';
   image_url: string;
 }
 
