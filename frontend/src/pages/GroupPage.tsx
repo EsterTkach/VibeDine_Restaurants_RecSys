@@ -9,7 +9,10 @@ import "./GroupPage.css";
 
 export default function GroupPage() {
   const navigate = useNavigate();
-  const { userId, username } = useAuth();
+  const { userData } = useAuth();
+  const userId  = userData.user_id;
+  const username  = userData.username;
+
 
   const [friends, setFriends] = useState<Friend[]>([]);
   const [loading, setLoading] = useState(true);

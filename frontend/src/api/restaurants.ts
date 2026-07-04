@@ -1,21 +1,21 @@
 import apiClient from './client';
-import type { ApiRecommendationResponse, Friend } from '../types';
+import type { ApiRecommendationResponse, Friend , UserData } from '../types';
 
 export async function getUserRecommendations(userId: string, topK = 10): Promise<ApiRecommendationResponse> {
   const response = await apiClient.get<ApiRecommendationResponse>(`/recommend/cf/${userId}`, {
-    params: { top_k: topK },
-  });
+      params: { top_k: topK },
+    });
   return response.data;
 }
 
 export async function getSimilarRestaurants(restaurantName: string, topK = 10): Promise<ApiRecommendationResponse> {
   const response = await apiClient.get<ApiRecommendationResponse>(`/recommend/cb/${encodeURIComponent(restaurantName)}`, {
-    params: { top_k: topK },
-  });
+      params: { top_k: topK },
+    });
   return response.data;
 }
 
-export async function signup(username: string, password: string): Promise<{ message: string; user_id: string }> {
+export async function signup(username: string, password: string): Promise<{ message: string; user_data: UserData }> {
   const response = await apiClient.post('/users/signup', { username, password });
   return response.data;
 }
@@ -36,8 +36,8 @@ export async function saveOnboardingPreferences(
   return response.data;
 }
 
-export async function login(username: string, password: string): Promise<{ message: string; user_id: string; username: string }> {
-  const response = await apiClient.post('/users/login', { username, password });
+export async function login(username: string, password: string): Promise<{ message: string; user_data: UserData }> {
+  const response = await apiClient.post("/users/login", { username, password });
   return response.data;
 }
 

@@ -1,3 +1,4 @@
+import "./ProfilePage.css";
 import { useState, useEffect } from "react";
 import { Heart } from "lucide-react";
 
@@ -6,22 +7,26 @@ import BottomNav from "../components/BottomNav";
 import { userService } from "../api/services";
 import { useAuth } from "../contexts/AuthContext";
 
-import "./ProfilePage.css";
 import SectionDivider from "../components/SectionDivider";
 import FoodAvatar from "../components/FoodAvatar";
 import { useHome } from "../contexts/HomeContext";
 
-export default function ProfilePage() {
-  const { username, userId } = useAuth();
+type Restaurant = {
+  gmap_id: string;
+  name: string;
+  image_url: string;
+};
 
-  const [profileName, setProfileName] = useState<string>(username);
+const DEFAULT_RESTAURANT_IMAGE  =
+  "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=500";
+
+
+
+export default function ProfilePage() {
+  const { userData } = useAuth();
+
   //const [loading, setLoading] = useState<boolean>(true);
   const { setHasLoadedHome } = useHome();
-  type Restaurant = {
-    gmap_id: string;
-    name: string;
-    image_url: string;
-  };
 
   const [likedRestaurants, setLikedRestaurants] = useState<Restaurant[]>([]);
   const [removingRestaurantIds, setRemovingRestaurantIds] = useState<string[]>(
@@ -31,11 +36,11 @@ export default function ProfilePage() {
   useEffect(() => {
     async function fetchLikedRestaurants() {
       try {
-        if (!userId) {
+        if (!userData.user_id) {
           console.warn("No user ID found. Cannot fetch liked restaurants.");
           return;
         }
-        const data = await userService.getLikedRestaurants(userId);
+        const data = await userService.getLikedRestaurants(userData.user_id);
         setLikedRestaurants(data.liked_restaurants);
         console.log("data.liked_restaurants :", data.liked_restaurants);
       } catch (error) {
@@ -46,18 +51,12 @@ export default function ProfilePage() {
     fetchLikedRestaurants();
   }, []);
 
-  useEffect(() => {
-    if (username) {
-      setProfileName(username);
-    }
-  }, [username]);
-
   const handleUnlike = async (restaurantId: string) => {
     setRemovingRestaurantIds((prev) => [...prev, restaurantId]);
 
     try {
 
-      await userService.unlikeRestaurant(userId, restaurantId);
+      await userService.unlikeRestaurant(userData.user_id, restaurantId);
       setHasLoadedHome(false);
       setTimeout(() => {
         setLikedRestaurants((prev) =>
@@ -79,9 +78,9 @@ export default function ProfilePage() {
         <div className="profile-header">
           <div className="profile-avatar-big">
             {/* {loading ? "⏳" : avatarLetter} */}
-            <FoodAvatar userId={username} size={110} />
+            <FoodAvatar avatar_index={userData.avatar_index} size={110} />
           </div>
-          <h1 className="profile-name">{profileName}</h1>
+          <h1 className="profile-name">{userData.name}</h1>
           <p className="profile-subtitle">Food Explorer</p>{" "}
         </div>
 
@@ -125,7 +124,7 @@ export default function ProfilePage() {
                       />{" "}
                     </button>
                     <div className="card-image">
-                      <img src={restaurant.image_url} alt={restaurant.name} />
+                      <img src={restaurant.image_url || DEFAULT_RESTAURANT_IMAGE } alt=""/>
                     </div>
                     <div className="card-name">{restaurant.name}</div>
                   </div>

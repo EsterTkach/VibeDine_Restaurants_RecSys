@@ -31,38 +31,40 @@ def signup(
     request:
     UserSignupRequest
 ):
+    new_user_id = str(uuid4())
 
     user = {
-        "user_id":
-        str(uuid4()),
-
-        "username":
-        request.username,
-
-        "password":
-        request.password,
+        "_id": new_user_id,
+        "user_id": new_user_id,
+        "name": request.username,
+        "username": request.username,
+        "password": request.password,
+        "liked_restaurants": [],
+        "friends": [],
+        "preferences": [],
+        "location": {
+            "type": "Point",
+            "coordinates": [0, 0],
+        },
+        "avatar_index": 0,
     }
-    existing_user = users_collection.find_one(
-    {"username": request.username})
-    if existing_user:
-        raise HTTPException(
-            status_code=409,
-            detail="Username already exists"
-        )
 
-    users_collection.insert_one(
-        user
-    )
-    print("Inserted user:", user)
+    existing_user = users_collection.find_one({"username": request.username})
+    if existing_user:
+        raise HTTPException(status_code=409, detail="Username already exists")
+
+    users_collection.insert_one(user)
 
     return {
-        "message":
-        "User created",
-        "user_id":
-        user["user_id"],
-        "username":
-        user["username"],
+        "message": "User created",
+        "user_data": {
+            "user_id": user["user_id"],
+            "username": user["username"],
+            "avatar_index": user["avatar_index"],
+            "name": user["name"],
+        },
     }
+
 
 @router.post("/login")
 def login(
@@ -90,14 +92,15 @@ def login(
         )
 
     return {
-        "message":
-        "Login successful",
-
-        "user_id":
-        user["user_id"],
-        "username":
-        user["username"],
+        "message": "Login successful",
+        "user_data": {
+            "user_id": user["user_id"],
+            "username": user["username"],
+            "avatar_index": user["avatar_index"],
+            "name": user["name"],
+        },
     }
+
 
 @router.post("/{user_id}/onboarding-preferences")
 def save_onboarding_preferences(
@@ -349,9 +352,7 @@ def add_friend(user_id: str, request: AddFriendRequest):
 
 @router.get("/{user_id}/restaurants/liked")
 def get_liked_restaurants(user_id: str):
-    print('user_id: ', user_id)
     liked_restaurants = get_user_online_liked_restaurants(user_id)
-    print('liked_restaurants: ', liked_restaurants)
 
     return {
         "user_id": user_id,
