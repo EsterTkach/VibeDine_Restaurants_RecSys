@@ -19,11 +19,13 @@
   display: flex;
 
   justify-content: space-between;
-  align-items: flex-start;
-  
+  align-items: center;
+
   padding: 0 24px;
 
   margin-bottom: 24px;
+
+  gap: 16px;
 }
 
 .home-header h1 {
@@ -32,6 +34,58 @@
 
 .home-header p {
   color: #777;
+}
+
+.home-text {
+  flex: 1;
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+}
+
+.home-text h1 {
+  margin: 0;
+
+  font-size: 28px;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.home-text p {
+  margin-top: 8px;
+
+  color: #777;
+}
+
+.greeting {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.greeting span:first-child {
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.greeting span:last-child {
+  font-size: 28px;
+  font-weight: 700;
+
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+
+
+.profile-avatar-container {
+  flex-shrink: 0;
+  /* top: 20px;
+  right: 20px; */
 }
 
 .profile-avatar {
@@ -44,7 +98,7 @@
 
   border-radius: 50%;
 
-  background: white;
+   background: white;
 
   box-shadow:
     0 8px 20px rgba(0,0,0,0.08);
@@ -81,7 +135,7 @@ section h2 {
 
   overflow: hidden;
 
-  box-shadow:
+   box-shadow:
     0 12px 25px rgba(0,0,0,0.08);
 
   transition: 0.25s;
@@ -128,7 +182,7 @@ section h2 {
 }
 
 .search-bar {
-  background: #8B6B4A;
+  background: #d09331;
   border-radius: 18px;
   margin: 16px 16px 24px 16px;
   padding: 16px;
@@ -147,7 +201,7 @@ section h2 {
 .search-bar:hover {
   box-shadow: 0 12px 28px rgba(139, 107, 74, 0.15);
   transform: translateY(-2px);
-  background: #76583B;
+  background: #dc9e3a;
 }
 
 .search-bar:active {

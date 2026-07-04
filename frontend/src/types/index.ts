@@ -81,3 +81,12 @@ export interface VibeMatcherState {
     dineOption?: DineOption;
   };
 }
+
+
+
+export type UserData = {
+  user_id: string;
+  username: string;
+  avatar_index: number;
+  name: string;
+};

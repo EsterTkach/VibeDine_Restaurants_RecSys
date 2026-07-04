@@ -1,29 +1,41 @@
 import { createContext, useContext, useState } from "react";
 
+import type { UserData } from "../types";
+
 type AuthContextType = {
-  userId: string;
-  username: string;
-  setUserId: (userId: string) => void;
-  setUsername: (username: string) => void;
+  userData: UserData;
+  setUserData: React.Dispatch<React.SetStateAction<UserData>>;
+};
+
+const defaultUserData: UserData = {
+  user_id: "",
+  username: "",
+  avatar_index: 0,
+  name: "",
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [userId, setUserId] = useState(
-    localStorage.getItem("user_id") || "");
-  const [username, setUsername] = useState(
-    localStorage.getItem("username") || "");
+  const [userData, setUserData] = useState<UserData>(() => {
+    const stored = localStorage.getItem("user_data");
+
+    if (!stored) return defaultUserData;
+
+    try {
+      return JSON.parse(stored) as UserData;
+    } catch {
+      return defaultUserData;
+    }
+  });
 
   return (
     <AuthContext.Provider
       value={{
-      userId,
-      setUserId,
-      username,
-      setUsername,
+        userData,
+        setUserData,
       }}
-      >
+    >
       {children}
     </AuthContext.Provider>
   );

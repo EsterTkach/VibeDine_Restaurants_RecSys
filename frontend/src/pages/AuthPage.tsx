@@ -9,8 +9,8 @@ import { preloadHomeData } from "../api/home";
 
 export default function AuthPage() {
   const navigate = useNavigate();
-  
-  const {username, setUsername, setUserId} = useAuth();
+  const { userData, setUserData } = useAuth();
+
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -24,7 +24,7 @@ export default function AuthPage() {
   };
 
   const handleLogin = async () => {
-    if (!username.trim() || !password.trim()) {
+    if (!userData.username.trim() || !password.trim()) {
       setError("Please fill in all fields");
       return;
     }
@@ -33,17 +33,22 @@ export default function AuthPage() {
       setError("");
       setLoading(true);
 
-      console.log("Trying login:", username, password);
+      console.log("Trying login:", userData.username, password);
       // 1. Try hitting the live backend service first
-      const data = await authService.login(username, password);
-      console.log("Login response:", username,password);
-      setUserId(data.user_id);
-      setUsername(data.username);
-      localStorage.setItem("user_id", data.user_id);
-      localStorage.setItem("username", data.username);
+      const data = await authService.login(userData.username, password);
+      console.log("Login response:", userData.username, password);
+      setUserData(data.user_data);
+      localStorage.setItem("user_data", JSON.stringify(data.user_data)); 
       //preloadHomeData(data.user_id);
+
       // If server returns a token/user, pass user data directly to the loading view
-      navigate("/loading", { state: { username: data.username } });
+      navigate("/loading", {
+        replace: true,
+        state: {
+          nextPage: "/home",
+          username: data.user_data.username,
+        },
+      });
 
     } catch (apiError) {
       console.log(apiError);
@@ -68,9 +73,14 @@ export default function AuthPage() {
           <input
             className="input"
             placeholder="Username"
-            value={username}
+            value={userData.username}
             disabled={loading}
-            onChange={(e) => setUsername(e.target.value)}
+            onChange={(e) =>
+              setUserData({
+                ...userData,
+                username: e.target.value,
+              })
+            }
           />
 
           <input
@@ -88,16 +98,16 @@ export default function AuthPage() {
             </span>
           )}
 
-          <button 
-            className="primary-btn" 
+          <button
+            className="primary-btn"
             onClick={handleLogin}
             disabled={loading}
           >
             {loading ? "Signing In..." : "Sign In →"}
           </button>
 
-          <button 
-            className="secondary-btn" 
+          <button
+            className="secondary-btn"
             onClick={() => navigate("/signup")}
             disabled={loading}
           >
@@ -114,7 +124,7 @@ export default function AuthPage() {
           <button className="social-btn" onClick={showComingSoon} disabled={loading}>
             <FaApple size={20} />
             Continue with Apple
-          </button> 
+          </button>
 
           <button className="social-btn" onClick={showComingSoon} disabled={loading}>
             <FaXTwitter size={18} />
@@ -124,10 +134,10 @@ export default function AuthPage() {
       </div>
 
       {showToast && (
-        <div className="toast">
-          🚀 Social login is coming soon
+      <div className="toast">
+        🚀 Social login is coming soon
         </div>
       )}
-    </AppShell>
+      </AppShell>
   );
 }
