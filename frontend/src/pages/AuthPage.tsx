@@ -1,11 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { FaApple, FaXTwitter } from "react-icons/fa6";
 import AppShell from "../layouts/AppShell";
 import { useNavigate } from "react-router-dom";
 import { authService } from "../api/services";
 import { useAuth } from "../contexts/AuthContext";
-import { preloadHomeData } from "../api/home";
 
 export default function AuthPage() {
   const navigate = useNavigate();
@@ -18,9 +17,7 @@ export default function AuthPage() {
 
   const showComingSoon = () => {
     setShowToast(true);
-    setTimeout(() => {
-      setShowToast(false);
-    }, 2500);
+    setTimeout(() => setShowToast(false), 2500);
   };
 
   const handleLogin = async () => {
@@ -33,13 +30,9 @@ export default function AuthPage() {
       setError("");
       setLoading(true);
 
-      console.log("Trying login:", userData.username, password);
-      // 1. Try hitting the live backend service first
       const data = await authService.login(userData.username, password);
-      console.log("Login response:", userData.username, password);
       setUserData(data.user_data);
       localStorage.setItem("user_data", JSON.stringify(data.user_data)); 
-      //preloadHomeData(data.user_id);
 
       // If server returns a token/user, pass user data directly to the loading view
       navigate("/loading", {
@@ -51,8 +44,13 @@ export default function AuthPage() {
       });
 
     } catch (apiError) {
-      console.log(apiError);
-      console.warn("Backend login failed or offline. Testing fallback demo users...", apiError);
+      const status = (apiError as any)?.response?.status;
+      if (status === 401) {
+        setError("Invalid username or password, please try again");
+      } else {
+        setError("Login failed. Please try again.");
+      }
+      console.warn("Backend login failed or offline.", apiError);
     } finally {
       setLoading(false);
     }

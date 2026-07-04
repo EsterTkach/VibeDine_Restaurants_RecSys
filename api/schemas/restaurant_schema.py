@@ -17,6 +17,4 @@ class FilterRequest(BaseModel):
     radius_km: float | None = None
 
     min_rating: float = 0.0
-    min_reviews: int = 0
-    max_reviews: int | None = None
-    top_k: int = 5
+    #min_reviews: int = 0

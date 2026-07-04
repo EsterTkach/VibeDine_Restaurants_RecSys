@@ -1,6 +1,5 @@
 import "./ProfilePage.css";
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { Heart } from "lucide-react";
 
 import AppShell from "../layouts/AppShell";
@@ -24,7 +23,6 @@ const DEFAULT_RESTAURANT_IMAGE  =
 
 
 export default function ProfilePage() {
-  const navigate = useNavigate();
   const { userData } = useAuth();
 
   //const [loading, setLoading] = useState<boolean>(true);

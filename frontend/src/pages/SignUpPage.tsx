@@ -3,7 +3,6 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AppShell from "../layouts/AppShell";
 import { authService } from "../api/services";
-
 import { useAuth } from "../contexts/AuthContext";
 
 export default function SignUpPage() {
@@ -25,12 +24,10 @@ export default function SignUpPage() {
       setError("");
       setLoading(true);
 
-      // 1. Try routing the sign up request to the live backend server
       const response = await authService.register(userData.username, password); // Email is empty string for now
+      setUserData(response.user_data);
 
       localStorage.setItem("user_data", JSON.stringify(response.user_data));
-
-      console.log("Saved user_data:", localStorage.getItem("user_data"));
 
       navigate("/onboarding", {
         replace: true,
@@ -57,7 +54,7 @@ export default function SignUpPage() {
         state: {
           userData: fallbackUser,
 
-        },
+        }
       });
     } finally {
       setLoading(false);

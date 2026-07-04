@@ -4,26 +4,32 @@ import AppShell from "../layouts/AppShell";
 import BottomNav from "../components/BottomNav";
 import VibeMatcherModal from "../components/VibeMatcherModal";
 import ComingSoonModal from "../components/ComingSoonModal";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import RestaurantRow from '../components/RestaurantRow';
-import type { CarouselData } from '../types';
 import { getHomeCarousels, getVibeMatchRecommendations } from "../api/restaurants";
 import "./HomePage.css";
 
-import { useAuth } from "../contexts/AuthContext";
+import { defaultUserData, useAuth } from "../contexts/AuthContext";
 import { useHome } from "../contexts/HomeContext";
 import FoodAvatar from "../components/FoodAvatar";
 
+
+
 export default function HomePage() {
   const navigate = useNavigate();
-  const location = useLocation();
   const [showVibeModal, setShowVibeModal] = useState(false);
   const [showComingSoon, setShowComingSoon] = useState(false);
 
   // LIVE DATA STATES
 
-  const { userData } = useAuth();
+  const { userData, setUserData } = useAuth();
   const userId = userData.user_id;
+
+
+   const trueAvatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+    userData.name
+  )}&background=3d2817&color=fff&bold=true&rounded=true`;
+
 
    const {
     carousels,
@@ -32,6 +38,7 @@ export default function HomePage() {
     setHasLoadedHome,
   } = useHome();
   const [loading, setLoading] = useState<boolean>(true);
+  const [showAccountMenu, setShowAccountMenu] = useState(false);
 
   const [vibeMatches, setVibeMatches] = useState<any[]>([]);
   const [showVibeMatches, setShowVibeMatches] = useState(false);
@@ -120,6 +127,16 @@ export default function HomePage() {
   const handleComingSoonClose = () => {
     setShowComingSoon(false);
   };
+
+  const handleLogout = () => {
+    setUserData(defaultUserData);
+    localStorage.removeItem("user_data");
+
+    setCarousels([]);
+    setHasLoadedHome(false);
+    setShowAccountMenu(false);
+    navigate("/login", { replace: true });
+  };
   console.log("HomePage render");
   // BACKEND INTEGRATION EFFECT
   useEffect(() => {
@@ -179,7 +196,25 @@ export default function HomePage() {
           </div>
 
           <div className="profile-avatar-container">
-            <FoodAvatar avatar_index={userData.avatar_index} size={90} />
+            <button
+              className="profile-avatar-button"
+              onClick={() => setShowAccountMenu((value) => !value)}
+              aria-label="Open account menu"
+            >
+              {loading && !errorMessage ? (
+                <div className="profile-avatar-loader">⏳</div>
+              ) : (
+                <FoodAvatar avatar_index={userData.avatar_index} size={90} />
+              )}
+            </button>
+
+            {showAccountMenu && (
+              <div className="account-menu">
+                <button className="account-menu-button" onClick={handleLogout}>
+                  Log out
+                </button>
+              </div>
+            )}
           </div>
         </div>
 

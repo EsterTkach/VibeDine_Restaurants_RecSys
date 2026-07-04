@@ -77,11 +77,15 @@ from api.ml.cb_recommender import compute_cb_scores, restaurant_lookup
 
 def get_onboarding_candidate_gmap_ids(user_id: str, candidate_gmap_ids=None):
     pref = get_onboarding_preferences(user_id)
+    preferences = pref.get("preferences", {})
 
-    categories = pref["preferences"].get("favorite_categories", [])
-    atmosphere = pref["preferences"].get("favorite_atmospheres", [])
-    accessibility = pref["preferences"].get("accessibility", [])
-    dietary_restrictions = pref["preferences"].get("dietary_restrictions", [])
+    if not preferences:
+        return candidate_gmap_ids
+
+    categories = preferences.get("favorite_categories", [])
+    atmosphere = preferences.get("favorite_atmospheres", [])
+    accessibility = preferences.get("accessibility", [])
+    dietary_restrictions = preferences.get("dietary_restrictions", [])
 
     candidate_gmap_ids_by_category = extract_gmap_ids(
         get_filtered_restaurants_repo(
@@ -179,7 +183,7 @@ def get_hybrid_scores_for_user(user_id: str):
 
 
 def rank_hybrid_recommendations(hybrid_scores, top_k=10, candidate_gmap_ids=None):
-    candidate_set = set(candidate_gmap_ids) if candidate_gmap_ids else None
+    candidate_set = set(candidate_gmap_ids) if candidate_gmap_ids is not None else None
     recommendations = []
     for gmap_id, score in hybrid_scores.items():
         if candidate_set is not None and gmap_id not in candidate_set:
