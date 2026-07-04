@@ -1,0 +1,310 @@
+**Testing users-**
+
+
+
+
+
+**576 offline reviews and 0 online-**
+
+
+_id- "105612537624910232966"
+
+user_id- "105612537624910232966"
+
+name- "Ronald Mitchell"
+
+username- "ronald_mitchell_7351"
+
+password- "1234"
+
+liked_restaurants- Array (empty)
+
+friends- Array (empty)
+
+preferences- Array (empty)
+
+location- coordinates- -114.698434 39.444735
+
+avatar_index- 5
+
+
+
+
+
+
+
+**419 offline reviews and 12 online-**
+
+
+_id: '110032669556380186301',
+
+user_id: '110032669556380186301',
+
+name: 'Robert Tyler',
+
+username: 'robert_tyler_9058',
+
+password: '1234',
+
+liked_restaurants: [
+
+'0x8090cbf5bbba898b:0xb37d7e1fea0c63ef',
+
+'0x8085875ce042646d:0xd289103cd80a0a97',
+
+'0x808f7fd770b93dfd:0x9163bc5a8883c63b',
+
+'0x809b053254d9dfab:0xb1b11e804211e0ea',
+
+'0x80904101ce001281:0x76db23c5d22346ae',
+
+'0x808e4aaee95d631b:0xc9d0839a2aefcb64',
+
+'0x808f7c1425bf6e9d:0xf5c6c8e213483c28',
+
+'0x80c2c7049ff0132d:0xf598d3badb3f6dc',
+
+'0x80c2d20b1642d757:0xdf3698e5172297cf',
+
+'0x80c298259dc3e43d:0x20349edf1ec7eb40',
+
+'0x809ae410bb4b79db:0x8e53e91c4a62cfcd',
+
+'0x80e84e90e72e4b39:0x606f85aade439c98'
+
+],
+
+friends: [],
+
+preferences: [],
+
+location: {
+
+type: 'Point',
+
+coordinates: [
+
+Double('-116.686274'),
+
+Double('41.281602')
+
+]
+
+},
+
+avatar_index: NumberInt('6')
+
+}
+
+
+
+
+
+
+
+
+
+**0 offline reviews and 0 online and no onboarding-**
+
+
+
+_id: ObjectId('6a454f7b46e5c21b512d28cf'),
+
+user_id: 'c0cb6899-86a8-414f-b833-bf54f07c3a8f',
+
+username: 'aya',
+
+password: '1234'
+
+}
+
+
+
+
+
+
+
+**17 offline reviews and 12 online-**
+
+
+
+{
+
+_id: '103517930104985091440',
+
+user_id: '103517930104985091440',
+
+name: 'Deanna Walsh',
+
+username: 'deanna_walsh_5596',
+
+password: '1234',
+
+liked_restaurants: [
+
+'0x8090cbf5bbba898b:0xb37d7e1fea0c63ef',
+
+'0x8085875ce042646d:0xd289103cd80a0a97',
+
+'0x808f7fd770b93dfd:0x9163bc5a8883c63b',
+
+'0x809b053254d9dfab:0xb1b11e804211e0ea',
+
+'0x80904101ce001281:0x76db23c5d22346ae',
+
+'0x808e4aaee95d631b:0xc9d0839a2aefcb64',
+
+'0x808f7c1425bf6e9d:0xf5c6c8e213483c28',
+
+'0x80c2c7049ff0132d:0xf598d3badb3f6dc',
+
+'0x80c2d20b1642d757:0xdf3698e5172297cf',
+
+'0x80c298259dc3e43d:0x20349edf1ec7eb40',
+
+'0x809ae410bb4b79db:0x8e53e91c4a62cfcd',
+
+'0x80e84e90e72e4b39:0x606f85aade439c98'
+
+],
+
+friends: [],
+
+preferences: [],
+
+location: {
+
+type: 'Point',
+
+coordinates: [
+
+Double('-120.445127'),
+
+Double('39.226969')
+
+]
+
+},
+
+avatar_index: NumberInt('3')
+
+}
+
+
+
+
+
+
+
+
+
+**0 offline reviews and 0 online with onboarding-**
+
+
+
+{
+
+_id: ObjectId('6a47a7a1a7fd067596b8770a'),
+
+user_id: '51ace930-f2bb-4295-91f1-1b7e9b37899d',
+
+username: 'esty_onboard',
+
+password: '1234',
+
+onboarding_preferences: {
+
+favorite_categories: [
+
+'Dessert'
+
+],
+
+favorite_atmospheres: [
+
+'Romantic'
+
+],
+
+accessibility: 'Not Required',
+
+dietary_restrictions: 'None'
+
+}
+
+}
+
+
+
+
+
+**0 offline reviews and 12 online with onboarding-**
+
+
+
+_id: ObjectId('6a47ab2ea7fd067596b8770b'),
+
+user_id: '4cbe2144-ede7-41a6-abc0-fcf456844508',
+
+username: 'esty_onborad_and_online',
+
+password: '1234',
+
+onboarding_preferences: {
+
+favorite_categories: [
+
+'Dessert',
+
+'Cafe'
+
+],
+
+favorite_atmospheres: [
+
+'Casual',
+
+'Upscale'
+
+],
+
+accessibility: 'Not Required',
+
+dietary_restrictions: 'None'
+
+},
+
+liked_restaurants: [
+
+'0x8090cbf5bbba898b:0xb37d7e1fea0c63ef',
+
+'0x8085875ce042646d:0xd289103cd80a0a97',
+
+'0x808f7fd770b93dfd:0x9163bc5a8883c63b',
+
+'0x809b053254d9dfab:0xb1b11e804211e0ea',
+
+'0x80904101ce001281:0x76db23c5d22346ae',
+
+'0x808e4aaee95d631b:0xc9d0839a2aefcb64',
+
+'0x808f7c1425bf6e9d:0xf5c6c8e213483c28',
+
+'0x80c2c7049ff0132d:0xf598d3badb3f6dc',
+
+'0x80c2d20b1642d757:0xdf3698e5172297cf',
+
+'0x80c298259dc3e43d:0x20349edf1ec7eb40',
+
+'0x809ae410bb4b79db:0x8e53e91c4a62cfcd',
+
+'0x80e84e90e72e4b39:0x606f85aade439c98'
+
+]
+
+}
+
+
+
+
+
