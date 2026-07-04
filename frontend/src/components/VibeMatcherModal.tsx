@@ -54,24 +54,89 @@ export default function VibeMatcherModal({
 
   const categories: { key: MatchingCategory; label: string; emoji: string }[] =
     [
-      { key: "italian", label: "Italian", emoji: "🍝" },
-      { key: "japanese", label: "Japanese", emoji: "🍱" },
-      { key: "mexican", label: "Mexican", emoji: "🌮" },
-      { key: "thai", label: "Thai", emoji: "🍜" },
-      { key: "indian", label: "Indian", emoji: "🍛" },
-      { key: "french", label: "French", emoji: "🥐" },
-      { key: "korean", label: "Korean", emoji: "🥘" },
-      { key: "datenight", label: "Date Night", emoji: "💕" },
-      { key: "groups", label: "Groups", emoji: "👥" },
-      { key: "coffee", label: "Morning Coffee", emoji: "☕" },
-      { key: "lunch", label: "Quick Lunch", emoji: "⏱️" },
-      { key: "dessert", label: "Dessert Spot", emoji: "🍰" },
+        { key: "american", label: "American", emoji: "🍔" },
+        { key: "italian", label: "Italian", emoji: "🍝" },
+        { key: "chinese", label: "Chinese", emoji: "🥡" },
+        { key: "mexican_latin", label: "Mexican & Latin", emoji: "🌮" },
+        { key: "indian", label: "Indian", emoji: "🍛" },
+        { key: "cafe", label: "Cafe", emoji: "☕" },
+        { key: "breakfast_brunch", label: "Breakfast & Brunch", emoji: "🥐" },
+        { key: "lunch", label: "Lunch", emoji: "🥗" },
+        { key: "dinner", label: "Dinner", emoji: "🍽️" },
+        { key: "fast_food", label: "Fast Food / Quick Bite", emoji: "⏱️" },
+        { key: "vegetarian", label: "Vegetarian", emoji: "🥬" },
+        { key: "halal", label: "Halal", emoji: "🌙" },
     ];
 
   const toggleCategory = (cat: MatchingCategory) => {
     setSelectedCategories((prev) =>
       prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]
     );
+  };
+
+  const categoryFilterMap: Record<MatchingCategory, Partial<any>> = {
+    american: { categories: ["American"] },
+    italian: { categories: ["Italian"] },
+    chinese: { categories: ["Chinese"] },
+    mexican_latin: { categories: ["Mexican & Latin"] },
+    indian: { categories: ["Indian"] },
+    cafe: { establishment_types: ["Cafe"] },
+    breakfast_brunch: { meal_types: ["Breakfast & Brunch"] },
+    lunch: { meal_types: ["Lunch"] },
+    dinner: { meal_types: ["Dinner"] },
+    fast_food: { dining_styles: ["Fast Food / Quick Bite"] },
+    vegetarian: { dietary_preferences: ["Vegetarian"] },
+    halal: { dietary_preferences: ["Halal"] },
+  };
+
+  const buildVibeFilters = () => {
+    const filters: Record<string, any> = {
+      top_k: 5,
+    };
+
+    const addFilterValues = (key: string, values: string[] | null) => {
+      if (!values || values.length === 0) return;
+
+      filters[key] = [...(filters[key] || []), ...values];
+    };
+
+    selectedCategories.forEach((category) => {
+      const filter = categoryFilterMap[category];
+
+      Object.entries(filter).forEach(([key, value]) => {
+        addFilterValues(key, value as string[]);
+      });
+    });
+
+    if (budgetOption) {
+      filters.price = budgetOption;
+    }
+
+    if (accessibilityOption === "Required") {
+      addFilterValues("accessibility", ["Wheelchair accessible entrance"]);
+    }
+
+    if (dietaryOption && dietaryOption !== "None") {
+      addFilterValues("offerings", [dietaryOption]);
+    }
+
+    if (dineOption === "Takeout") {
+      addFilterValues("service_options", ["Takeout"]);
+    }
+
+    if (dineOption === "Dine-in") {
+      addFilterValues("service_options", ["Dine-in"]);
+    }
+
+    if (distanceOption === "Walking Distance") {
+      filters.radius_km = 2;
+    } else if (distanceOption === "Up to 15 Minutes") {
+      filters.radius_km = 8;
+    } else if (distanceOption === "Up to 30 Minutes") {
+      filters.radius_km = 16;
+    }
+
+    return filters;
   };
 
   const hasAnySelection =
@@ -211,16 +276,7 @@ export default function VibeMatcherModal({
         <div className="vibe-modal-footer">
           <button
             className="vibe-match-btn"
-            onClick={() =>
-              onSubmit({
-              categories: selectedCategories,
-              budget: budgetOption,
-              distance: distanceOption,
-              accessibility: accessibilityOption,
-              dietary: dietaryOption,
-              dineOption: dineOption,
-            })
-          }
+            onClick={() => onSubmit(buildVibeFilters())}
             disabled={!hasAnySelection}
           >
             Vibe Match Me ✨

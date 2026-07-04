@@ -9,6 +9,7 @@ import GroupPage from "./pages/GroupPage";
 import GroupResultPage from "./pages/GroupResultPage";
 import RestaurantPage from "./pages/RestaurantPage";
 import Onboarding from "./pages/Onboarding";
+import VibeMatchPage from "./pages/VibeMatchPage";
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
         <Route path="/restaurant" element={<RestaurantPage />} />
         <Route path="/group" element={<GroupPage />} />
         <Route path="/group-result" element={<GroupResultPage />} />
+        <Route path="/vibe-match" element={<VibeMatchPage />} />
       </Routes>
     </BrowserRouter>
   );

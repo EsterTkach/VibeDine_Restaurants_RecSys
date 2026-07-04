@@ -63,19 +63,19 @@ export type AccessibilityOption = "Required" | "Not Required";
 export type DietaryOption = "None" | "Vegetarian" | "Vegan" | "Gluten Free";
 export type DineOption = "Dine-in" | "Takeout" | "Both";
 
-export type MatchingCategory = 
-  | "italian" 
-  | "japanese" 
-  | "mexican" 
-  | "thai" 
-  | "indian" 
-  | "french" 
-  | "korean" 
-  | "datenight" 
-  | "groups" 
-  | "coffee" 
-  | "lunch" 
-  | "dessert";
+export type MatchingCategory =
+  | "american"
+  | "italian"
+  | "chinese"
+  | "mexican_latin"
+  | "indian"
+  | "cafe"
+  | "breakfast_brunch"
+  | "lunch"
+  | "dinner"
+  | "fast_food"
+  | "vegetarian"
+  | "halal";
 
 export interface VibeMatcherState {
   selectedPreferences: PreferenceOption[];

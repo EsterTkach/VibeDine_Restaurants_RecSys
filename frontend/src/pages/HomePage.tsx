@@ -40,9 +40,6 @@ export default function HomePage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
 
-  const [vibeMatches, setVibeMatches] = useState<any[]>([]);
-  const [showVibeMatches, setShowVibeMatches] = useState(false);
-
   // New clean UI error message state tracker
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -114,8 +111,13 @@ export default function HomePage() {
         vibeFilters
     );
 
-      setVibeMatches(data.recommendations || []);
-      setShowVibeMatches(true);
+      navigate("/loading", {
+        state: {
+          nextPage: "/vibe-match",
+          recommendations: data.recommendations || [],
+          filters: vibeFilters,
+        },
+      });
     } catch (error) {
       console.error("Failed to load vibe matches:", error);
       setErrorMessage("Could not load vibe matches. Please try again.");
@@ -241,13 +243,6 @@ export default function HomePage() {
             marginTop: '24px'
           }}
         >
-          {showVibeMatches && vibeMatches.length > 0 && (
-            <RestaurantRow
-              title="Your Vibe Matches"
-              emoji="🪄"
-              restaurants={vibeMatches}
-            />
-          )}
           {loading ? (
             <div className="text-center p-10 text-gray-400">Loading your customized feed...</div>
           ) : errorMessage ? (
