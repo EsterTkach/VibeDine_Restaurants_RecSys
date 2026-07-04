@@ -66,12 +66,15 @@ export async function removeFriend(userId: string, friendId: string): Promise<vo
 export async function getHomeCarousels(userId: string, topK = 25) {
   const response = await apiClient.get("/recommend/home-carousels", {
     params: { user_id: userId, top_k: topK },
+    timeout: 60000,
   });
   return response.data;
 }
 
 export async function getVibeMatchRecommendations(userId: string, filters: any) {
-  const response = await apiClient.post(`/recommend/vibe-match/${userId}`, filters);
+  const response = await apiClient.post(`/recommend/vibe-match/${userId}`, filters, {
+    timeout: 60000,
+  });
   return response.data;
 }
 
