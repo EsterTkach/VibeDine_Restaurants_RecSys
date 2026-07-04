@@ -211,7 +211,7 @@ export default function HomePage() {
             {showAccountMenu && (
               <div className="account-menu">
                 <button className="account-menu-button" onClick={handleLogout}>
-                  Sign out
+                  Log out
                 </button>
               </div>
             )}
