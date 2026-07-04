@@ -1,7 +1,9 @@
 from enum import Enum
 
+# ==========================================
+# 1. ENUMS
+# ==========================================
 class CuisineType(Enum):
-    """ סוגי מטבחים ומוצא גיאוגרפי """
     AMERICAN = "American"
     ITALIAN = "Italian"
     CHINESE = "Chinese"
@@ -13,25 +15,21 @@ class CuisineType(Enum):
     EUROPEAN = "European"
 
 class EstablishmentType(Enum):
-    """ סוג המבנה / העסק """
     RESTAURANT = "Restaurant"
     BAR_PUB = "Bar & Pub"
     BAKERY_CONFECTIONERY = "Bakery & Confectionery"
     CAFE = "Cafe"
 
 class MealType(Enum):
-    """ סוג הארוחה לפי שעות היום """
     BREAKFAST_BRUNCH = "Breakfast & Brunch"
     LUNCH = "Lunch"
     DINNER = "Dinner"
 
 class DiningStyle(Enum):
-    """ סגנון ומהירות השירות """
     GOURMET = "Gourmet / Fine Dining"
     FAST_FOOD = "Fast Food / Quick Bite"
 
 class PopularFoodItem(Enum):
-    """ מאכלים פופולריים ספציפיים לסינון ממוקד """
     HAMBURGER = "Hamburger"
     SUSHI = "Sushi"
     PIZZA_PASTA = "Pizza & Pasta"
@@ -42,9 +40,16 @@ class PopularFoodItem(Enum):
     STEAK_BBQ = "Steak & BBQ"
 
 class DietaryPreference(Enum):
-    """ העדפות דיאטטיות ודתיות """
     VEGAN = "Vegan"
     VEGETARIAN = "Vegetarian"
     KOSHER = "Kosher"
     HALAL = "Halal"
     GLUTEN_FREE = "Gluten-Free"
+
+class Vibe(Enum):
+    COZY = "Cozy"
+    ROMANTIC = "Romantic"
+    CASUAL = "Casual"
+    UPSCALE = "Upscale"
+    FAMILY_FRIENDLY = "Family Friendly"
+    TRENDY = "Trendy"
