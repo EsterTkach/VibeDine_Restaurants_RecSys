@@ -1,6 +1,8 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
+import RestaurantCard from "../components/RestaurantCard";
+import apiClient from "../api/client";
 import {
   submitGroupSessionFeedback,
   type GroupRecommendation,
@@ -22,12 +24,46 @@ export default function GroupResultPage() {
 
   const [currentRecommendation, setCurrentRecommendation] =
     useState<GroupRecommendation | null>(location.state?.recommendation || null);
+  const [resolvedImageUrl, setResolvedImageUrl] = useState<string | undefined>(
+    location.state?.recommendation?.image_url || undefined
+  );
 
   const [showModal, setShowModal] = useState(false);
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
   const [feedbackError, setFeedbackError] = useState("");
   const [selectedFriendsAffected, setSelectedFriendsAffected] = useState<string[]>([]);
   const [selectedReason, setSelectedReason] = useState("");
+
+  useEffect(() => {
+    if (!currentRecommendation) {
+      setResolvedImageUrl(undefined);
+      return;
+    }
+
+    if (currentRecommendation.image_url) {
+      setResolvedImageUrl(currentRecommendation.image_url);
+      return;
+    }
+
+    let cancelled = false;
+
+    apiClient
+      .get(`/restaurants/${currentRecommendation.gmap_id}`)
+      .then((res) => {
+        if (!cancelled) {
+          setResolvedImageUrl(res.data?.image_url || "");
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setResolvedImageUrl("");
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentRecommendation?.gmap_id, currentRecommendation?.image_url]);
 
   const toggleAffectedFriend = (label: string) => {
     setSelectedFriendsAffected((prev) =>
@@ -66,6 +102,7 @@ export default function GroupResultPage() {
       );
 
       setCurrentRecommendation(response.recommendation);
+      setResolvedImageUrl(response.recommendation?.image_url || "");
       setSelectedFriendsAffected([]);
       setSelectedReason("");
       setShowModal(false);
@@ -153,25 +190,18 @@ export default function GroupResultPage() {
 
           <h1>{currentRecommendation?.name || "No match found"}</h1>
 
-          {currentRecommendation?.image_url && (
-            <img
-              src={currentRecommendation.image_url}
-              className="result-restaurant-img"
-              alt={currentRecommendation.name}
+          {currentRecommendation ? (
+            <RestaurantCard
+              restaurant={{
+                gmap_id: currentRecommendation.gmap_id,
+                name: currentRecommendation.name,
+                cuisine: currentRecommendation.cuisines?.[0] || "",
+                avg_rating: currentRecommendation.avg_rating || 0,
+                price: (currentRecommendation.price as '$' | '$$' | '$$$' | undefined) ?? '$',
+                image_url: resolvedImageUrl || currentRecommendation.image_url || "",
+              }}
             />
-          )}
-
-          <div className="result-meta">
-            {currentRecommendation?.avg_rating && (
-              <span>⭐ {currentRecommendation.avg_rating}</span>
-            )}
-            {currentRecommendation?.price && (
-              <span>• {currentRecommendation.price}</span>
-            )}
-            {currentRecommendation?.cuisines?.[0] && (
-              <span>• {currentRecommendation.cuisines[0]}</span>
-            )}
-          </div>
+          ) : null}
 
           <p>
             {currentRecommendation
@@ -188,22 +218,13 @@ export default function GroupResultPage() {
           </div>
 
           {currentRecommendation && (
-            <>
-              <button
-                className="reserve-btn"
-                onClick={() => navigate(`/restaurant/${currentRecommendation.gmap_id}`)}
-              >
-                View Restaurant →
-              </button>
-
-              <button
-                className="reject-btn"
-                disabled={!sessionId}
-                onClick={() => setShowModal(true)}
-              >
-                This recommendation doesn't work
-              </button>
-            </>
+            <button
+              className="reject-btn"
+              disabled={!sessionId}
+              onClick={() => setShowModal(true)}
+            >
+              This recommendation doesn't work
+            </button>
           )}
 
           {!currentRecommendation && (
