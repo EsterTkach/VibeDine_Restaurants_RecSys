@@ -16,7 +16,8 @@ function avatarColor(index: number) {
 }
 
 export default function FriendsPage() {
-  const { userId } = useAuth();
+  const { userData } = useAuth();
+  const userId = userData.user_id;
 
   const [friends, setFriends] = useState<Friend[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
