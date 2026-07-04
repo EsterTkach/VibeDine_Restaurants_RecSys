@@ -59,7 +59,6 @@ export default function HomePage() {
     setShowVibeModal(false);
   };
   const handleVibeMatchSubmit = async (filters: any) => {
-  setShowVibeModal(false);
   setLoading(true);
   setErrorMessage(null);
 
@@ -71,26 +70,8 @@ export default function HomePage() {
   try {
     const data = await getVibeMatchRecommendations(userId, filters);
 
-    navigate("/loading", {
-      state: {
-        nextPage: "/vibe-match",
-        recommendations: data.recommendations || [],
-        filters,
-      },
-    });
-  } catch (error) {
-    console.error("Failed to load vibe matches:", error);
-    setErrorMessage("Could not load vibe matches. Please try again.");
-  } finally {
-    setLoading(false);
-  }
-};
-  try {
-    const data = await getVibeMatchRecommendations(
-      userId,
-      filters
-    );
     setShowVibeModal(false);
+    
     navigate("/loading", {
       state: {
         nextPage: "/vibe-match",
@@ -105,7 +86,6 @@ export default function HomePage() {
     setLoading(false);
   }
 };
->>>>>>> 721b177 (vibematch)
 
   const handleComingSoonClose = () => {
     setShowComingSoon(false);

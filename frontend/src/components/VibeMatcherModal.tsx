@@ -91,7 +91,7 @@ export default function VibeMatcherModal({
 
   const buildVibeFilters = () => {
     const filters: Record<string, any> = {
-      top_k: 5,
+      top_k: 7,
     };
 
     const addFilterValues = (key: string, values: string[] | null) => {
