@@ -74,6 +74,44 @@ export default function VibeMatcherModal({
     );
   };
 
+  const buildVibeFilters = () => {
+  return {
+    categories: selectedCategories.length
+      ? selectedCategories.map((category: string) => `${category} restaurant`)
+      : null,
+
+    price: budgetOption || null,
+
+    accessibility:
+      accessibilityOption === "Required"
+        ? ["Wheelchair accessible entrance"]
+        : null,
+
+    offerings:
+      dietaryOption && dietaryOption !== "None"
+        ? [dietaryOption]
+        : null,
+
+    service_options:
+      dineOption === "Takeout"
+        ? ["Takeout"]
+        : dineOption === "Dine-in"
+        ? ["Dine-in"]
+        : null,
+
+    radius_km:
+      distanceOption === "Walking Distance"
+        ? 2
+        : distanceOption === "Up to 15 Minutes"
+        ? 8
+        : distanceOption === "Up to 30 Minutes"
+        ? 16
+        : null,
+
+    top_k: 5,
+  };
+};
+
   const hasAnySelection =
     budgetOption ||
     distanceOption ||
@@ -211,16 +249,7 @@ export default function VibeMatcherModal({
         <div className="vibe-modal-footer">
           <button
             className="vibe-match-btn"
-            onClick={() =>
-              onSubmit({
-              categories: selectedCategories,
-              budget: budgetOption,
-              distance: distanceOption,
-              accessibility: accessibilityOption,
-              dietary: dietaryOption,
-              dineOption: dineOption,
-            })
-          }
+            onClick={() => onSubmit(buildVibeFilters())}
             disabled={!hasAnySelection}
           >
             Vibe Match Me ✨

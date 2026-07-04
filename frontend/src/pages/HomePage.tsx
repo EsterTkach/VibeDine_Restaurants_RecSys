@@ -29,9 +29,6 @@ export default function HomePage() {
     setHasLoadedHome,
   } = useHome();
   const [loading, setLoading] = useState<boolean>(true);
-
-  const [vibeMatches, setVibeMatches] = useState<any[]>([]);
-  const [showVibeMatches, setShowVibeMatches] = useState(false);
   
   // New clean UI error message state tracker
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -57,7 +54,6 @@ export default function HomePage() {
   };
 
   const handleVibeMatchSubmit = async (filters: any) => {
-  setShowVibeModal(false);
   setLoading(true);
   setErrorMessage(null);
 
@@ -66,50 +62,19 @@ export default function HomePage() {
     localStorage.getItem("userId") ||
     "default_user";
 
-  const vibeFilters = {
-    categories: filters.categories?.length
-      ? filters.categories.map((category: string) => `${category} restaurant`)
-      : null,
-
-    price: filters.budget || null,
-
-    accessibility:
-      filters.accessibility === "Required"
-        ? ["Wheelchair accessible entrance"]
-        : null,
-
-    offerings:
-      filters.dietary && filters.dietary !== "None"
-        ? [filters.dietary]
-        : null,
-
-    service_options:
-      filters.dineOption === "Takeout"
-        ? ["Takeout"]
-        : filters.dineOption === "Dine-in"
-        ? ["Dine-in"]
-        : null,
-
-    radius_km:
-      filters.distance === "Walking Distance"
-        ? 2
-        : filters.distance === "Up to 15 Minutes"
-        ? 8
-        : filters.distance === "Up to 30 Minutes"
-        ? 16
-        : null,
-
-    top_k: 5,
-  };
-
   try {
     const data = await getVibeMatchRecommendations(
       userId,
-      vibeFilters
+      filters
     );
-
-    setVibeMatches(data.recommendations || []);
-    setShowVibeMatches(true);
+    setShowVibeModal(false);
+    navigate("/loading", {
+      state: {
+        nextPage: "/vibe-match",
+        recommendations: data.recommendations || [],
+        filters,
+      },
+    });
   } catch (error) {
     console.error("Failed to load vibe matches:", error);
     setErrorMessage("Could not load vibe matches. Please try again.");
@@ -219,13 +184,6 @@ export default function HomePage() {
             marginTop: '24px'
           }}
         >
-          {showVibeMatches && vibeMatches.length > 0 && (
-            <RestaurantRow
-              title="Your Vibe Matches"
-              emoji="🪄"
-              restaurants={vibeMatches}
-          />
-        )}
           {loading ? (
             <div className="text-center p-10 text-gray-400">Loading your customized feed...</div>
           ) : errorMessage ? (
