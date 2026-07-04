@@ -109,3 +109,25 @@
   margin-top: 12px;
   font-size: 14px;
 }
+
+.remove-friend-btn {
+  border: none;
+  background: #f2ebe3;
+  color: #8b6b4a;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  font-size: 14px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+
+.remove-friend-btn:hover {
+  background: #e8d5c0;
+}
+
+.remove-friend-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

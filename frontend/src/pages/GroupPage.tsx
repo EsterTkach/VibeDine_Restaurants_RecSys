@@ -46,12 +46,25 @@ export default function GroupPage() {
   const hasFriends = !loading && friends.length > 0;
   const noFriends = !loading && friends.length === 0;
 
+  const buildFilters = (): Record<string, unknown> => {
+    const filters: Record<string, unknown> = {};
+    if (budget) filters.price = budget;
+    if (distance === "Walkable") filters.radius_km = 1;
+    else if (distance === "15 Min") filters.radius_km = 3;
+    else if (distance === "30 Min") filters.radius_km = 6;
+    if (accessibility === "Required") filters.accessibility = ["Wheelchair accessible entrance"];
+    if (dietary === "Vegetarian") filters.dietary_restrictions = ["Vegetarian"];
+    else if (dietary === "Vegan") filters.dietary_restrictions = ["Vegan"];
+    else if (dietary === "Gluten Free") filters.dietary_restrictions = ["Gluten-Free"];
+    return filters;
+  };
+
   const handleFindMatch = async () => {
     setIsCreatingSession(true);
     setError("");
     try {
       const groupUserIds = [userId, ...selectedFriends.map((f) => f.user_id)];
-      const session = await createGroupSession(groupUserIds);
+      const session = await createGroupSession(groupUserIds, buildFilters());
       navigate("/loading", {
         state: {
           selectedFriends,
@@ -63,8 +76,10 @@ export default function GroupPage() {
           nextPage: "/group-result",
         },
       });
-    } catch (err) {
-      setError("Could not start a group session. Please try again.");
+    } catch (err: any) {
+      const detail = err?.response?.data?.detail || err?.message || "Unknown error";
+      console.error("Group session error:", detail, err?.response?.status);
+      setError(`Could not start a group session: ${detail}`);
     } finally {
       setIsCreatingSession(false);
     }
@@ -74,7 +89,7 @@ export default function GroupPage() {
     <AppShell>
       <div className="group-page">
 
-        <button className="back-btn" onClick={() => navigate(-1)}>
+        <button className="back-btn" onClick={() => navigate("/home")}>
           ← Back
         </button>
 

@@ -31,8 +31,11 @@ export default function AuthPage() {
       setLoading(true);
 
       const data = await authService.login(userData.username, password);
+      // Clear any stale session data from a previous user before setting new one
+      localStorage.removeItem("user_id");
+      localStorage.removeItem("userId");
       setUserData(data.user_data);
-      localStorage.setItem("user_data", JSON.stringify(data.user_data)); 
+      localStorage.setItem("user_data", JSON.stringify(data.user_data));
 
       // If server returns a token/user, pass user data directly to the loading view
       navigate("/loading", {

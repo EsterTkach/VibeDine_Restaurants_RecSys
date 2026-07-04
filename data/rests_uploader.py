@@ -119,7 +119,7 @@ def parse_hours(raw_hours):
 
 def process_and_upload():
     # התחברות למונגו
-    client = MongoClient("mongodb+srv://<username>:<password>@cluster0.yodtpzx.mongodb.net/?appName=Cluster0")
+    client = MongoClient("mongodb+srv://yuvalnamirbarr:xAaOYUtq4GQTN3t8@cluster0.yodtpzx.mongodb.net/?appName=Cluster0")
     db = client["restaurants_project_db"]
     collection = db["restaurants"]
     

@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import AppShell from "../layouts/AppShell";
 import BottomNav from "../components/BottomNav";
-import { getFriends, searchUsers, addFriend } from "../api/restaurants";
+import { getFriends, searchUsers, addFriend, removeFriend } from "../api/restaurants";
+import { useAuth } from "../contexts/AuthContext";
 import type { Friend } from "../types";
 
 import "./FriendsPage.css";
@@ -15,7 +16,7 @@ function avatarColor(index: number) {
 }
 
 export default function FriendsPage() {
-  const userId = localStorage.getItem("user_id") || "";
+  const { userId } = useAuth();
 
   const [friends, setFriends] = useState<Friend[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -25,6 +26,7 @@ export default function FriendsPage() {
   const [addingId, setAddingId] = useState<string | null>(null);
   const [addedId, setAddedId] = useState<string | null>(null);
   const [addError, setAddError] = useState<string | null>(null);
+  const [removingId, setRemovingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!userId) return;
@@ -53,6 +55,18 @@ export default function FriendsPage() {
     }, 400);
     return () => clearTimeout(timer);
   }, [searchQuery, friends, userId]);
+
+  async function handleRemoveFriend(friend: Friend) {
+    setRemovingId(friend.user_id);
+    try {
+      await removeFriend(userId, friend.user_id);
+      setFriends((prev) => prev.filter((f) => f.user_id !== friend.user_id));
+    } catch {
+      // silent — friend stays in list if removal fails
+    } finally {
+      setRemovingId(null);
+    }
+  }
 
   async function handleAddFriend(friend: Friend) {
     setAddingId(friend.user_id);
@@ -144,10 +158,17 @@ export default function FriendsPage() {
               >
                 {(friend.name || friend.username)[0].toUpperCase()}
               </div>
-              <div>
+              <div style={{ flex: 1 }}>
                 <h3>{friend.name || friend.username}</h3>
                 <span>Food Explorer 🍜</span>
               </div>
+              <button
+                className="remove-friend-btn"
+                onClick={() => handleRemoveFriend(friend)}
+                disabled={removingId === friend.user_id}
+              >
+                {removingId === friend.user_id ? "..." : "✕"}
+              </button>
             </div>
           ))}
         </div>

@@ -58,6 +58,10 @@ export async function addFriend(userId: string, friendId: string): Promise<void>
   await apiClient.post(`/users/${userId}/friends`, { friend_id: friendId });
 }
 
+export async function removeFriend(userId: string, friendId: string): Promise<void> {
+  await apiClient.delete(`/users/${userId}/friends/${friendId}`);
+}
+
 // Home carousels
 export async function getHomeCarousels(userId: string, topK = 25) {
   const response = await apiClient.get("/recommend/home-carousels", {
@@ -75,6 +79,10 @@ export async function getVibeMatchRecommendations(userId: string, filters: any) 
 export type GroupRecommendation = {
   gmap_id: string;
   name: string;
+  avg_rating?: number;
+  price?: string;
+  image_url?: string;
+  cuisines?: string[];
   avg_hybrid_score?: number;
   users_supported?: number;
   coverage?: number;
@@ -86,13 +94,26 @@ export type GroupSessionResponse = {
   recommendation: GroupRecommendation | null;
 };
 
-export async function createGroupSession(userIds: string[]) {
-  const response = await apiClient.post<GroupSessionResponse>("/groups/session", {
-    user_ids: userIds,
-    top_k: 1,
-    per_user_k: 50,
-  });
+export async function createGroupSession(userIds: string[], filters?: Record<string, unknown>) {
+  const response = await apiClient.post<GroupSessionResponse>(
+    "/groups/session",
+    {
+      user_ids: userIds,
+      top_k: 1,
+      per_user_k: 50,
+      filters: filters ?? {},
+    },
+    { timeout: 60000 },
+  );
   return response.data;
+}
+
+export async function likeRestaurant(userId: string, restaurantId: string): Promise<void> {
+  await apiClient.post(`/users/restaurants/${restaurantId}/like`, { user_id: userId });
+}
+
+export async function unlikeRestaurant(userId: string, restaurantId: string): Promise<void> {
+  await apiClient.delete(`/users/restaurants/${restaurantId}/like`, { data: { user_id: userId } });
 }
 
 export async function submitGroupSessionFeedback(
@@ -110,6 +131,7 @@ export async function submitGroupSessionFeedback(
       top_k: 1,
       per_user_k: 50,
     },
+    { timeout: 60000 },
   );
   return response.data;
 }

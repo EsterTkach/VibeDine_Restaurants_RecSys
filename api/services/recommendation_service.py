@@ -6,6 +6,7 @@ from api.services.users_service import get_user_online_likes
 from api.utils.utils import extract_gmap_ids, format_restaurant_for_frontend
 from api.routes.users import get_onboarding_preferences
 from api.ml.cb_recommender import compute_cb_scores, restaurant_lookup
+from api.services import hybrid_cache
 
 
 
@@ -169,6 +170,11 @@ def combine_hybrid_scores(cb_scores, cf_scores, alpha=0.5):
     return hybrid_scores, cb_norm, cf_norm
 
 def get_hybrid_scores_for_user(user_id: str):
+    cached = hybrid_cache.get(user_id)
+    if cached is not None:
+        print(f"Cache hit for user {user_id}")
+        return cached
+
     cb_scores = compute_cb_scores(user_id)
     cf_scores = compute_cf_scores(user_id)
     alpha = get_user_alpha(user_id)
@@ -179,6 +185,8 @@ def get_hybrid_scores_for_user(user_id: str):
 
     hybrid_scores = combine_hybrid_scores(cb_scores, cf_scores, alpha)[0]
     print(f"Hybrid restaurants={len(hybrid_scores)}")
+
+    hybrid_cache.set(user_id, hybrid_scores)
     return hybrid_scores
 
 

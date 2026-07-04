@@ -1,4 +1,5 @@
 from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from api.db.restaurant_repository import get_filtered_restaurants_repo
 from api.services.recommendation_service import (
@@ -36,6 +37,10 @@ def aggregate_group_recommendations(user_ids, recommendations_by_user, top_k=10)
     restaurant_scores = defaultdict(
         lambda: {
             "name": None,
+            "avg_rating": None,
+            "price": None,
+            "image_url": None,
+            "cuisines": [],
             "score_sum": 0.0,
             "count": 0,
         }
@@ -50,6 +55,10 @@ def aggregate_group_recommendations(user_ids, recommendations_by_user, top_k=10)
 
             gmap_id = rec["gmap_id"]
             restaurant_scores[gmap_id]["name"] = rec["name"]
+            restaurant_scores[gmap_id]["avg_rating"] = rec.get("avg_rating")
+            restaurant_scores[gmap_id]["price"] = rec.get("price")
+            restaurant_scores[gmap_id]["image_url"] = rec.get("image_url")
+            restaurant_scores[gmap_id]["cuisines"] = rec.get("cuisines", [])
             restaurant_scores[gmap_id]["score_sum"] += rec["hybrid_score"]
             restaurant_scores[gmap_id]["count"] += 1
 
@@ -65,6 +74,10 @@ def aggregate_group_recommendations(user_ids, recommendations_by_user, top_k=10)
             {
                 "gmap_id": gmap_id,
                 "name": data["name"],
+                "avg_rating": data["avg_rating"],
+                "price": data["price"],
+                "image_url": data["image_url"],
+                "cuisines": data["cuisines"],
                 "avg_hybrid_score": round(float(avg_score), 3),
                 "users_supported": data["count"],
                 "coverage": round(float(coverage), 3),
@@ -93,12 +106,18 @@ def get_hybrid_recommendations_for_group_with_user_candidates(
 
     recommendations_by_user = {}
 
-    for user_id in user_ids:
-        recommendations_by_user[user_id] = get_hybrid_recommendations_for_user(
-            user_id=user_id,
+    def _fetch_with_candidates(uid):
+        return uid, get_hybrid_recommendations_for_user(
+            user_id=uid,
             top_k=per_user_k,
-            candidate_gmap_ids=candidate_gmap_ids_by_user.get(user_id),
+            candidate_gmap_ids=candidate_gmap_ids_by_user.get(uid),
         )
+
+    with ThreadPoolExecutor(max_workers=len(user_ids)) as pool:
+        futures = {pool.submit(_fetch_with_candidates, uid): uid for uid in user_ids}
+        for future in as_completed(futures):
+            uid, recs = future.result()
+            recommendations_by_user[uid] = recs
 
     return aggregate_group_recommendations(
         user_ids=user_ids,
@@ -150,13 +169,18 @@ def get_hybrid_recommendations_for_group(
 
     recommendations_by_user = {}
 
-    # Generate hybrid recommendations for each user
-    for user_id in user_ids:
-        recommendations_by_user[user_id] = get_hybrid_recommendations_for_user(
-            user_id=user_id,
+    def _fetch_for_user(uid):
+        return uid, get_hybrid_recommendations_for_user(
+            user_id=uid,
             top_k=per_user_k,
             candidate_gmap_ids=candidate_gmap_ids,
         )
+
+    with ThreadPoolExecutor(max_workers=len(user_ids)) as pool:
+        futures = {pool.submit(_fetch_for_user, uid): uid for uid in user_ids}
+        for future in as_completed(futures):
+            uid, recs = future.result()
+            recommendations_by_user[uid] = recs
 
     return aggregate_group_recommendations(
         user_ids=user_ids,
