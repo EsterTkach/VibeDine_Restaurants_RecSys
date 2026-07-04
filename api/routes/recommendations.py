@@ -58,7 +58,7 @@ def get_home_carousels(user_id: str = "default_user", top_k: int = 25):
     user_profile = get_user_by_id(user_id)
     user_location = user_profile.get("location", {})
     coordinates = user_location.get("coordinates")
-    print(time.perf_counter() - start)
+
     candidate_gmap_ids_by_radius = None
     if (
         coordinates 
@@ -77,15 +77,18 @@ def get_home_carousels(user_id: str = "default_user", top_k: int = 25):
         
     candidate_gmap_ids_by_mealtime = extract_gmap_ids(get_filtered_restaurants_repo(dining_options=get_meal_time_string()))
     candidate_gmap_ids_by_hidden_gems = extract_gmap_ids(get_filtered_restaurants_repo(min_rating=4.5, max_reviews=30))
-
     is_cold_start = get_user_augmented_likes(user_id) == 0
     onboarding_candidate_gmap_ids = None
     hybrid_scores = None
+    print(time.perf_counter() - start)
+
+    start = time.perf_counter()
     if is_cold_start:
         print("User has no augmented likes, fetching onboarding candidate gmap_ids")
         onboarding_candidate_gmap_ids = get_onboarding_candidate_gmap_ids(user_id)
     else:
         hybrid_scores = get_hybrid_scores_for_user(user_id)
+    print(f"hybrid scores run time: {time.perf_counter() - start:.2f}s")
 
     start = time.perf_counter()
     recommended = get_hybrid_recommendations_for_user(

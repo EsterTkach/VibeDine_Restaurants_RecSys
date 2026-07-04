@@ -156,7 +156,7 @@ export default function RestaurantRow({ title, emoji, restaurants }: RestaurantR
       >
         {restaurants.map((restaurant) => (
           <div 
-            key={restaurant.id} 
+            key={restaurant.gmap_id} 
             className="slider-item" 
             style={{ flex: '0 0 256px', width: '256px', minWidth: '256px' }}
           >

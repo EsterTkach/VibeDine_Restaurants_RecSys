@@ -135,11 +135,14 @@ export default function HomePage() {
         setLoading(true);
         setErrorMessage(null); // Reset previous errors on reload
         
-        const currentUserId = localStorage.getItem("user_id");
-        if (!currentUserId) {
+        const currentUserId = localStorage.getItem("user_id") || localStorage.getItem("userId");
+        if (!currentUserId || currentUserId === "undefined" || currentUserId === "null") {
+          console.warn("Invalid or missing user ID found. Redirecting to login...");
           navigate("/login", { replace: true });
           return;
         }
+        console.log("Sending request with validated User ID:", currentUserId);
+
         const data = await getHomeCarousels(currentUserId);
 
         console.log("Home carousels response:", data);
@@ -147,13 +150,13 @@ export default function HomePage() {
         setCarousels(data.carousels || []);
         setHasLoadedHome(true);
         console.log("Carousels:", data.carousels);
-
         }
 
         catch (error) {
         console.error(error);
         if (axios.isAxiosError(error)) {
           console.log(error.response);
+          setErrorMessage("We couldn't connect to the server. Please check your network and try again.");
 }
       } finally {
         setLoading(false);
@@ -161,7 +164,7 @@ export default function HomePage() {
     }
     console.log("fetchDashboardData called");
     fetchDashboardData();
-  }, []);
+  }, [navigate, setCarousels, setHasLoadedHome]);
 
   const emojiMap: Record<string, string> = {
     recommended_for_you: "✨",
