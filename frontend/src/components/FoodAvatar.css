@@ -14,3 +14,28 @@
   height: 78%;
   object-fit: contain;
 }
+
+
+        /*             */
+       /* for Sign-Up */
+      /*            b*/
+
+.auth-card .avatar-option {
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+
+.auth-card .avatar-option-inner {
+  border: 3px solid transparent;
+  border-radius: 50%;
+  padding: 5px;
+  transition: all 0.2s ease;
+}
+
+.avatar-option.selected .avatar-option-inner {
+  border-color: #d6a777;
+  background: #fff8f1;
+  box-shadow: 0 4px 10px rgba(214, 167, 119, 0.3);
+}

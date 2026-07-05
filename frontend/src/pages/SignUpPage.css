@@ -1,0 +1,87 @@
+.avatar-section {
+  /* width: 100%; */
+}
+
+.avatar-title {
+  margin: 4px 0 10px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.avatar-picker {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.avatar-option {
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+
+.avatar-option-inner {
+  border: 2px solid transparent;
+  border-radius: 50%;
+  padding: 2px;
+  transition: all 0.2s ease;
+}
+
+.avatar-option.selected .avatar-option-inner {
+  border-color: #d6a777;
+  background: #fff8f1;
+  box-shadow: 0 4px 10px rgba(214, 167, 119, 0.3);
+}
+
+.location-preview {
+  margin-top: 8px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: #f8f5f2;
+  color: #6b7280;
+  font-size: 13px;
+  text-align: center;
+}
+
+
+.location-search-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.location-search-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding-right: 52px;
+}
+
+
+.location-actions {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.location-search-btn {
+  border: none;
+  background: transparent;
+  color: #8b6b4a;
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+}

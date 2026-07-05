@@ -1,4 +1,5 @@
 // 1. Import your teammate's new API layer functions directly
+import type { RegisterRequest } from "../types";
 import {
   login,
   signup,
@@ -107,8 +108,8 @@ export const authService = {
   },
 
   // Bridges directly to teammate's signup method
-  register: async (username: string, password: string) => {
+  register: async (data: RegisterRequest) => {
     // Note: Teammate's signup implementation currently expects only (username, password)
-    return await signup(username, password);
+    return await signup(data);
   }
 };
