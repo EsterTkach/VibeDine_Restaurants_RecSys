@@ -151,9 +151,9 @@ export default function HomePage() {
           <div className="home-text">
             <h1 className="greeting">
               <span>{getGreeting()},</span>
-              <span>{userData.name}</span>
+              <span>{userData.name}! 👋</span>
             </h1>
-            <p>What are you craving today?</p>
+            <p>Find your next favorite spot</p>
           </div>
 
           <div className="profile-avatar-container">
@@ -163,9 +163,9 @@ export default function HomePage() {
               aria-label="Open account menu"
             >
               {loading && !errorMessage ? (
-                <div className="profile-avatar-loader" style={{ width: 48, height: 48, borderRadius: '50%', background: '#f5efe8' }} />
+                <div className="profile-avatar-loader">⏳</div>
               ) : (
-                <FoodAvatar avatar_index={userData.avatar_index} size={48} />
+                <FoodAvatar avatar_index={userData.avatar_index} size={90} />
               )}
             </button>
 

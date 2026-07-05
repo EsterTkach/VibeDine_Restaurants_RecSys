@@ -28,7 +28,7 @@
 
 body {
   font-family: 'Nunito', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  font-weight: 400;
+  font-weight: 300;
   background-color: var(--vd-brown-50);
   color: var(--vd-brown-900);
   -webkit-font-smoothing: antialiased;

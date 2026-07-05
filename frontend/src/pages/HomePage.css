@@ -89,35 +89,33 @@
 
 .home-text h1 {
   margin: 0;
-  font-size: 24px;
+  font-size: 28px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .home-text p {
-  margin-top: 4px;
+  margin-top: 8px;
   color: #8a7560;
-  font-size: 14px;
+  font-size: 15px;
 }
 
 .greeting {
   display: flex;
   flex-direction: column;
   margin: 0;
-  line-height: 1.3;
+  line-height: 1.2;
 }
 
 .greeting span:first-child {
-  font-size: 15px;
-  font-weight: 500;
-  color: #8a7560;
+  font-size: 28px;
+  font-weight: 700;
 }
 
 .greeting span:last-child {
-  font-size: 22px;
+  font-size: 28px;
   font-weight: 700;
-  color: #2d1f10;
   overflow-wrap: anywhere;
   word-break: break-word;
 }

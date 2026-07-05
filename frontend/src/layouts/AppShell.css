@@ -28,23 +28,6 @@
   flex-direction: column;
 }
 
-/* Simulated status bar / notch area */
-.phone-frame::before {
-  content: '';
-  position: sticky;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 130px;
-  height: 30px;
-  background: #000;
-  border-radius: 0 0 18px 18px;
-  z-index: 200;
-  margin: 0 auto;
-  display: block;
-  flex-shrink: 0;
-}
-
 .phone-frame > div {
   flex: 1;
   overflow-y: auto;
