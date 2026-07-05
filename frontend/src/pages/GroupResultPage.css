@@ -4,6 +4,7 @@
 
 .result-content {
   padding: 28px;
+  position: relative;
 }
 
 .recommendation-badge {
@@ -87,6 +88,23 @@
   margin-bottom: 18px;
 }
 
+.close-result-btn {
+  position: absolute;
+  top: 28px;
+  right: 28px;
+  border: none;
+  background: #f3e6d7;
+  color: #8b6b4a;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .reject-btn {
   width: 100%;
 
@@ -109,6 +127,17 @@
 
 .reject-btn:hover {
   background: #f3e6d7;
+}
+
+.reject-btn:disabled,
+.reserve-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.feedback-error {
+  color: #b53b32 !important;
+  margin-top: 12px !important;
 }
 
 .working-banner {
@@ -228,3 +257,11 @@
   color: #777;
 }
 
+.result-meta {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  color: #666;
+  font-weight: 500;
+  font-size: 15px;
+}

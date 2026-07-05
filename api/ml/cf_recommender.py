@@ -19,6 +19,18 @@ restaurant_lookup = model["restaurant_lookup"]
 #added for hybrid recommender:
 item_id_to_index = model["item_id_to_index"] 
 
+# Pre-compute global popularity ranking once at module load
+_popularity_scores = np.asarray(user_item_matrix.sum(axis=0)).ravel()
+_popularity_ranked_indices = _popularity_scores.argsort()[::-1]
+
+# Build a pre-sorted list of (gmap_id, score) for fast filtering
+_popular_ranked_list = []
+for _idx in _popularity_ranked_indices:
+    _gid = index_to_item_id[_idx]
+    _popular_ranked_list.append((_gid, float(_popularity_scores[_idx])))
+
+print(f"Popularity ranking pre-computed: {len(_popular_ranked_list)} restaurants")
+
 def get_user_row(user_id):
     """
     allows online interactions to improve recommendations, if available
@@ -205,24 +217,13 @@ def get_popular_restaurants(top_k=config.TOP_K, candidate_gmap_ids=None):
     """
     Return the Top-K most popular restaurants
     based on offline positive ratings.
+    Uses pre-computed popularity ranking for O(n) filtering.
     """
-
-    # Sum positive ratings (4-5) for each restaurant
-    popularity_scores = np.asarray(
-        user_item_matrix.sum(axis=0)
-    ).ravel()
-
-    # Rank restaurants by popularity
-    ranked_indices = popularity_scores.argsort()[::-1]
-
-    candidate_set = set(candidate_gmap_ids) if candidate_gmap_ids else None
+    candidate_set = set(candidate_gmap_ids) if candidate_gmap_ids is not None else None
 
     recommendations = []
 
-    # Build recommendation list
-    for idx in ranked_indices:
-        gmap_id = index_to_item_id[idx]
-
+    for gmap_id, score in _popular_ranked_list:
         if candidate_set is not None and gmap_id not in candidate_set:
             continue
 
@@ -236,10 +237,10 @@ def get_popular_restaurants(top_k=config.TOP_K, candidate_gmap_ids=None):
             {
                 "gmap_id": gmap_id,
                 "name": name,
-                "popularity_score": round(float(popularity_scores[idx]), 3),
+                "popularity_score": round(score, 3),
             }
         )
-        if len(recommendations) == (top_k*3):
+        if len(recommendations) == (top_k * 3):
             break
 
     return recommendations

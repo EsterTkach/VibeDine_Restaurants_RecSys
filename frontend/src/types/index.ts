@@ -25,8 +25,15 @@ export interface User {
   name: string;
   username: string;
   password: string;
-  avatar_url: string;
+  avatar_index: number;
   liked_restaurants: Restaurant[];
+}
+
+export interface Friend {
+  user_id: string;
+  name: string;
+  username: string;
+  avatar_index: number;
 }
 
 export interface ApiRecommendation {
@@ -56,19 +63,19 @@ export type AccessibilityOption = "Required" | "Not Required";
 export type DietaryOption = "None" | "Vegetarian" | "Vegan" | "Gluten Free";
 export type DineOption = "Dine-in" | "Takeout" | "Both";
 
-export type MatchingCategory = 
-  | "italian" 
-  | "japanese" 
-  | "mexican" 
-  | "thai" 
-  | "indian" 
-  | "french" 
-  | "korean" 
-  | "datenight" 
-  | "groups" 
-  | "coffee" 
-  | "lunch" 
-  | "dessert";
+export type MatchingCategory =
+  | "american"
+  | "italian"
+  | "chinese"
+  | "mexican_latin"
+  | "indian"
+  | "cafe"
+  | "breakfast_brunch"
+  | "lunch"
+  | "dinner"
+  | "fast_food"
+  | "vegetarian"
+  | "halal";
 
 export interface VibeMatcherState {
   selectedPreferences: PreferenceOption[];
@@ -81,3 +88,12 @@ export interface VibeMatcherState {
     dineOption?: DineOption;
   };
 }
+
+
+
+export type UserData = {
+  user_id: string;
+  username: string;
+  avatar_index: number;
+  name: string;
+};

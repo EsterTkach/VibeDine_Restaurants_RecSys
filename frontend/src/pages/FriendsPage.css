@@ -58,4 +58,76 @@
   justify-content: center;
 
   font-weight: bold;
+
+  flex-shrink: 0;
+}
+
+.friends-search {
+  margin-top: 24px;
+}
+
+.friends-search-input {
+  width: 100%;
+  padding: 14px 18px;
+  border: none;
+  border-radius: 16px;
+  background: white;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.07);
+  font-size: 15px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.friends-search-input::placeholder {
+  color: #aaa;
+}
+
+.add-friend-btn {
+  border: none;
+  background: #8b6b4a;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 12px;
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+
+.add-friend-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.add-friend-btn.added {
+  background: #4a8b6b;
+}
+
+.friends-empty {
+  color: #aaa;
+  text-align: center;
+  margin-top: 12px;
+  font-size: 14px;
+}
+
+.remove-friend-btn {
+  border: none;
+  background: #f2ebe3;
+  color: #8b6b4a;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  font-size: 14px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+
+.remove-friend-btn:hover {
+  background: #e8d5c0;
+}
+
+.remove-friend-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }

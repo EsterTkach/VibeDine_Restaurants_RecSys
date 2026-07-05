@@ -6,6 +6,7 @@ from api.services.users_service import get_user_online_likes
 from api.utils.utils import extract_gmap_ids, format_restaurant_for_frontend
 from api.routes.users import get_onboarding_preferences
 from api.ml.cb_recommender import compute_cb_scores, restaurant_lookup
+from api.services import hybrid_cache
 
 
 
@@ -75,28 +76,111 @@ from api.ml.cb_recommender import compute_cb_scores, restaurant_lookup
 
 #     return recommendations
 
+POPULAR_FOOD_TO_CATEGORIES_MAP = {
+    "Sushi": ["Sushi", "Sushi restaurant", "Japanese", "Japanese restaurant"],
+    "Pizza & Pasta": ["Italian", "Italian restaurant", "Pizza restaurant", "Pizza"],
+    "Hamburger": ["Hamburger", "Hamburger restaurant", "Burger restaurant"],
+    "Ice Cream & Dessert": ["Dessert", "Dessert shop", "Ice cream shop", "Bakery"],
+    "Noodles & Ramen": ["Ramen", "Noodle shop", "Japanese", "Asian"],
+    "Seafood": ["Seafood", "Seafood restaurant"],
+    "Chicken": ["Chicken restaurant", "Fried chicken restaurant"],
+    "Steak & BBQ": ["Steak house", "Barbecue restaurant", "BBQ"],
+}
+
+CUISINE_TO_CATEGORIES_MAP = {
+    "American": ["American", "American restaurant"],
+    "Italian": ["Italian", "Italian restaurant", "Pizza restaurant"],
+    "Chinese": ["Chinese", "Chinese restaurant"],
+    "Japanese": ["Japanese", "Japanese restaurant", "Sushi restaurant"],
+    "Mexican & Latin": ["Mexican", "Mexican restaurant", "Latin American restaurant"],
+    "Asian Fusion": ["Asian", "Asian restaurant", "Asian fusion restaurant"],
+    "Indian": ["Indian", "Indian restaurant"],
+    "Mediterranean & Middle East": ["Mediterranean", "Mediterranean restaurant", "Middle Eastern restaurant"],
+    "European": ["European", "European restaurant", "French restaurant"],
+}
+
+ACCESSIBILITY_MAP = {
+    "Required": ["Wheelchair accessible entrance", "Wheelchair accessible seating", "Wheelchair accessible"],
+}
+
+
+def _parse_onboarding_preferences(preferences: dict):
+    """
+    Maps user-facing onboarding preference values to the actual
+    MongoDB field values used by get_filtered_restaurants_repo.
+    """
+    raw_categories = preferences.get("favorite_categories", [])
+    atmosphere = preferences.get("favorite_atmospheres", [])
+    accessibility_raw = preferences.get("accessibility", "")
+    dietary_raw = preferences.get("dietary_restrictions", "")
+
+    # 1. Separate popular food items from cuisine types and map to DB values
+    mapped_categories = []
+    mapped_popular_items = []
+
+    for item in raw_categories:
+        # Strip emoji prefix (e.g., "🍣 Sushi" → "Sushi")
+        clean = item.split(" ", 1)[1] if " " in item and not item[0].isalpha() else item
+
+        if clean in POPULAR_FOOD_TO_CATEGORIES_MAP:
+            mapped_categories.extend(POPULAR_FOOD_TO_CATEGORIES_MAP[clean])
+            mapped_popular_items.append(clean)
+        elif clean in CUISINE_TO_CATEGORIES_MAP:
+            mapped_categories.extend(CUISINE_TO_CATEGORIES_MAP[clean])
+        else:
+            mapped_categories.append(clean)
+
+    # 2. Map accessibility
+    mapped_accessibility = ACCESSIBILITY_MAP.get(accessibility_raw)
+
+    # 3. Map dietary restrictions (single string → list, skip "None")
+    mapped_dietary = None
+    if dietary_raw and dietary_raw != "None":
+        mapped_dietary = [dietary_raw]
+
+    return {
+        "categories": mapped_categories or None,
+        "popular_items": mapped_popular_items or None,
+        "atmosphere": atmosphere or None,
+        "accessibility": mapped_accessibility,
+        "dietary_restrictions": mapped_dietary,
+    }
+
+
 def get_onboarding_candidate_gmap_ids(user_id: str, candidate_gmap_ids=None):
     pref = get_onboarding_preferences(user_id)
+    preferences = pref.get("preferences", {})
 
-    categories = pref["preferences"].get("favorite_categories", [])
-    atmosphere = pref["preferences"].get("favorite_atmospheres", [])
-    accessibility = pref["preferences"].get("accessibility", [])
-    dietary_restrictions = pref["preferences"].get("dietary_restrictions", [])
+    if not preferences:
+        return candidate_gmap_ids
+
+    parsed = _parse_onboarding_preferences(preferences)
 
     candidate_gmap_ids_by_category = extract_gmap_ids(
         get_filtered_restaurants_repo(
-            categories=categories,
-            accessibility=accessibility,
-            atmosphere=atmosphere,
-            dietary_restrictions=dietary_restrictions,
+            categories=parsed["categories"],
+            popular_items=parsed["popular_items"],
+            accessibility=parsed["accessibility"],
+            atmosphere=parsed["atmosphere"],
+            dietary_restrictions=parsed["dietary_restrictions"],
             limit=1000))
+
+    # Fallback: if strict filters return nothing, relax to categories only
+    if not candidate_gmap_ids_by_category and parsed["categories"]:
+        candidate_gmap_ids_by_category = extract_gmap_ids(
+            get_filtered_restaurants_repo(
+                categories=parsed["categories"],
+                limit=1000))
 
     if candidate_gmap_ids is None:
         return candidate_gmap_ids_by_category
 
-    return list(
+    combined = list(
         set(candidate_gmap_ids_by_category) & set(candidate_gmap_ids)
     )
+
+    # If intersection is empty, prefer onboarding candidates over nothing
+    return combined if combined else candidate_gmap_ids_by_category
 
 
 def get_user_onboarding_recommendations(
@@ -165,6 +249,11 @@ def combine_hybrid_scores(cb_scores, cf_scores, alpha=0.5):
     return hybrid_scores, cb_norm, cf_norm
 
 def get_hybrid_scores_for_user(user_id: str):
+    cached = hybrid_cache.get(user_id)
+    if cached is not None:
+        print(f"Cache hit for user {user_id}")
+        return cached
+
     cb_scores = compute_cb_scores(user_id)
     cf_scores = compute_cf_scores(user_id)
     alpha = get_user_alpha(user_id)
@@ -175,11 +264,13 @@ def get_hybrid_scores_for_user(user_id: str):
 
     hybrid_scores = combine_hybrid_scores(cb_scores, cf_scores, alpha)[0]
     print(f"Hybrid restaurants={len(hybrid_scores)}")
+
+    hybrid_cache.set(user_id, hybrid_scores)
     return hybrid_scores
 
 
 def rank_hybrid_recommendations(hybrid_scores, top_k=10, candidate_gmap_ids=None):
-    candidate_set = set(candidate_gmap_ids) if candidate_gmap_ids else None
+    candidate_set = set(candidate_gmap_ids) if candidate_gmap_ids is not None else None
     recommendations = []
     for gmap_id, score in hybrid_scores.items():
         if candidate_set is not None and gmap_id not in candidate_set:
@@ -215,7 +306,15 @@ def get_hybrid_recommendations_for_user(
     If the user has no online likes, returns offline likes.
     If the user has no offline likes, returns popular restaurants.
     """
-    if get_user_augmented_likes(user_id) == 0:
+    # Skip expensive DB check if caller already determined cold-start status
+    if onboarding_candidate_gmap_ids is not None:
+        is_cold_start = True
+    elif hybrid_scores is not None:
+        is_cold_start = False
+    else:
+        is_cold_start = get_user_augmented_likes(user_id) == 0
+
+    if is_cold_start:
         print(f"User {user_id} is cold-start, returning onboarding recommendations")
         return get_user_onboarding_recommendations(
             user_id,

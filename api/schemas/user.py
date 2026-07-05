@@ -20,3 +20,6 @@ class OnboardingPreferences(BaseModel):
 
 class OnboardingPreferencesRequest(BaseModel):
     preferences: OnboardingPreferences
+
+class AddFriendRequest(BaseModel):
+    friend_id: str

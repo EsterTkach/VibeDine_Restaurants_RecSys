@@ -50,7 +50,7 @@ export const restaurantService = {
 };
 
 export const userService = {
-
+  
   getLikedRestaurants: (userId: string | number) =>
     handleRequest<{
       user_id: string;
@@ -74,10 +74,7 @@ export const userService = {
 };
 
 export const vibeService = {
-  submitMatch: async (preferences: any) => {
-    // Dynamically grab the userId stored by your teammate's login block
-    const userId = localStorage.getItem("user_id") || "default_user_id";
-
+  submitMatch: async (userId: string, preferences: any) => {
     // Clean & simple: directly call the imported function!
     return await saveOnboardingPreferences(userId, preferences);
   },

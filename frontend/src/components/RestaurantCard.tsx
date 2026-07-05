@@ -3,13 +3,17 @@ import type { Restaurant } from "../types";
 
 interface Props {
   restaurant: Restaurant;
+  variant?: "card" | "list";
 }
 
-export default function RestaurantCard({ restaurant }: Props) {
+export default function RestaurantCard({
+  restaurant,
+  variant = "card",
+}: Props) {
   const navigate = useNavigate();
 
   return (
-    <div className="restaurant-card-home">
+    <div className={`restaurant-card-home ${variant === "list" ? "restaurant-card-list" : ""}`}>
       <img
         src={restaurant.image_url}
         alt={restaurant.name}

@@ -1,16 +1,15 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { FaApple, FaXTwitter } from "react-icons/fa6";
 import AppShell from "../layouts/AppShell";
 import { useNavigate } from "react-router-dom";
 import { authService } from "../api/services";
 import { useAuth } from "../contexts/AuthContext";
-import { preloadHomeData } from "../api/home";
 
 export default function AuthPage() {
   const navigate = useNavigate();
-  
-  const {username, setUsername, setUserId} = useAuth();
+  const { userData, setUserData } = useAuth();
+
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -18,13 +17,11 @@ export default function AuthPage() {
 
   const showComingSoon = () => {
     setShowToast(true);
-    setTimeout(() => {
-      setShowToast(false);
-    }, 2500);
+    setTimeout(() => setShowToast(false), 2500);
   };
 
   const handleLogin = async () => {
-    if (!username.trim() || !password.trim()) {
+    if (!userData.username.trim() || !password.trim()) {
       setError("Please fill in all fields");
       return;
     }
@@ -33,21 +30,30 @@ export default function AuthPage() {
       setError("");
       setLoading(true);
 
-      console.log("Trying login:", username, password);
-      // 1. Try hitting the live backend service first
-      const data = await authService.login(username, password);
-      console.log("Login response:", username,password);
-      setUserId(data.user_id);
-      setUsername(data.username);
-      localStorage.setItem("user_id", data.user_id);
-      localStorage.setItem("username", data.username);
-      //preloadHomeData(data.user_id);
+      const data = await authService.login(userData.username, password);
+      // Clear any stale session data from a previous user before setting new one
+      localStorage.removeItem("user_id");
+      localStorage.removeItem("userId");
+      setUserData(data.user_data);
+      localStorage.setItem("user_data", JSON.stringify(data.user_data));
+
       // If server returns a token/user, pass user data directly to the loading view
-      navigate("/loading", { state: { username: data.username } });
+      navigate("/loading", {
+        replace: true,
+        state: {
+          nextPage: "/home",
+          username: data.user_data.username,
+        },
+      });
 
     } catch (apiError) {
-      console.log(apiError);
-      console.warn("Backend login failed or offline. Testing fallback demo users...", apiError);
+      const status = (apiError as any)?.response?.status;
+      if (status === 401) {
+        setError("Invalid username or password, please try again");
+      } else {
+        setError("Login failed. Please try again.");
+      }
+      console.warn("Backend login failed or offline.", apiError);
     } finally {
       setLoading(false);
     }
@@ -68,9 +74,14 @@ export default function AuthPage() {
           <input
             className="input"
             placeholder="Username"
-            value={username}
+            value={userData.username}
             disabled={loading}
-            onChange={(e) => setUsername(e.target.value)}
+            onChange={(e) =>
+              setUserData({
+                ...userData,
+                username: e.target.value,
+              })
+            }
           />
 
           <input
@@ -88,16 +99,16 @@ export default function AuthPage() {
             </span>
           )}
 
-          <button 
-            className="primary-btn" 
+          <button
+            className="primary-btn"
             onClick={handleLogin}
             disabled={loading}
           >
             {loading ? "Signing In..." : "Sign In →"}
           </button>
 
-          <button 
-            className="secondary-btn" 
+          <button
+            className="secondary-btn"
             onClick={() => navigate("/signup")}
             disabled={loading}
           >
@@ -114,7 +125,7 @@ export default function AuthPage() {
           <button className="social-btn" onClick={showComingSoon} disabled={loading}>
             <FaApple size={20} />
             Continue with Apple
-          </button> 
+          </button>
 
           <button className="social-btn" onClick={showComingSoon} disabled={loading}>
             <FaXTwitter size={18} />
@@ -124,10 +135,10 @@ export default function AuthPage() {
       </div>
 
       {showToast && (
-        <div className="toast">
-          🚀 Social login is coming soon
+      <div className="toast">
+        🚀 Social login is coming soon
         </div>
       )}
-    </AppShell>
+      </AppShell>
   );
 }

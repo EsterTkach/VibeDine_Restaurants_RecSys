@@ -4,6 +4,11 @@ def get_filtered_restaurants_repo(
     skip: int = 0,
     limit: int = 50,
     categories: list = None,
+    establishment_types: list = None,
+    meal_types: list = None,
+    dining_styles: list = None,
+    popular_items: list = None,
+    dietary_preferences: list = None,
     accessibility: list = None,
     service_options: list = None,
     atmosphere: list = None,
@@ -14,6 +19,7 @@ def get_filtered_restaurants_repo(
     min_rating: float = 0.0,
     min_reviews: int = 0,
     max_reviews: int = None,
+    max_price: str = None,
     latitude: float = None,
     longitude: float = None,
     radius_km: float = 15,
@@ -57,6 +63,7 @@ def get_filtered_restaurants_repo(
         min_reviews (int, optional): The absolute minimum number of reviews required. Defaults to 0.
         max_reviews (int, optional): The absolute maximum number of reviews permitted. Useful for 
                                      unearthing high-quality, low-exposure "Hidden Gems". Defaults to None.
+        max_price (str, optional): Maximum allowed price marker, such as "$$". Defaults to None.
         latitude (float, optional): Target latitude for center of radius filter.
         longitude (float, optional): Target longitude for center of radius filter.
         radius_km (float, optional): Radius distance threshold in kilometers.
@@ -75,6 +82,11 @@ def get_filtered_restaurants_repo(
         return [value]
 
     categories = ensure_list(categories)
+    establishment_types = ensure_list(establishment_types)
+    meal_types = ensure_list(meal_types)
+    dining_styles = ensure_list(dining_styles)
+    popular_items = ensure_list(popular_items)
+    dietary_preferences = ensure_list(dietary_preferences)
     accessibility = ensure_list(accessibility)
     service_options = ensure_list(service_options)
     atmosphere = ensure_list(atmosphere)
@@ -111,10 +123,27 @@ def get_filtered_restaurants_repo(
 
     if price:
         query["price"] = price
+    elif max_price:
+        allowed_prices = ["$", "$$", "$$$", "$$$$"]
+        if max_price in allowed_prices:
+            query["$or"] = [
+                {"price": {"$in": allowed_prices[: allowed_prices.index(max_price) + 1]}},
+                {"price_level": {"$in": allowed_prices[: allowed_prices.index(max_price) + 1]}},
+            ]
 
     # Apply flexible $in filters
     if categories:
-        query["category"] = {"$in": categories}
+        query["cuisines"] = {"$in": categories}
+    if establishment_types:
+        query["establishment_types"] = {"$in": establishment_types}
+    if meal_types:
+        query["meal_types"] = {"$in": meal_types}
+    if dining_styles:
+        query["dining_styles"] = {"$in": dining_styles}
+    if popular_items:
+        query["popular_items"] = {"$in": popular_items}
+    if dietary_preferences:
+        query["dietary_preferences"] = {"$in": dietary_preferences}
     if accessibility:
         query["accessibility"] = {"$in": accessibility}
     if service_options:
@@ -146,6 +175,7 @@ def get_filtered_restaurants_repo(
             "avg_rating",
             "num_of_reviews",
             "location",
+            "$or",
         ]:  
             projection[field] = 1
 
@@ -163,7 +193,17 @@ def get_filtered_restaurants_repo(
         }
 
     if categories:
-        score_components.append(add_intersection("category", categories))
+        score_components.append(add_intersection("cuisines", categories))
+    if establishment_types:
+        score_components.append(add_intersection("establishment_types", establishment_types))
+    if meal_types:
+        score_components.append(add_intersection("meal_types", meal_types))
+    if dining_styles:
+        score_components.append(add_intersection("dining_styles", dining_styles))
+    if popular_items:
+        score_components.append(add_intersection("popular_items", popular_items))
+    if dietary_preferences:
+        score_components.append(add_intersection("dietary_preferences", dietary_preferences))
     if accessibility:
         score_components.append(add_intersection("accessibility", accessibility))
     if service_options:

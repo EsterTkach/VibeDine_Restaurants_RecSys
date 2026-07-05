@@ -118,3 +118,19 @@
   color: #666;
   font-weight: 500;
 }
+
+.action-btn.liked {
+  background: #e8453c;
+}
+
+.restaurant-hours {
+  margin-top: 14px;
+  color: #555;
+  font-size: 14px;
+}
+
+.restaurant-address {
+  margin-top: 8px;
+  color: #777;
+  font-size: 14px;
+}
