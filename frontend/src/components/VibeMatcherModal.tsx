@@ -74,7 +74,7 @@ export default function VibeMatcherModal({
     );
   };
 
-  const categoryFilterMap: Record<MatchingCategory, Partial<any>> = {
+    const categoryFilterMap: Record<MatchingCategory, Partial<any>> = {
     american: { categories: ["American"] },
     italian: { categories: ["Italian"] },
     chinese: { categories: ["Chinese"] },
@@ -91,12 +91,11 @@ export default function VibeMatcherModal({
 
   const buildVibeFilters = () => {
     const filters: Record<string, any> = {
-      top_k: 5,
+      top_k: 7,
     };
 
     const addFilterValues = (key: string, values: string[] | null) => {
       if (!values || values.length === 0) return;
-
       filters[key] = [...(filters[key] || []), ...values];
     };
 

@@ -308,3 +308,65 @@ def get_user_recommendations(
 #         per_user_k=request.per_user_k,
 #         filters=request.filters,
 #     )
+
+@router.post("/vibe-match/{user_id}")
+def get_vibe_match_recommendations(
+    user_id: str,
+    filters: FilterRequest
+):
+    filtered_restaurants = get_filtered_restaurants_repo(
+    categories=filters.categories,
+    accessibility=filters.accessibility,
+    service_options=filters.service_options,
+    atmosphere=filters.atmosphere,
+    dining_options=filters.dining_options,
+    crowd=filters.crowd,
+    offerings=filters.offerings or filters.dietary_restrictions,
+    price=filters.price,
+    latitude=filters.latitude,
+    longitude=filters.longitude,
+    radius_km=filters.radius_km,
+    min_rating=filters.min_rating,
+    limit=100
+)
+
+    candidate_gmap_ids = extract_gmap_ids(filtered_restaurants)
+    if not candidate_gmap_ids:
+        filtered_restaurants = get_filtered_restaurants_repo(
+            categories=filters.categories,
+            price=filters.price,
+            offerings=filters.offerings or filters.dietary_restrictions,
+            limit=100
+        )
+        candidate_gmap_ids = extract_gmap_ids(filtered_restaurants)
+    
+    if not candidate_gmap_ids:
+        filtered_restaurants = get_filtered_restaurants_repo(
+            categories=filters.categories,
+            price=filters.price,
+            limit=100
+        )
+        candidate_gmap_ids = extract_gmap_ids(filtered_restaurants)
+
+    if not candidate_gmap_ids:
+        filtered_restaurants = get_filtered_restaurants_repo(
+            price=filters.price,
+            limit=100
+        )
+        candidate_gmap_ids = extract_gmap_ids(filtered_restaurants)
+    
+    recommendations = get_hybrid_recommendations_for_user(
+        user_id=user_id,
+        top_k=7,
+        candidate_gmap_ids=candidate_gmap_ids,
+        onboarding_candidate_gmap_ids=candidate_gmap_ids
+    )
+
+    return {
+        "recommendation_type": "vibe_match",
+        "filters": filters.dict(),
+        "recommendations": [
+            format_restaurant_for_frontend(r)
+            for r in recommendations
+        ]
+    }
