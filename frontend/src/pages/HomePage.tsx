@@ -187,7 +187,7 @@ export default function HomePage() {
         <div
           className="search-bar"
           onClick={() => navigate("/group")}
-          style={{ marginTop: "-10px" }}
+          style={{ marginTop: "0px" }}
         >
           <span className="search-text">Plan With Friends</span>{" "}
           <span className="search-icon">👥</span>
@@ -203,10 +203,20 @@ export default function HomePage() {
           }}
         >
           {loading ? (
-            <div className="text-center p-10 text-gray-400">Loading your customized feed...</div>
+            <div className="home-loading-skeleton">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="skeleton-row">
+                  <div className="skeleton-title" />
+                  <div className="skeleton-cards">
+                    {[1, 2, 3, 4].map((j) => (
+                      <div key={j} className="skeleton-card" />
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : errorMessage ? (
-            // CLEAN ALTERNATIVE: Replaces carousels with an interactive alert box if something breaks
-            <div className="error-banner" style={{ textAlign: 'center', padding: '40px 20px', background: '#fff5f5', borderRadius: '12px', border: '1px dashed #feb2b2', color: '#c53030' }}>
+            <div className="error-banner" style={{ textAlign: 'center', padding: '40px 20px', background: '#fff5f5', borderRadius: '16px', border: '1px dashed #feb2b2', color: '#c53030' }}>
               <span style={{ fontSize: '32px' }}>⚠️</span>
               <h3 style={{ margin: '12px 0 6px', fontWeight: 'bold' }}>Feed Temporarily Unavailable</h3>
               <p style={{ fontSize: '14px', opacity: 0.8, maxWidth: '400px', margin: '0 auto' }}>{errorMessage}</p>
