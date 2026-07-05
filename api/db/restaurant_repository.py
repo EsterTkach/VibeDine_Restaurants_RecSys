@@ -3,24 +3,26 @@ from api.db.mongo import (restaurants_collection, users_collection)
 def get_filtered_restaurants_repo(
     skip: int = 0,
     limit: int = 50,
-    categories: list = None,
+    categories: list = None, # AKA- cuisines
     establishment_types: list = None,
     meal_types: list = None,
     dining_styles: list = None,
     popular_items: list = None,
     dietary_preferences: list = None,
-    accessibility: list = None,
-    service_options: list = None,
-    atmosphere: list = None,
-    dining_options: list = None,
-    crowd: list = None,
-    offerings: list = None,
-    dietary_restrictions: list = None,
+    accessibility: list = None, # Unsupported by data (Legacy)
+    service_options: list = None, # Unsupported by data (Legacy)
+    atmosphere: list = None, # Unsupported by data (Legacy)
+    dining_options: list = None, # Unsupported by data (Legacy)
+    crowd: list = None, # Unsupported by data (Legacy)
+    offerings: list = None, # Unsupported by data (Legacy)
+    dietary_restrictions: list = None, # Unsupported by data (Legacy)
+    vibe: list = None, # NEW: Replaces atmosphere/crowd
+    is_accessible: bool = None, # NEW: Strict boolean for accessibility
     min_rating: float = 0.0,
     min_reviews: int = 0,
     max_reviews: int = None,
     max_price: str = None,
-    latitude: float = None,
+    latitude: float = None, 
     longitude: float = None,
     radius_km: float = 15,
     price: str = None,
@@ -52,13 +54,15 @@ def get_filtered_restaurants_repo(
         skip (int): Pagination offset. Defaults to 0.
         limit (int): Maximum number of top documents to return. Defaults to 50.
         categories (list, optional): Exact-match category strings (e.g., ["Sushi"]).
-        accessibility (list, optional): Accessibility tags.
-        service_options (list, optional): Service tags (e.g., ["Delivery", "Takeout"]).
-        atmosphere (list, optional): Atmosphere tags (e.g., ["Cozy", "Casual"]).
-        dining_options (list, optional): Dining tags.
-        crowd (list, optional): Crowd tags.
-        offerings (list, optional): Offering tags.
-        dietary_restrictions (list, optional): Dietary restriction tags (e.g., ["Halal", "Vegan"]).
+        accessibility (list, optional): Legacy accessibility tags.
+        service_options (list, optional): Legacy service tags (e.g., ["Delivery", "Takeout"]).
+        atmosphere (list, optional): Legacy atmosphere tags (e.g., ["Cozy", "Casual"]).
+        dining_options (list, optional): Legacy dining tags.
+        crowd (list, optional): Legacy crowd tags.
+        offerings (list, optional): Legacy offering tags.
+        dietary_restrictions (list, optional): Legacy dietary restriction tags (e.g., ["Halal", "Vegan"]).
+        vibe (list, optional): Vibe tags (e.g., ["Romantic", "Bustling"]). 
+        is_accessible (bool, optional): Strict boolean flag for physical accessibility.
         min_rating (float, optional): The absolute minimum average rating required. Defaults to 0.0.
         min_reviews (int, optional): The absolute minimum number of reviews required. Defaults to 0.
         max_reviews (int, optional): The absolute maximum number of reviews permitted. Useful for 
@@ -94,6 +98,7 @@ def get_filtered_restaurants_repo(
     crowd = ensure_list(crowd)
     offerings = ensure_list(offerings)
     dietary_restrictions = ensure_list(dietary_restrictions)
+    vibe = ensure_list(vibe)
     
     # 1. Build the base Match Query
     query = {}
@@ -131,6 +136,10 @@ def get_filtered_restaurants_repo(
                 {"price_level": {"$in": allowed_prices[: allowed_prices.index(max_price) + 1]}},
             ]
 
+    # Apply strict boolean filters
+    if is_accessible is not None:
+        query["is_accessible"] = is_accessible
+
     # Apply flexible $in filters
     if categories:
         query["cuisines"] = {"$in": categories}
@@ -158,6 +167,8 @@ def get_filtered_restaurants_repo(
         query["offerings"] = {"$in": offerings}
     if dietary_restrictions:
         query["dietary_restrictions"] = {"$in": dietary_restrictions}
+    if vibe:
+        query["vibe"] = {"$in": vibe}
 
     # 2. Build the return projection
     projection = {
@@ -218,6 +229,8 @@ def get_filtered_restaurants_repo(
         score_components.append(add_intersection("offerings", offerings))
     if dietary_restrictions:
         score_components.append(add_intersection("dietary_restrictions", dietary_restrictions))
+    if vibe:
+        score_components.append(add_intersection("vibe", vibe))
 
     # 4. Construct the Aggregation Pipeline
     pipeline = [{"$match": query}]
