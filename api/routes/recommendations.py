@@ -81,8 +81,15 @@ def _shuffle_keeping_quality(items, seed):
 
 
 def _with_fallbacks(primary, fallback, ultimate_fallback, top_k):
-    recommendations = primary or fallback or ultimate_fallback or []
-    return _dedupe_recommendations(recommendations)[:top_k]
+    """
+    If primary results are sparse, supplement with fallback items to fill top_k.
+    """
+    results = list(primary or [])
+    if len(results) < top_k and fallback:
+        results.extend(fallback)
+    if len(results) < top_k and ultimate_fallback:
+        results.extend(ultimate_fallback)
+    return _dedupe_recommendations(results)[:top_k]
 
 
 def _get_nearby_candidate_gmap_ids(coordinates):
