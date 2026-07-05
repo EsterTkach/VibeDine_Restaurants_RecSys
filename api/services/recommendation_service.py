@@ -76,6 +76,77 @@ from api.services import hybrid_cache
 
 #     return recommendations
 
+POPULAR_FOOD_TO_CATEGORIES_MAP = {
+    "Sushi": ["Sushi", "Sushi restaurant", "Japanese", "Japanese restaurant"],
+    "Pizza & Pasta": ["Italian", "Italian restaurant", "Pizza restaurant", "Pizza"],
+    "Hamburger": ["Hamburger", "Hamburger restaurant", "Burger restaurant"],
+    "Ice Cream & Dessert": ["Dessert", "Dessert shop", "Ice cream shop", "Bakery"],
+    "Noodles & Ramen": ["Ramen", "Noodle shop", "Japanese", "Asian"],
+    "Seafood": ["Seafood", "Seafood restaurant"],
+    "Chicken": ["Chicken restaurant", "Fried chicken restaurant"],
+    "Steak & BBQ": ["Steak house", "Barbecue restaurant", "BBQ"],
+}
+
+CUISINE_TO_CATEGORIES_MAP = {
+    "American": ["American", "American restaurant"],
+    "Italian": ["Italian", "Italian restaurant", "Pizza restaurant"],
+    "Chinese": ["Chinese", "Chinese restaurant"],
+    "Japanese": ["Japanese", "Japanese restaurant", "Sushi restaurant"],
+    "Mexican & Latin": ["Mexican", "Mexican restaurant", "Latin American restaurant"],
+    "Asian Fusion": ["Asian", "Asian restaurant", "Asian fusion restaurant"],
+    "Indian": ["Indian", "Indian restaurant"],
+    "Mediterranean & Middle East": ["Mediterranean", "Mediterranean restaurant", "Middle Eastern restaurant"],
+    "European": ["European", "European restaurant", "French restaurant"],
+}
+
+ACCESSIBILITY_MAP = {
+    "Required": ["Wheelchair accessible entrance", "Wheelchair accessible seating", "Wheelchair accessible"],
+}
+
+
+def _parse_onboarding_preferences(preferences: dict):
+    """
+    Maps user-facing onboarding preference values to the actual
+    MongoDB field values used by get_filtered_restaurants_repo.
+    """
+    raw_categories = preferences.get("favorite_categories", [])
+    atmosphere = preferences.get("favorite_atmospheres", [])
+    accessibility_raw = preferences.get("accessibility", "")
+    dietary_raw = preferences.get("dietary_restrictions", "")
+
+    # 1. Separate popular food items from cuisine types and map to DB values
+    mapped_categories = []
+    mapped_popular_items = []
+
+    for item in raw_categories:
+        # Strip emoji prefix (e.g., "🍣 Sushi" → "Sushi")
+        clean = item.split(" ", 1)[1] if " " in item and not item[0].isalpha() else item
+
+        if clean in POPULAR_FOOD_TO_CATEGORIES_MAP:
+            mapped_categories.extend(POPULAR_FOOD_TO_CATEGORIES_MAP[clean])
+            mapped_popular_items.append(clean)
+        elif clean in CUISINE_TO_CATEGORIES_MAP:
+            mapped_categories.extend(CUISINE_TO_CATEGORIES_MAP[clean])
+        else:
+            mapped_categories.append(clean)
+
+    # 2. Map accessibility
+    mapped_accessibility = ACCESSIBILITY_MAP.get(accessibility_raw)
+
+    # 3. Map dietary restrictions (single string → list, skip "None")
+    mapped_dietary = None
+    if dietary_raw and dietary_raw != "None":
+        mapped_dietary = [dietary_raw]
+
+    return {
+        "categories": mapped_categories or None,
+        "popular_items": mapped_popular_items or None,
+        "atmosphere": atmosphere or None,
+        "accessibility": mapped_accessibility,
+        "dietary_restrictions": mapped_dietary,
+    }
+
+
 def get_onboarding_candidate_gmap_ids(user_id: str, candidate_gmap_ids=None):
     pref = get_onboarding_preferences(user_id)
     preferences = pref.get("preferences", {})
@@ -83,25 +154,33 @@ def get_onboarding_candidate_gmap_ids(user_id: str, candidate_gmap_ids=None):
     if not preferences:
         return candidate_gmap_ids
 
-    categories = preferences.get("favorite_categories", [])
-    atmosphere = preferences.get("favorite_atmospheres", [])
-    accessibility = preferences.get("accessibility", [])
-    dietary_restrictions = preferences.get("dietary_restrictions", [])
+    parsed = _parse_onboarding_preferences(preferences)
 
     candidate_gmap_ids_by_category = extract_gmap_ids(
         get_filtered_restaurants_repo(
-            categories=categories,
-            accessibility=accessibility,
-            atmosphere=atmosphere,
-            dietary_restrictions=dietary_restrictions,
+            categories=parsed["categories"],
+            popular_items=parsed["popular_items"],
+            accessibility=parsed["accessibility"],
+            atmosphere=parsed["atmosphere"],
+            dietary_restrictions=parsed["dietary_restrictions"],
             limit=1000))
+
+    # Fallback: if strict filters return nothing, relax to categories only
+    if not candidate_gmap_ids_by_category and parsed["categories"]:
+        candidate_gmap_ids_by_category = extract_gmap_ids(
+            get_filtered_restaurants_repo(
+                categories=parsed["categories"],
+                limit=1000))
 
     if candidate_gmap_ids is None:
         return candidate_gmap_ids_by_category
 
-    return list(
+    combined = list(
         set(candidate_gmap_ids_by_category) & set(candidate_gmap_ids)
     )
+
+    # If intersection is empty, prefer onboarding candidates over nothing
+    return combined if combined else candidate_gmap_ids_by_category
 
 
 def get_user_onboarding_recommendations(
