@@ -3,6 +3,10 @@ from pydantic import BaseModel
 
 class FilterRequest(BaseModel):
     categories: list[str] | None = None
+    establishment_types: list[str] | None = None
+    meal_types: list[str] | None = None
+    dining_styles: list[str] | None = None
+    dietary_preferences: list[str] | None = None
     accessibility: list[str] | None = None
     service_options: list[str] | None = None
     atmosphere: list[str] | None = None
