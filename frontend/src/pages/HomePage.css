@@ -3,10 +3,9 @@
   flex-direction: column;
   height: 100%;
   overflow-y: auto;
-  padding-top: 40px;
-  padding-bottom: 120px;
+  padding-top: 48px;
+  padding-bottom: 100px;
   box-sizing: border-box;
-
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
@@ -17,20 +16,15 @@
 
 .home-header {
   display: flex;
-
   justify-content: space-between;
   align-items: center;
-
-  padding: 0 24px;
-
-  margin-bottom: 24px;
-
+  padding: 0 20px;
+  margin-bottom: 20px;
   gap: 16px;
 }
 
 .profile-avatar-container {
   flex-shrink: 0;
-  margin-left: 16px;
   position: relative;
 }
 
@@ -39,6 +33,11 @@
   background: transparent;
   padding: 0;
   cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.profile-avatar-button:active {
+  transform: scale(0.92);
 }
 
 .account-menu {
@@ -46,54 +45,51 @@
   right: 0;
   top: calc(100% + 8px);
   background: white;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
-  border: 1px solid #f0e6d8;
-  min-width: 120px;
+  border-radius: 14px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  min-width: 150px;
   z-index: 20;
+  animation: menuFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+@keyframes menuFadeIn {
+  from { opacity: 0; transform: translateY(-6px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .account-menu-button {
   width: 100%;
   border: none;
   background: transparent;
-  padding: 12px 14px;
+  padding: 14px 18px;
   text-align: left;
   font-size: 14px;
-  color: #7a5330;
+  color: #5f4c38;
   cursor: pointer;
+  transition: background 0.15s ease;
+  font-weight: 500;
 }
 
 .account-menu-button:hover {
-  background: #f8f0e8;
-}
-
-.home-header h1 {
-  font-size: 28px;
-  word-break: break-word;
+  background: #faf7f3;
 }
 
 .home-header > div:first-child {
-  min-width: 0; 
-}
-
-.home-header p {
-  color: #777;
+  min-width: 0;
 }
 
 .home-text {
   flex: 1;
   min-width: 0;
-
   display: flex;
   flex-direction: column;
 }
 
 .home-text h1 {
   margin: 0;
-
   font-size: 28px;
-
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -101,8 +97,8 @@
 
 .home-text p {
   margin-top: 8px;
-
-  color: #777;
+  color: #8a7560;
+  font-size: 15px;
 }
 
 .greeting {
@@ -120,33 +116,19 @@
 .greeting span:last-child {
   font-size: 28px;
   font-weight: 700;
-
   overflow-wrap: anywhere;
   word-break: break-word;
-}
-
-
-
-.profile-avatar-container {
-  flex-shrink: 0;
-  /* top: 20px;
-  right: 20px; */
 }
 
 .profile-avatar {
   width: 54px;
   height: 54px;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   border-radius: 50%;
-
-   background: white;
-
-  box-shadow:
-    0 8px 20px rgba(0,0,0,0.08);
+  background: white;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
 }
 
 section {
@@ -157,57 +139,83 @@ section h2 {
   margin-bottom: 14px;
 }
 
-.carousel {
-  display: flex;
-
-  gap: 14px;
-
-  overflow-x: auto;
-
-  padding-bottom: 10px;
-}
-
-.carousel::-webkit-scrollbar {
-  display: none;
-}
-
+/* ===== RESTAURANT CARDS ===== */
 .restaurant-card-home {
-  min-width: 220px;
-
+  min-width: 200px;
   background: white;
-
-  border-radius: 24px;
-
+  border-radius: 16px;
   overflow: hidden;
-
-   box-shadow:
-    0 12px 25px rgba(0,0,0,0.08);
-
-  transition: 0.25s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+  border: 1px solid rgba(0, 0, 0, 0.04);
 }
 
 .restaurant-card-home:hover {
-  transform: translateY(-4px);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
 }
 
-.restaurant-card-home img {
+.restaurant-card-home:active {
+  transform: scale(0.97);
+}
+
+.restaurant-card-img-wrapper {
+  position: relative;
   width: 100%;
+  height: 150px;
+  overflow: hidden;
+  background: #f5efe8;
+}
 
-  height: 160px;
-
+.restaurant-card-img-wrapper img {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
+  transition: opacity 0.4s ease, transform 0.3s ease;
+}
+
+.restaurant-card-home:hover .restaurant-card-img-wrapper img {
+  transform: scale(1.03);
+}
+
+.card-price-overlay {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(4px);
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #5f4c38;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.restaurant-card-img-skeleton {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, #f5efe8 25%, #faf5ee 50%, #f5efe8 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
 .restaurant-card-home.restaurant-card-list {
   width: 100%;
   min-width: 0;
   display: flex;
-  border-radius: 24px;
+  border-radius: 16px;
 }
 
-.restaurant-card-home.restaurant-card-list img {
-  width: 140px;
-  height: 140px;
+.restaurant-card-home.restaurant-card-list .restaurant-card-img-wrapper {
+  width: 120px;
+  height: 120px;
   flex-shrink: 0;
 }
 
@@ -219,80 +227,147 @@ section h2 {
 }
 
 .restaurant-card-content {
-  padding: 14px;
+  padding: 12px 14px;
 }
 
 .restaurant-card-content h3 {
-  margin-bottom: 6px;
+  margin: 0 0 6px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #2d1f10;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.restaurant-card-content span {
-  color: #8b6b4a;
+.restaurant-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 4px;
+}
 
+.rating-badge {
+  font-size: 13px;
+  font-weight: 700;
+  color: #d4790e;
+}
+
+.review-count {
+  font-size: 12px;
+  color: #999;
+  font-weight: 500;
+}
+
+.price-badge {
+  font-size: 12px;
   font-weight: 600;
+  color: #999;
+  background: #f8f4ef;
+  padding: 2px 8px;
+  border-radius: 6px;
 }
 
-.restaurant-card-content p {
-  color: #777;
-
-  margin-top: 6px;
+.cuisine-label {
+  color: #8a7560;
+  font-size: 12px;
+  margin: 4px 0 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .location-tag {
   color: #8b6b4a;
-
   font-weight: 600;
-
   margin-top: 6px;
 }
 
+/* ===== SEARCH BAR ===== */
 .search-bar {
-  background: #d09331;
-  border-radius: 18px;
-  margin: 16px 16px 24px 16px;
-  padding: 16px;
+  background: linear-gradient(135deg, #a67c52 0%, #8b6b4a 100%);
+  border-radius: 14px;
+  margin: 8px 20px 12px;
+  padding: 14px 18px;
   color: #ffffff;
-  margin-bottom: 30px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 12px rgba(139, 107, 74, 0.2);
   cursor: pointer;
-  transition: all 0.25s ease;
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   gap: 12px;
   font-weight: 600;
+  font-size: 15px;
   user-select: none;
 }
 
 .search-bar:hover {
-  box-shadow: 0 12px 28px rgba(139, 107, 74, 0.15);
-  transform: translateY(-2px);
-  background: #dc9e3a;
+  box-shadow: 0 8px 20px rgba(139, 107, 74, 0.3);
+  transform: translateY(-1px);
 }
 
 .search-bar:active {
-  transform: translateY(0);
+  transform: scale(0.98);
 }
 
 .search-icon {
-  font-size: 20px;
-  animation: float 2.5s ease-in-out infinite;
-}
-
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-4px);
-  }
+  font-size: 18px;
 }
 
 .search-text {
   flex: 1;
-  text-align: center;
+  text-align: left;
 }
 
-/* Coming Soon Toast */
+/* ===== LOADING SKELETON ===== */
+.home-loading-skeleton {
+  padding: 0 16px;
+}
+
+.skeleton-row {
+  margin-bottom: 32px;
+}
+
+.skeleton-title {
+  width: 160px;
+  height: 20px;
+  background: linear-gradient(90deg, #f5efe8 25%, #faf5ee 50%, #f5efe8 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+  margin-bottom: 14px;
+}
+
+.skeleton-cards {
+  display: flex;
+  gap: 16px;
+  overflow: hidden;
+}
+
+.skeleton-card {
+  min-width: 200px;
+  height: 220px;
+  background: linear-gradient(90deg, #f5efe8 25%, #faf5ee 50%, #f5efe8 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 16px;
+}
+
+/* ===== CAROUSEL CONTAINER ===== */
+.carousel {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+}
+
+.carousel::-webkit-scrollbar {
+  display: none;
+}
+
+/* ===== TOAST ===== */
 .home-toast {
   position: fixed;
   bottom: 80px;
@@ -312,14 +387,8 @@ section h2 {
 }
 
 @keyframes toastSlideUp {
-  from {
-    opacity: 0;
-    transform: translateX(-50%) translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
+  from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
 @media (max-width: 768px) {

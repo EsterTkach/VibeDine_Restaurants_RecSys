@@ -4,12 +4,14 @@ import AppShell from "../layouts/AppShell";
 import apiClient from "../api/client";
 import { likeRestaurant, unlikeRestaurant } from "../api/restaurants";
 import { useAuth } from "../contexts/AuthContext";
+import { useHome } from "../contexts/HomeContext";
 import "./RestaurantPage.css";
 
 export default function RestaurantPage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const { userId } = useAuth();
+  const { notifyLikeChanged } = useHome();
 
   const [restaurant, setRestaurant] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -37,6 +39,7 @@ export default function RestaurantPage() {
         await likeRestaurant(userId, id);
         setLiked(true);
       }
+      notifyLikeChanged();
     } catch {
       // silent
     } finally {

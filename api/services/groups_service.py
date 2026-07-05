@@ -2,10 +2,12 @@ from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from api.db.restaurant_repository import get_filtered_restaurants_repo
+from api.ml.cf_recommender import get_popular_restaurants
 from api.services.recommendation_service import (
     get_hybrid_recommendations_for_user,
     get_user_augmented_likes,
 )
+from api.utils.utils import format_restaurant_for_frontend
 
 
 def _filters_to_dict(filters):
@@ -19,6 +21,30 @@ def _filters_to_dict(filters):
         return filters.dict(exclude_none=True)
 
     return filters
+
+
+def _fallback_popular_recommendations(top_k=10):
+    """
+    Fallback for group recommendations: return popular restaurants
+    formatted with group-compatible fields.
+    """
+    popular = get_popular_restaurants(top_k=top_k)
+    fallback_results = []
+    for rec in popular:
+        formatted = format_restaurant_for_frontend(rec)
+        fallback_results.append({
+            "gmap_id": rec["gmap_id"],
+            "name": rec["name"],
+            "avg_rating": formatted.get("avg_rating"),
+            "price": formatted.get("price"),
+            "image_url": formatted.get("image_url"),
+            "cuisines": [],
+            "avg_hybrid_score": rec.get("popularity_score", 0.0),
+            "users_supported": 0,
+            "coverage": 0.0,
+            "group_score": rec.get("popularity_score", 0.0),
+        })
+    return fallback_results[:top_k]
 
 
 def _get_non_cold_start_user_ids(user_ids):
@@ -101,8 +127,8 @@ def get_hybrid_recommendations_for_group_with_user_candidates(
 ):
     user_ids = _get_non_cold_start_user_ids(user_ids)
     if not user_ids:
-        print("No non-cold-start users in group")
-        return []
+        print("No non-cold-start users in group, returning popular fallback")
+        return _fallback_popular_recommendations(top_k)
 
     recommendations_by_user = {}
 
@@ -119,11 +145,17 @@ def get_hybrid_recommendations_for_group_with_user_candidates(
             uid, recs = future.result()
             recommendations_by_user[uid] = recs
 
-    return aggregate_group_recommendations(
+    results = aggregate_group_recommendations(
         user_ids=user_ids,
         recommendations_by_user=recommendations_by_user,
         top_k=top_k,
     )
+
+    if not results:
+        print("Group aggregation returned no results, returning popular fallback")
+        return _fallback_popular_recommendations(top_k)
+
+    return results
 
 
 def get_hybrid_recommendations_for_group(
@@ -146,13 +178,13 @@ def get_hybrid_recommendations_for_group(
     """
     
     if not user_ids:
-        print("Group is empty")
-        return []
+        print("Group is empty, returning popular fallback")
+        return _fallback_popular_recommendations(top_k)
 
     user_ids = _get_non_cold_start_user_ids(user_ids)
     if not user_ids:
-        print("No non-cold-start users in group")
-        return []
+        print("No non-cold-start users in group, returning popular fallback")
+        return _fallback_popular_recommendations(top_k)
     
     candidate_gmap_ids = None
 
@@ -182,8 +214,14 @@ def get_hybrid_recommendations_for_group(
             uid, recs = future.result()
             recommendations_by_user[uid] = recs
 
-    return aggregate_group_recommendations(
+    results = aggregate_group_recommendations(
         user_ids=user_ids,
         recommendations_by_user=recommendations_by_user,
         top_k=top_k,
     )
+
+    if not results:
+        print("Group aggregation returned no results, returning popular fallback")
+        return _fallback_popular_recommendations(top_k)
+
+    return results

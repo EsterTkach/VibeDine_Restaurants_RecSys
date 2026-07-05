@@ -1,20 +1,39 @@
 @import "tailwindcss";
 
 :root {
-  --color-dark:   #264653;
-  --color-teal:   #069494;
-  --color-pink:   #FFC0CB;
+  --color-dark: #264653;
+  --color-teal: #069494;
+  --color-pink: #FFC0CB;
   --color-yellow: #FCE883;
-  --color-mint:   #F1FAEE;
+  --color-mint: #F1FAEE;
+
+  /* VibeDine design tokens */
+  --vd-brown-900: #2d1f10;
+  --vd-brown-700: #5f4c38;
+  --vd-brown-500: #8b6b4a;
+  --vd-brown-400: #a67c52;
+  --vd-brown-200: #e8d4b3;
+  --vd-brown-100: #f5efe8;
+  --vd-brown-50: #faf7f3;
+  --vd-radius-sm: 10px;
+  --vd-radius-md: 16px;
+  --vd-radius-lg: 20px;
+  --vd-radius-xl: 28px;
+  --vd-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --vd-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.06);
+  --vd-shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.1);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  font-family: 'Nunito', system-ui, sans-serif;
+  font-family: 'Nunito', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   font-weight: 300;
-  background-color: var(--color-mint);
-  color: var(--color-dark);
+  background-color: var(--vd-brown-50);
+  color: var(--vd-brown-900);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.5;
 }
 
 /* font-title = Parisienne (logo only) */
@@ -26,3 +45,13 @@ body {
 /* Hide scrollbar but keep scroll functionality */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Smooth page transitions */
+main {
+  animation: pageEnter 0.3s ease;
+}
+
+@keyframes pageEnter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

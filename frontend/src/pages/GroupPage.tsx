@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import AppShell from "../layouts/AppShell";
 import { getFriends, createGroupSession } from "../api/restaurants";
 import { useAuth } from "../contexts/AuthContext";
-import type { Friend } from "../types";
+import type { Friend, MatchingCategory } from "../types";
 
 import "./GroupPage.css";
 
@@ -24,6 +24,43 @@ export default function GroupPage() {
   const [distance, setDistance] = useState("");
   const [accessibility, setAccessibility] = useState("");
   const [dietary, setDietary] = useState("");
+  const [selectedFoodTypes, setSelectedFoodTypes] = useState<MatchingCategory[]>([]);
+
+  const foodCategories: { key: MatchingCategory; label: string; emoji: string }[] = [
+    { key: "american", label: "American", emoji: "🍔" },
+    { key: "italian", label: "Italian", emoji: "🍝" },
+    { key: "chinese", label: "Chinese", emoji: "🥡" },
+    { key: "mexican_latin", label: "Mexican & Latin", emoji: "🌮" },
+    { key: "indian", label: "Indian", emoji: "🍛" },
+    { key: "cafe", label: "Cafe", emoji: "☕" },
+    { key: "breakfast_brunch", label: "Breakfast & Brunch", emoji: "🥐" },
+    { key: "lunch", label: "Lunch", emoji: "🥗" },
+    { key: "dinner", label: "Dinner", emoji: "🍽️" },
+    { key: "fast_food", label: "Fast Food / Quick Bite", emoji: "⏱️" },
+    { key: "vegetarian", label: "Vegetarian", emoji: "🥬" },
+    { key: "halal", label: "Halal", emoji: "🌙" },
+  ];
+
+  const categoryFilterMap: Record<MatchingCategory, Record<string, string[]>> = {
+    american: { categories: ["American"] },
+    italian: { categories: ["Italian"] },
+    chinese: { categories: ["Chinese"] },
+    mexican_latin: { categories: ["Mexican & Latin"] },
+    indian: { categories: ["Indian"] },
+    cafe: { establishment_types: ["Cafe"] },
+    breakfast_brunch: { meal_types: ["Breakfast & Brunch"] },
+    lunch: { meal_types: ["Lunch"] },
+    dinner: { meal_types: ["Dinner"] },
+    fast_food: { dining_styles: ["Fast Food / Quick Bite"] },
+    vegetarian: { dietary_preferences: ["Vegetarian"] },
+    halal: { dietary_preferences: ["Halal"] },
+  };
+
+  const toggleFoodType = (cat: MatchingCategory) => {
+    setSelectedFoodTypes((prev) =>
+      prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]
+    );
+  };
 
   useEffect(() => {
     if (!userId) return;
@@ -52,10 +89,23 @@ export default function GroupPage() {
     if (distance === "Walkable") filters.radius_km = 1;
     else if (distance === "15 Min") filters.radius_km = 3;
     else if (distance === "30 Min") filters.radius_km = 6;
-    if (accessibility === "Required") filters.accessibility = ["Wheelchair accessible entrance"];
+    if (accessibility === "Required")
+      filters.accessibility = ["Wheelchair accessible entrance", "Wheelchair accessible seating", "Wheelchair accessible"];
     if (dietary === "Vegetarian") filters.dietary_restrictions = ["Vegetarian"];
     else if (dietary === "Vegan") filters.dietary_restrictions = ["Vegan"];
     else if (dietary === "Gluten Free") filters.dietary_restrictions = ["Gluten-Free"];
+    else if (dietary === "Kosher") filters.dietary_restrictions = ["Kosher"];
+    else if (dietary === "Halal") filters.dietary_restrictions = ["Halal"];
+
+    // Map selected food types to their respective filter fields
+    selectedFoodTypes.forEach((cat) => {
+      const mapping = categoryFilterMap[cat];
+      Object.entries(mapping).forEach(([key, values]) => {
+        const existing = (filters[key] as string[]) || [];
+        filters[key] = [...existing, ...values];
+      });
+    });
+
     return filters;
   };
 
@@ -135,6 +185,21 @@ export default function GroupPage() {
               <h3>Group Preferences</h3>
 
               <div className="preference-group">
+                <label>🍽️ Food Type</label>
+                <div className="segmented-control">
+                  {foodCategories.map(({ key, label, emoji }) => (
+                    <button
+                      key={key}
+                      className={selectedFoodTypes.includes(key) ? "segment active" : "segment"}
+                      onClick={() => toggleFoodType(key)}
+                    >
+                      {emoji} {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="preference-group">
                 <label>💰 Budget</label>
                 <div className="segmented-control">
                   {["$", "$$", "$$$", "$$$$"].map((value) => (
@@ -182,7 +247,7 @@ export default function GroupPage() {
               <div className="preference-group">
                 <label>🥗 Dietary</label>
                 <div className="segmented-control">
-                  {["None", "Vegetarian", "Vegan", "Gluten Free"].map((value) => (
+                  {["None", "Vegetarian", "Vegan", "Kosher", "Halal", "Gluten Free"].map((value) => (
                     <button
                       key={value}
                       className={dietary === value ? "segment active" : "segment"}

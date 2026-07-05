@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException
 import time
+import random
 
 from api.schemas.restaurant_schema import FilterRequest
 
@@ -28,7 +29,9 @@ from api.schemas.group_schema import (
 
 from api.utils.utils import (
     format_restaurant_for_frontend,
+    get_meal_time,
     get_meal_time_string,
+    MEAL_TIME_TITLES,
     extract_gmap_ids,
     enrich_restaurants
 )
@@ -60,9 +63,33 @@ def _dedupe_recommendations(recommendations):
     return unique
 
 
+def _shuffle_keeping_quality(items, seed):
+    """
+    Shuffle items while keeping high-quality ones near the top.
+    Splits into top-half and bottom-half, shuffles each independently,
+    then concatenates. This diversifies order without burying top picks.
+    """
+    if len(items) <= 3:
+        return items
+    mid = len(items) // 2
+    top = items[:mid]
+    bottom = items[mid:]
+    rng = random.Random(seed)
+    rng.shuffle(top)
+    rng.shuffle(bottom)
+    return top + bottom
+
+
 def _with_fallbacks(primary, fallback, ultimate_fallback, top_k):
-    recommendations = primary or fallback or ultimate_fallback or []
-    return _dedupe_recommendations(recommendations)[:top_k]
+    """
+    If primary results are sparse, supplement with fallback items to fill top_k.
+    """
+    results = list(primary or [])
+    if len(results) < top_k and fallback:
+        results.extend(fallback)
+    if len(results) < top_k and ultimate_fallback:
+        results.extend(ultimate_fallback)
+    return _dedupe_recommendations(results)[:top_k]
 
 
 def _get_nearby_candidate_gmap_ids(coordinates):
@@ -140,6 +167,9 @@ def get_home_carousels(user_id: str = "default_user", top_k: int = 25):
     else:
         hybrid_scores = get_hybrid_scores_for_user(user_id)
 
+    # Pre-compute popular restaurants once for cold-start fallback
+    ultimate_fallback = get_popular_restaurants(top_k=top_k)
+
     start = time.perf_counter()
     recommended = get_hybrid_recommendations_for_user(
         user_id,
@@ -147,7 +177,6 @@ def get_home_carousels(user_id: str = "default_user", top_k: int = 25):
         onboarding_candidate_gmap_ids=onboarding_candidate_gmap_ids,
         hybrid_scores=hybrid_scores,
     )
-    ultimate_fallback = get_popular_restaurants(top_k=top_k)
     recommended = _with_fallbacks(
         primary=recommended,
         fallback=None,
@@ -231,6 +260,18 @@ def get_home_carousels(user_id: str = "default_user", top_k: int = 25):
     
     print(f"Batch DB Fetch: {time.perf_counter() - start:.2f}s")
 
+    # Shuffle cold-start carousels to diversify order across similar sets
+    if is_cold_start:
+        recommended = _shuffle_keeping_quality(recommended, seed=1)
+        popular_near_you = _shuffle_keeping_quality(popular_near_you, seed=2)
+        popular_at_this_hour = _shuffle_keeping_quality(popular_at_this_hour, seed=3)
+        you_might_like = _shuffle_keeping_quality(you_might_like, seed=4)
+        hidden_gems = _shuffle_keeping_quality(hidden_gems, seed=5)
+
+    # Dynamic meal-time title
+    meal_time = get_meal_time()
+    meal_time_title = MEAL_TIME_TITLES[meal_time]
+
     return {
         "carousels": [
             {
@@ -245,7 +286,7 @@ def get_home_carousels(user_id: str = "default_user", top_k: int = 25):
             },
             {
                 "id": "popular_at_this_hour",
-                "title": "Popular at this hour",
+                "title": meal_time_title,
                 "items": [format_restaurant_for_frontend(r) for r in enrich_restaurants(popular_at_this_hour, full_docs_dict)]
             },
             {
