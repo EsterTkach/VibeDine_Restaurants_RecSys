@@ -11,9 +11,12 @@ export type Restaurant = {
 
 type LikedContextType = {
   likedRestaurants: Restaurant[];
+  offlineLikedRestaurants: Restaurant[];
   loading: boolean;
 
   fetchLikedRestaurants: () => Promise<void>;
+  fetchOfflineLikedRestaurants: (force?: boolean) => Promise<void>;
+
   likeRestaurant: (restaurantId: string) => Promise<void>;
   unlikeRestaurant: (restaurantId: string) => Promise<void>;
 
@@ -35,13 +38,33 @@ export function LikedProvider({ children }: { children: React.ReactNode }) {
   const [hasLoadedLikedRestaurants, setHasLoadedLikedRestaurants] =
     useState(false);
 
+  // Restaurants the user liked in the past (offline history).
+  const [offlineLikedRestaurants, setOfflineLikedRestaurants] = useState<
+    Restaurant[]
+  >([]);
+
+  // Ensures offline favorites are fetched only once per logged-in user.
+  const [
+    hasLoadedOfflineLikedRestaurants,
+    setHasLoadedOfflineLikedRestaurants,
+  ] = useState(false);
+
   useEffect(() => {
     if (!userData.user_id) return;
 
-    fetchLikedRestaurants();
+    setLikedRestaurants([]);
+    setOfflineLikedRestaurants([]);
+
+    setHasLoadedLikedRestaurants(false);
+    setHasLoadedOfflineLikedRestaurants(false);
+
+    fetchLikedRestaurants(true);
+    fetchOfflineLikedRestaurants(true);
   }, [userData.user_id]);
 
   async function fetchLikedRestaurants(force = false) {
+    // When force is true, bypass the cache and always fetch fresh data.
+
     if (!userData.user_id) {
       console.warn("No user ID found. Cannot fetch liked restaurants.");
       return;
@@ -51,9 +74,9 @@ export function LikedProvider({ children }: { children: React.ReactNode }) {
     try {
       setLoading(true);
 
-      const data = await userService.getLikedRestaurants(userData.user_id);
+      const data = await userService.getOnlineLikedRestaurants(userData.user_id);
 
-      setLikedRestaurants(data.liked_restaurants);
+      setLikedRestaurants(data.online_liked_restaurants);
       setHasLoadedLikedRestaurants(true);
     } finally {
       setLoading(false);
@@ -74,12 +97,36 @@ export function LikedProvider({ children }: { children: React.ReactNode }) {
     await fetchLikedRestaurants(true);
   }
 
+  async function fetchOfflineLikedRestaurants(force = false) {
+    // When force is true, bypass the cache and always fetch fresh data.
+
+    if (!userData.user_id) {
+      console.warn("No user ID found. Cannot fetch offline liked restaurants.");
+      return;
+    }
+
+    if (!force && hasLoadedOfflineLikedRestaurants) return;
+
+    try {
+      const data = await userService.getOfflineLikedRestaurants(
+        userData.user_id,
+      );
+
+      setOfflineLikedRestaurants(data.offline_liked_restaurants);
+      setHasLoadedOfflineLikedRestaurants(true);
+    } catch (error) {
+      console.error("Failed to fetch offline liked restaurants", error);
+    }
+  }
+
   return (
     <LikedContext.Provider
       value={{
         likedRestaurants,
+        offlineLikedRestaurants,
         loading,
         fetchLikedRestaurants,
+        fetchOfflineLikedRestaurants,
         likeRestaurant,
         unlikeRestaurant,
         setLikedRestaurants,

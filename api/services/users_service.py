@@ -19,16 +19,41 @@ def get_user_online_likes(user_id: str):
     return {"user_id": user_id, "online_likes": liked_ids}
 
 def get_user_online_liked_restaurants(user_id: str):
-    liked_restaurant_ids = _get_all_liked_ids(user_id)
+    user = users_collection.find_one(
+        {"user_id": user_id},
+        {
+            "_id": 0,
+            "liked_restaurants": 1,
+        },
+    )
 
-    if not liked_restaurant_ids:
+    if not user:
         return []
 
-    liked_restaurants = list(
+    online_ids = user.get("liked_restaurants", [])
+
+    if not online_ids:
+        return []
+
+    restaurants = list(
         restaurants_collection.find(
-            {"gmap_id": {"$in": liked_restaurant_ids}},
-            {"_id": 0, "gmap_id": 1, "name": 1, "image_url": 1}
+            {"gmap_id": {"$in": online_ids}},
+            {
+                "_id": 0,
+                "gmap_id": 1,
+                "name": 1,
+                "image_url": 1,
+            },
         )
     )
 
-    return liked_restaurants
+    restaurants_by_id = {
+        restaurant["gmap_id"]: restaurant for restaurant in restaurants
+    }
+
+    return [
+        restaurants_by_id[gmap_id]
+        for gmap_id in online_ids
+        if gmap_id in restaurants_by_id
+    ]
+

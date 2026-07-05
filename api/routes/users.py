@@ -7,7 +7,8 @@ from fastapi import (
 from uuid import uuid4
 
 from api.db.mongo import (
-    users_collection
+    users_collection,
+    restaurants_collection
 )
 
 from api.schemas.user import (
@@ -17,6 +18,8 @@ from api.schemas.user import (
     RestaurantInteractionRequest,
     AddFriendRequest
 )
+
+from api.ml.cf_recommender import get_user_offline_likes
 
 from api.services.users_service import (get_user_online_liked_restaurants,)
 from api.services.hybrid_cache import invalidate as invalidate_hybrid_cache
@@ -365,11 +368,23 @@ def remove_friend(user_id: str, friend_id: str):
     return {"message": "Friend removed"}
 
 
-@router.get("/{user_id}/restaurants/liked")
-def get_liked_restaurants(user_id: str):
-    liked_restaurants = get_user_online_liked_restaurants(user_id)
+@router.get("/{user_id}/restaurants/likes/online")
+def get_online_liked_restaurants(user_id: str):
+    online_likes_restaurants = get_user_online_liked_restaurants(user_id)
 
-    return {
-        "user_id": user_id,
-        "liked_restaurants": liked_restaurants
-    }
+    return {"user_id": user_id, "online_liked_restaurants": online_likes_restaurants}
+
+
+@router.get("/{user_id}/restaurants/likes/offline")
+def get_offline_liked_restaurants(user_id: str):
+    offline_likes_ids = get_user_offline_likes(user_id)
+    print("offline_likes_ids: ", offline_likes_ids)
+
+    offline_likes_restaurants = list(
+        restaurants_collection.find(
+            {"gmap_id": {"$in": offline_likes_ids["offline_likes"]}},
+            {"_id": 0, "gmap_id": 1, "name": 1, "image_url": 1},
+        )
+    )
+
+    return {"user_id": user_id, "offline_liked_restaurants": offline_likes_restaurants}

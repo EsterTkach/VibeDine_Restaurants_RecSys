@@ -50,16 +50,25 @@ export const restaurantService = {
 };
 
 export const userService = {
-
-  getLikedRestaurants: (userId: string | number) =>
+  getOnlineLikedRestaurants: (userId: string | number) =>
     handleRequest<{
       user_id: string;
-      liked_restaurants: {
+      online_liked_restaurants: {
         gmap_id: string;
         name: string;
         image_url: string;
       }[];
-    }>(`/users/${userId}/restaurants/liked`),
+    }>(`/users/${userId}/restaurants/likes/online`),
+
+  getOfflineLikedRestaurants: (userId: string | number) =>
+    handleRequest<{
+      user_id: string;
+      offline_liked_restaurants: {
+        gmap_id: string;
+        name: string;
+        image_url: string;
+      }[];
+    }>(`/users/${userId}/restaurants/likes/offline`),
 
   unlikeRestaurant: (userId: string, restaurantId: string) =>
     handleRequest(`/users/restaurants/${restaurantId}/like`, {

@@ -1,6 +1,7 @@
 import "./ProfilePage.css";
 import { useState } from "react";
 import { Heart } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 import AppShell from "../layouts/AppShell";
 import BottomNav from "../components/BottomNav";
@@ -10,15 +11,17 @@ import { useLiked } from "../contexts/LikedContext";
 import SectionDivider from "../components/SectionDivider";
 import FoodAvatar from "../components/FoodAvatar";
 
-const DEFAULT_RESTAURANT_IMAGE  =
+const DEFAULT_RESTAURANT_IMAGE =
   "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=500";
 
 
 
 export default function ProfilePage() {
+  const navigate = useNavigate();
+
   const { userData } = useAuth();
   const { setHasLoadedHome } = useHome();
-  const { likedRestaurants, loading, unlikeRestaurant } = useLiked();
+  const { likedRestaurants, offlineLikedRestaurants, loading, unlikeRestaurant } = useLiked();
 
   const [removingRestaurantIds, setRemovingRestaurantIds] = useState<string[]>(
     [],
@@ -61,16 +64,15 @@ export default function ProfilePage() {
           <SectionDivider text="Restaurants You Love" />
           {/* <Heart size={18} fill="#ef4444" color="#ef4444" /> */}
           {loading ? null : likedRestaurants.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-icon">🍽️</div>
+            <div className="compact-empty-state">
+              <span>🍽️</span>
 
               <h3>No favorite restaurants yet</h3>
 
-              <p>
-                Start exploring and tap the ❤️
-                <br />
-                to save places you love!
-              </p>
+              <div className="empty-message">
+                <p>Start exploring and tap the ❤️</p>
+                <p>to save places you love!</p>
+              </div>
             </div>
           ) : (
             <div className="restaurant-cards-grid">
@@ -87,7 +89,10 @@ export default function ProfilePage() {
                   >
                     <button
                       className="favorite-btn"
-                      onClick={() => handleUnlike(restaurant.gmap_id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleUnlike(restaurant.gmap_id);
+                      }}
                     >
                       <Heart
                         size={22}
@@ -95,13 +100,54 @@ export default function ProfilePage() {
                         fill={removing ? "none" : "#ef4444"}
                       />{" "}
                     </button>
-                    <div className="card-image">
+                    <div
+                      className="card-image"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/restaurant/${restaurant.gmap_id}`);
+                      }}
+                    >
                       <img src={restaurant.image_url || DEFAULT_RESTAURANT_IMAGE } alt=""/>
                     </div>
                     <div className="card-name">{restaurant.name}</div>
                   </div>
                 );
               })}
+            </div>
+          )}
+        </div>
+
+        {/* Restaurants You Liked Before Section */}
+        <div className="profile-section">
+          <SectionDivider text="Restaurants You Liked Before" />
+
+          {offlineLikedRestaurants.length === 0 ? (
+            <div className="compact-empty-state">
+              <span>🕘</span>
+              <p>No previous liked restaurants yet</p>
+            </div>
+          ) : (
+            <div className="restaurant-cards-grid">
+              {offlineLikedRestaurants.map((restaurant) => (
+                <div
+                  key={restaurant.gmap_id}
+                  className="restaurant-favorite-card"
+                >
+                  <div
+                    className="card-image"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/restaurant/${restaurant.gmap_id}`);
+                    }}
+                  >
+                    <img
+                      src={restaurant.image_url || DEFAULT_RESTAURANT_IMAGE}
+                      alt=""
+                    />
+                  </div>
+                  <div className="card-name">{restaurant.name}</div>
+                </div>
+              ))}
             </div>
           )}
         </div>
