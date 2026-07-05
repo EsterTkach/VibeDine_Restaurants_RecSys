@@ -140,6 +140,9 @@ def get_home_carousels(user_id: str = "default_user", top_k: int = 25):
     else:
         hybrid_scores = get_hybrid_scores_for_user(user_id)
 
+    # Pre-compute popular restaurants once for cold-start fallback
+    ultimate_fallback = get_popular_restaurants(top_k=top_k)
+
     start = time.perf_counter()
     recommended = get_hybrid_recommendations_for_user(
         user_id,
@@ -147,7 +150,6 @@ def get_home_carousels(user_id: str = "default_user", top_k: int = 25):
         onboarding_candidate_gmap_ids=onboarding_candidate_gmap_ids,
         hybrid_scores=hybrid_scores,
     )
-    ultimate_fallback = get_popular_restaurants(top_k=top_k)
     recommended = _with_fallbacks(
         primary=recommended,
         fallback=None,

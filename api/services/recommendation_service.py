@@ -306,7 +306,15 @@ def get_hybrid_recommendations_for_user(
     If the user has no online likes, returns offline likes.
     If the user has no offline likes, returns popular restaurants.
     """
-    if get_user_augmented_likes(user_id) == 0:
+    # Skip expensive DB check if caller already determined cold-start status
+    if onboarding_candidate_gmap_ids is not None:
+        is_cold_start = True
+    elif hybrid_scores is not None:
+        is_cold_start = False
+    else:
+        is_cold_start = get_user_augmented_likes(user_id) == 0
+
+    if is_cold_start:
         print(f"User {user_id} is cold-start, returning onboarding recommendations")
         return get_user_onboarding_recommendations(
             user_id,
