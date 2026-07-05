@@ -45,24 +45,46 @@ def format_restaurant_for_frontend(restaurant_doc: dict) -> dict:
         "image_url": restaurant_doc.get("image_url", ""), 
     }
 
-def get_meal_time_string() -> str:
+from enum import Enum
+
+
+class MealTime(Enum):
+    BREAKFAST = "breakfast"
+    LUNCH = "lunch"
+    DINNER = "dinner"
+
+
+MEAL_TIME_TITLES = {
+    MealTime.BREAKFAST: "Rise & Dine 🌅 Breakfast spots",
+    MealTime.LUNCH: "Lunch O'Clock 🍽️ Midday picks",
+    MealTime.DINNER: "Dinner Time 🌙 Evening favorites",
+}
+
+
+def get_meal_time() -> MealTime:
     """
-    Checks the current server time and returns 'breakfast', 'lunch', or 'dinner'.
-    
+    Returns the current MealTime enum based on server hour.
+
     Time Windows:
-    - 05:00 to 11:59 -> breakfast
-    - 12:00 to 16:59 -> lunch
-    - 17:00 to 04:59 -> dinner (captures evening and late-night)
+    - 05:00 to 11:59 -> BREAKFAST
+    - 12:00 to 16:59 -> LUNCH
+    - 17:00 to 04:59 -> DINNER
     """
-    # Get the current server hour (0 to 23)
     current_hour = datetime.now().hour
 
     if 5 <= current_hour < 12:
-        return "breakfast"
+        return MealTime.BREAKFAST
     elif 12 <= current_hour < 17:
-        return "lunch"
+        return MealTime.LUNCH
     else:
-        return "dinner"
+        return MealTime.DINNER
+
+
+def get_meal_time_string() -> str:
+    """
+    Checks the current server time and returns 'breakfast', 'lunch', or 'dinner'.
+    """
+    return get_meal_time().value
 
 def extract_gmap_ids(restaurants: list) -> list:
     """

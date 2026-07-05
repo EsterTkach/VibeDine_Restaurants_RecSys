@@ -247,7 +247,7 @@ section h2 {
 }
 
 .search-bar {
-  background: #d09331;
+  background: linear-gradient(135deg, #a67c52 0%, #8b6b4a 100%);
   border-radius: 18px;
   margin: 16px 16px 24px 16px;
   padding: 16px;
