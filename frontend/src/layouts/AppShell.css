@@ -1,39 +1,60 @@
 .app-shell {
   min-height: 100vh;
-
   display: flex;
   justify-content: center;
   align-items: center;
-
- background:
-  radial-gradient(circle at 20% 20%, #efe3d1 0%, transparent 25%),
-  radial-gradient(circle at 80% 80%, #e8d4b3 0%, transparent 30%),
-  radial-gradient(circle at 80% 10%, #f4ebe0 0%, transparent 20%),
-  #f8f5f0;
-
+  background:
+    radial-gradient(ellipse at 20% 0%, rgba(139, 107, 74, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 100%, rgba(139, 107, 74, 0.04) 0%, transparent 50%),
+    #f3ede5;
   padding: 24px;
 }
 
 .phone-frame {
   width: 100%;
   max-width: 430px;
-  height: 88vh; 
-  max-height: 850px;
+  height: 88vh;
+  max-height: 860px;
+  background: #ffffff;
+  border-radius: 44px;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.04),
+    0 25px 60px rgba(0, 0, 0, 0.12),
+    0 8px 20px rgba(0, 0, 0, 0.06),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
 
-  background: rgba(255,255,255,0.88);
-  backdrop-filter: blur(20px);
-  border-radius: 36px;
+/* Simulated status bar / notch area */
+.phone-frame::before {
+  content: '';
+  position: sticky;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 130px;
+  height: 30px;
+  background: #000;
+  border-radius: 0 0 18px 18px;
+  z-index: 200;
+  margin: 0 auto;
+  display: block;
+  flex-shrink: 0;
+}
 
+.phone-frame > div {
+  flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
-
-  position: relative;
-  overflow: hidden;
-
   scrollbar-width: none;
   -ms-overflow-style: none;
+}
+
+.phone-frame > div::-webkit-scrollbar {
+  display: none;
 }
 
 .phone-frame::-webkit-scrollbar {

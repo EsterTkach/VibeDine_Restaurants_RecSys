@@ -14,6 +14,9 @@ export default function RestaurantCard({
   const navigate = useNavigate();
   const [imageLoaded, setImageLoaded] = useState(false);
 
+  const rating = Number(restaurant.avg_rating || 0);
+  const reviewCount = restaurant.num_of_reviews;
+
   return (
     <div
       className={`restaurant-card-home ${variant === "list" ? "restaurant-card-list" : ""}`}
@@ -26,8 +29,15 @@ export default function RestaurantCard({
           src={restaurant.image_url}
           alt={restaurant.name}
           onLoad={() => setImageLoaded(true)}
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400&q=80";
+            setImageLoaded(true);
+          }}
           style={{ opacity: imageLoaded ? 1 : 0 }}
         />
+        {restaurant.price && (
+          <span className="card-price-overlay">{restaurant.price}</span>
+        )}
       </div>
 
       <div className="restaurant-card-content">
@@ -35,9 +45,11 @@ export default function RestaurantCard({
 
         <div className="restaurant-card-meta">
           <span className="rating-badge">
-            ⭐ {Number(restaurant.avg_rating || 0).toFixed(1)}
+            ★ {rating.toFixed(1)}
           </span>
-          {restaurant.price && <span className="price-badge">{restaurant.price}</span>}
+          {reviewCount != null && reviewCount > 0 && (
+            <span className="review-count">({reviewCount.toLocaleString()})</span>
+          )}
         </div>
 
         {restaurant.cuisine && (

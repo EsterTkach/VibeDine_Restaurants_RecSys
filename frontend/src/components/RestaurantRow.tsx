@@ -88,14 +88,14 @@ export default function RestaurantRow({ title, emoji, restaurants }: RestaurantR
         style={{ 
           display: 'flex', 
           alignItems: 'center', 
-          gap: '8px', 
+          gap: '6px', 
           marginBottom: '12px', 
-          paddingLeft: '16px', 
-          paddingRight: '16px' 
+          paddingLeft: '20px', 
+          paddingRight: '20px' 
         }}
       >
-        {emoji && <span style={{ fontSize: '1.25rem' }} role="img" aria-label={title}>{emoji}</span>}
-        <h2 style={{ fontSize: '1.125rem', fontWeight: '700', color: '#3d2817', margin: 0, letterSpacing: '-0.01em' }}>
+        {emoji && <span style={{ fontSize: '1rem' }} role="img" aria-label={title}>{emoji}</span>}
+        <h2 style={{ fontSize: '1rem', fontWeight: '700', color: '#2d1f10', margin: 0, letterSpacing: '-0.01em' }}>
           {title}
         </h2>
       </div>
@@ -166,11 +166,11 @@ export default function RestaurantRow({ title, emoji, restaurants }: RestaurantR
             flexWrap: 'nowrap',      
             overflowX: 'auto',       
             overflowY: 'hidden',     
-            gap: '16px',
-            paddingLeft: '16px',
-            paddingRight: '16px',
-            paddingBottom: '16px',
-            paddingTop: '8px',
+            gap: '14px',
+            paddingLeft: '20px',
+            paddingRight: '20px',
+            paddingBottom: '12px',
+            paddingTop: '4px',
             width: '100%',
             boxSizing: 'border-box',
             WebkitOverflowScrolling: 'touch',
@@ -182,7 +182,7 @@ export default function RestaurantRow({ title, emoji, restaurants }: RestaurantR
             <div 
               key={restaurant.id || restaurant.gmap_id} 
               className="slider-item" 
-              style={{ flex: '0 0 240px', width: '240px', minWidth: '240px' }}
+              style={{ flex: '0 0 200px', width: '200px', minWidth: '200px' }}
             >
               <RestaurantCard restaurant={restaurant} />
             </div>

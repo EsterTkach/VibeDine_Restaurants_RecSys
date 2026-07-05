@@ -151,9 +151,9 @@ export default function HomePage() {
           <div className="home-text">
             <h1 className="greeting">
               <span>{getGreeting()},</span>
-              <span>{userData.name}! 👋</span>
+              <span>{userData.name}</span>
             </h1>
-            <p>Find your next favorite spot</p>
+            <p>What are you craving today?</p>
           </div>
 
           <div className="profile-avatar-container">
@@ -163,9 +163,9 @@ export default function HomePage() {
               aria-label="Open account menu"
             >
               {loading && !errorMessage ? (
-                <div className="profile-avatar-loader">⏳</div>
+                <div className="profile-avatar-loader" style={{ width: 48, height: 48, borderRadius: '50%', background: '#f5efe8' }} />
               ) : (
-                <FoodAvatar avatar_index={userData.avatar_index} size={90} />
+                <FoodAvatar avatar_index={userData.avatar_index} size={48} />
               )}
             </button>
 
@@ -180,8 +180,8 @@ export default function HomePage() {
         </div>
 
         <div className="search-bar" onClick={handleVibeMatchClick}>
-          <span className="search-text">Vibe Matcher</span>{" "}
           <span className="search-icon">🪄</span>
+          <span className="search-text">Find your vibe</span>
         </div>
 
         <div
@@ -189,8 +189,8 @@ export default function HomePage() {
           onClick={() => navigate("/group")}
           style={{ marginTop: "0px" }}
         >
-          <span className="search-text">Plan With Friends</span>{" "}
           <span className="search-icon">👥</span>
+          <span className="search-text">Plan with friends</span>
         </div>
 
         <div
