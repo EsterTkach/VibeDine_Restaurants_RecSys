@@ -97,3 +97,16 @@ export type UserData = {
   avatar_index: number;
   name: string;
 };
+
+
+
+export type RegisterRequest = {
+  name: string;
+  username: string;
+  password: string;
+  avatar_index: number;
+  location: {
+    type: "Point";
+    coordinates: [number, number];
+  };
+};

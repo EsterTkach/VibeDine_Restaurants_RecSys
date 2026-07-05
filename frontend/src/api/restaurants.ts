@@ -1,5 +1,5 @@
 import apiClient from './client';
-import type { ApiRecommendationResponse, Friend , UserData } from '../types';
+import type { ApiRecommendationResponse, Friend , RegisterRequest, UserData } from '../types';
 
 export async function getUserRecommendations(userId: string, topK = 10): Promise<ApiRecommendationResponse> {
   const response = await apiClient.get<ApiRecommendationResponse>(`/recommend/cf/${userId}`, {
@@ -15,8 +15,8 @@ export async function getSimilarRestaurants(restaurantName: string, topK = 10): 
   return response.data;
 }
 
-export async function signup(username: string, password: string): Promise<{ message: string; user_data: UserData }> {
-  const response = await apiClient.post('/users/signup', { username, password });
+export async function signup(data: RegisterRequest,): Promise<{ message: string; user_data: UserData }> {
+  const response = await apiClient.post('/users/signup', data);
   return response.data;
 }
 

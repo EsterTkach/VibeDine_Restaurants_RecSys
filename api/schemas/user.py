@@ -1,9 +1,18 @@
 from pydantic import BaseModel
+from typing import Literal, Tuple
+
+class Location(BaseModel):
+    type: Literal["Point"]
+    coordinates: Tuple[float, float]
 
 
 class UserSignupRequest(BaseModel):
     username: str
     password: str
+    name: str
+    location : Location
+    avatar_index: int
+
 
 class UserLoginRequest(BaseModel):
     username: str

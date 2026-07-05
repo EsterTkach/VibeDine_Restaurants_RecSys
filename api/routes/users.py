@@ -39,17 +39,14 @@ def signup(
     user = {
         "_id": new_user_id,
         "user_id": new_user_id,
-        "name": request.username,
+        "name": request.name,
         "username": request.username,
         "password": request.password,
         "liked_restaurants": [],
         "friends": [],
         "preferences": [],
-        "location": {
-            "type": "Point",
-            "coordinates": [0, 0],
-        },
-        "avatar_index": 0,
+        "location": request.location.model_dump(),
+        "avatar_index": request.avatar_index,
     }
 
     existing_user = users_collection.find_one({"username": request.username})
