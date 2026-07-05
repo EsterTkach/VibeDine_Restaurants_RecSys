@@ -10,6 +10,7 @@ services:
       - ./data:/data
       - ./models:/models
     environment:
+      - WATCHFILES_FORCE_POLLING=true
       - MONGO_URI=mongodb+srv://ayarotbart_db_user:x0fGOfhRThKnkX4S@cluster0.yodtpzx.mongodb.net/?appName=Cluster0
     restart: unless-stopped
 
@@ -21,7 +22,7 @@ services:
       - "5173:5173"
     volumes:
       - ./frontend:/app
-      - /app/node_modules
+      - frontend_node_modules:/app/node_modules
     environment:
       - WATCHPACK_POLLING=true
       - CHOKIDAR_USEPOLLING=true
@@ -29,3 +30,6 @@ services:
     depends_on:
       - api
     restart: unless-stopped
+
+volumes:
+  frontend_node_modules:
