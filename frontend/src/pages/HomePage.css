@@ -267,12 +267,12 @@ section h2 {
 
 /* ===== SEARCH BAR ===== */
 .search-bar {
-  background: linear-gradient(135deg, #d09331 0%, #b87a1e 100%);
+  background: linear-gradient(135deg, #a67c52 0%, #8b6b4a 100%);
   border-radius: 18px;
   margin: 16px 16px 30px 16px;
   padding: 16px;
   color: #ffffff;
-  box-shadow: 0 8px 24px rgba(208, 147, 49, 0.25);
+  box-shadow: 0 8px 24px rgba(139, 107, 74, 0.25);
   cursor: pointer;
   transition: all 0.25s ease;
   display: flex;
@@ -283,7 +283,7 @@ section h2 {
 }
 
 .search-bar:hover {
-  box-shadow: 0 12px 32px rgba(208, 147, 49, 0.35);
+  box-shadow: 0 12px 32px rgba(139, 107, 74, 0.35);
   transform: translateY(-2px);
 }
 
