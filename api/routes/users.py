@@ -7,8 +7,7 @@ from fastapi import (
 from uuid import uuid4
 
 from api.db.mongo import (
-    users_collection,
-    user_interactions_collection
+    users_collection
 )
 
 from api.schemas.user import (
@@ -169,7 +168,7 @@ def like_restaurant(
 ):
     user_id = request.user_id
 
-    user_interactions_collection.update_one(
+    users_collection.update_one(
         {
             "user_id":
             user_id
@@ -205,7 +204,7 @@ def unlike_restaurant(
 ):
     user_id = request.user_id
 
-    user_interactions_collection.update_one(
+    users_collection.update_one(
         {
             "user_id":
             user_id
@@ -238,7 +237,7 @@ def save_restaurant(
     restaurant_id: str
 ):
 
-    user_interactions_collection.update_one(
+    users_collection.update_one(
         {
             "user_id":
             user_id
@@ -270,7 +269,7 @@ def record_restaurant_view(
     restaurant_id: str
 ):
 
-    user_interactions_collection.update_one(
+    users_collection.update_one(
         {
             "user_id":
             user_id
