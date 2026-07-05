@@ -52,10 +52,13 @@ export default function GroupPage() {
     if (distance === "Walkable") filters.radius_km = 1;
     else if (distance === "15 Min") filters.radius_km = 3;
     else if (distance === "30 Min") filters.radius_km = 6;
-    if (accessibility === "Required") filters.accessibility = ["Wheelchair accessible entrance"];
+    if (accessibility === "Required")
+      filters.accessibility = ["Wheelchair accessible entrance", "Wheelchair accessible seating", "Wheelchair accessible"];
     if (dietary === "Vegetarian") filters.dietary_restrictions = ["Vegetarian"];
     else if (dietary === "Vegan") filters.dietary_restrictions = ["Vegan"];
     else if (dietary === "Gluten Free") filters.dietary_restrictions = ["Gluten-Free"];
+    else if (dietary === "Kosher") filters.dietary_restrictions = ["Kosher"];
+    else if (dietary === "Halal") filters.dietary_restrictions = ["Halal"];
     return filters;
   };
 
@@ -182,7 +185,7 @@ export default function GroupPage() {
               <div className="preference-group">
                 <label>🥗 Dietary</label>
                 <div className="segmented-control">
-                  {["None", "Vegetarian", "Vegan", "Gluten Free"].map((value) => (
+                  {["None", "Vegetarian", "Vegan", "Kosher", "Halal", "Gluten Free"].map((value) => (
                     <button
                       key={value}
                       className={dietary === value ? "segment active" : "segment"}
