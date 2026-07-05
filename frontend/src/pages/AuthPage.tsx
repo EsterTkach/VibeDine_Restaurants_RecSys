@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { FaApple, FaXTwitter } from "react-icons/fa6";
 import AppShell from "../layouts/AppShell";
@@ -8,8 +8,9 @@ import { useAuth } from "../contexts/AuthContext";
 
 export default function AuthPage() {
   const navigate = useNavigate();
-  const { userData, setUserData } = useAuth();
-
+  const { setUserData } = useAuth();
+  
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -21,7 +22,7 @@ export default function AuthPage() {
   };
 
   const handleLogin = async () => {
-    if (!userData.username.trim() || !password.trim()) {
+    if (!username.trim() || !password.trim()) {
       setError("Please fill in all fields");
       return;
     }
@@ -30,10 +31,7 @@ export default function AuthPage() {
       setError("");
       setLoading(true);
 
-      const data = await authService.login(userData.username, password);
-      // Clear any stale session data from a previous user before setting new one
-      localStorage.removeItem("user_id");
-      localStorage.removeItem("userId");
+      const data = await authService.login(username, password);
       setUserData(data.user_data);
       localStorage.setItem("user_data", JSON.stringify(data.user_data));
 
@@ -74,14 +72,9 @@ export default function AuthPage() {
           <input
             className="input"
             placeholder="Username"
-            value={userData.username}
+            value={username}
             disabled={loading}
-            onChange={(e) =>
-              setUserData({
-                ...userData,
-                username: e.target.value,
-              })
-            }
+            onChange={(e) => setUsername(e.target.value)}
           />
 
           <input
@@ -139,6 +132,6 @@ export default function AuthPage() {
         🚀 Social login is coming soon
         </div>
       )}
-      </AppShell>
+    </AppShell>
   );
 }
