@@ -3,7 +3,6 @@ export interface Restaurant {
   name: string;
   cuisine: string;
   avg_rating: number;
-  num_of_reviews?: number;
   price: '$' | '$$' | '$$$';
   image_url: string;
 }
