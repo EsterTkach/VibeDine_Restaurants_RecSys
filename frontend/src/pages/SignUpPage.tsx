@@ -36,26 +36,13 @@ export default function SignUpPage() {
         },
       });
     } catch (apiError) {
-        console.warn("Backend sign up failed or offline. Using local development fallback simulation...", apiError);
-
-      // 2. STABILITY FALLBACK: Generate a fake local session so your UI workflow doesn't block
-      const fallbackUser = {
-        user_id: `mock_user_${Math.floor(Math.random() * 10000)}`,
-        username: userData.username,
-        avatar_index: 0,
-        name: "",
-      };
-
-      setUserData(fallbackUser);
-      localStorage.setItem("user_data", JSON.stringify(fallbackUser));
-
-      navigate("/onboarding", {
-        replace: true,
-        state: {
-          userData: fallbackUser,
-
-        }
-      });
+      console.warn("Backend sign up failed.", apiError);
+      const status = (apiError as any)?.response?.status;
+      if (status === 409) {
+        setError("Username already exists. Please choose another one.");
+      } else {
+        setError("Sign up failed. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
