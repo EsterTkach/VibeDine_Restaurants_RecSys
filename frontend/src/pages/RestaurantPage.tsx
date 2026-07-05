@@ -1,19 +1,20 @@
+import "./RestaurantPage.css";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import AppShell from "../layouts/AppShell";
 import apiClient from "../api/client";
-import { likeRestaurant, unlikeRestaurant } from "../api/restaurants";
 import { useAuth } from "../contexts/AuthContext";
-import "./RestaurantPage.css";
+import { useLiked } from "../contexts/LikedContext";
 
 export default function RestaurantPage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const { userId } = useAuth();
+  const { userData } = useAuth();
+  const { likedRestaurants, likeRestaurant, unlikeRestaurant } = useLiked();
 
+  const liked = likedRestaurants.some((r) => r.gmap_id === id);
   const [restaurant, setRestaurant] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [liked, setLiked] = useState(false);
   const [likeLoading, setLikeLoading] = useState(false);
 
   useEffect(() => {
@@ -27,18 +28,18 @@ export default function RestaurantPage() {
   }, [id]);
 
   const handleLikeToggle = async () => {
-    if (!userId || !id || likeLoading) return;
+    if (!userData.user_id || !id || likeLoading) return;
+
     setLikeLoading(true);
+
     try {
       if (liked) {
-        await unlikeRestaurant(userId, id);
-        setLiked(false);
+        await unlikeRestaurant(id);
       } else {
-        await likeRestaurant(userId, id);
-        setLiked(true);
+        await likeRestaurant(id);
       }
-    } catch {
-      // silent
+    } catch (error) {
+      console.error("Failed to update liked restaurant", error);
     } finally {
       setLikeLoading(false);
     }
@@ -66,7 +67,13 @@ export default function RestaurantPage() {
         ) : (
           <>
             <div className="restaurant-hero">
-              <button className="back-btn floating-back" onClick={() => navigate(-1)}>
+              <button
+                className="back-btn floating-back"
+                style={{
+                  color: "#ffffff",
+                }}
+                onClick={() => navigate(-1)}
+              >
                 ← Back
               </button>
               {restaurant.image_url && (

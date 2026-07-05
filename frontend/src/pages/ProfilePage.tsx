@@ -1,21 +1,14 @@
 import "./ProfilePage.css";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Heart } from "lucide-react";
 
 import AppShell from "../layouts/AppShell";
 import BottomNav from "../components/BottomNav";
-import { userService } from "../api/services";
 import { useAuth } from "../contexts/AuthContext";
-
+import { useHome } from "../contexts/HomeContext";
+import { useLiked } from "../contexts/LikedContext";
 import SectionDivider from "../components/SectionDivider";
 import FoodAvatar from "../components/FoodAvatar";
-import { useHome } from "../contexts/HomeContext";
-
-type Restaurant = {
-  gmap_id: string;
-  name: string;
-  image_url: string;
-};
 
 const DEFAULT_RESTAURANT_IMAGE  =
   "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=500";
@@ -24,52 +17,31 @@ const DEFAULT_RESTAURANT_IMAGE  =
 
 export default function ProfilePage() {
   const { userData } = useAuth();
-
-  //const [loading, setLoading] = useState<boolean>(true);
   const { setHasLoadedHome } = useHome();
+  const { likedRestaurants, loading, unlikeRestaurant } = useLiked();
 
-  const [likedRestaurants, setLikedRestaurants] = useState<Restaurant[]>([]);
   const [removingRestaurantIds, setRemovingRestaurantIds] = useState<string[]>(
     [],
   );
 
-  useEffect(() => {
-    async function fetchLikedRestaurants() {
-      try {
-        if (!userData.user_id) {
-          console.warn("No user ID found. Cannot fetch liked restaurants.");
-          return;
-        }
-        const data = await userService.getLikedRestaurants(userData.user_id);
-        setLikedRestaurants(data.liked_restaurants);
-        console.log("data.liked_restaurants :", data.liked_restaurants);
-      } catch (error) {
-        console.error("Failed to fetch liked restaurants", error);
-      }
-    }
-
-    fetchLikedRestaurants();
-  }, []);
-
   const handleUnlike = async (restaurantId: string) => {
     setRemovingRestaurantIds((prev) => [...prev, restaurantId]);
 
-    try {
+    // await userService.unlikeRestaurant(userData.user_id, restaurantId);
 
-      await userService.unlikeRestaurant(userData.user_id, restaurantId);
-      setHasLoadedHome(false);
-      setTimeout(() => {
-        setLikedRestaurants((prev) =>
-          prev.filter((r) => r.gmap_id !== restaurantId),
-        );
+    setTimeout(async () => {
+      try {
 
+        await unlikeRestaurant(restaurantId);
+        setHasLoadedHome(false);
+      } catch (err) {
+        console.error(err);
+      } finally {
         setRemovingRestaurantIds((prev) =>
           prev.filter((id) => id !== restaurantId),
         );
-      }, 300);
-    } catch (err) {
-      console.error(err);
-    }
+      }
+    }, 300);
   };
 
   return (
@@ -87,8 +59,8 @@ export default function ProfilePage() {
         {/* Restaurants You Love Section */}
         <div className="profile-section">
           <SectionDivider text="Restaurants You Love" />
-          {/* <Heart size={18} fill="#ef4444" color="#ef4444" /> */}{" "}
-          {likedRestaurants.length === 0 ? (
+          {/* <Heart size={18} fill="#ef4444" color="#ef4444" /> */}
+          {loading ? null : likedRestaurants.length === 0 ? (
             <div className="empty-state">
               <div className="empty-icon">🍽️</div>
 

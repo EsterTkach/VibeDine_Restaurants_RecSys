@@ -3,6 +3,7 @@ import "./index.css";
 import App from "./App.tsx";
 import { AuthProvider } from "./contexts/AuthContext";
 import { HomeProvider } from "./contexts/HomeContext.tsx";
+import { LikedProvider } from "./contexts/LikedContext.tsx";
 
 // createRoot(document.getElementById("root")!).render(
 //   <StrictMode>
@@ -15,9 +16,11 @@ import { HomeProvider } from "./contexts/HomeContext.tsx";
 // );
 
 createRoot(document.getElementById("root")!).render(
-    <AuthProvider>
+  <AuthProvider>
+    <LikedProvider>
       <HomeProvider>
-      <App />
+        <App />
       </HomeProvider>
-    </AuthProvider>
+    </LikedProvider>
+  </AuthProvider>,
 );

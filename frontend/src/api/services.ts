@@ -50,7 +50,7 @@ export const restaurantService = {
 };
 
 export const userService = {
-  
+
   getLikedRestaurants: (userId: string | number) =>
     handleRequest<{
       user_id: string;
@@ -64,6 +64,17 @@ export const userService = {
   unlikeRestaurant: (userId: string, restaurantId: string) =>
     handleRequest(`/users/restaurants/${restaurantId}/like`, {
       method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        user_id: userId,
+      }),
+    }),
+
+  likeRestaurant: (userId: string, restaurantId: string) =>
+    handleRequest(`/users/restaurants/${restaurantId}/like`, {
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
