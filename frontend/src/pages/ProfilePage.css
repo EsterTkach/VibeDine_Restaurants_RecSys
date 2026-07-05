@@ -65,6 +65,44 @@
   margin-top: 40px;
 }
 
+.empty-message {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.empty-message p {
+  margin: 0;
+}
+
+.compact-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  margin: 14px 0 22px;
+  padding: 12px 16px;
+
+  border-radius: 16px;
+  background: rgba(160, 120, 80, 0.07);
+
+  color: #9a7a5f;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.compact-empty-state span {
+  font-size: 24px;
+}
+
+.compact-empty-state p {
+  margin: 0;
+}
 
 .section-header {
   display: flex;
@@ -161,7 +199,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 16px;
-  margin-top: 30px;  
+  margin-top: 30px;
   margin-bottom: 50px;
 
 }
@@ -226,14 +264,16 @@
 }
 
 .restaurant-favorite-card.removing {
-    opacity: 0;
-    transform: scale(.92);
+  opacity: 0;
+  transform: scale(0.92);
 }
 
 
 
 
 .favorite-btn {
+  z-index: 3;
+
   position: absolute;
   top: 10px;
   right: 10px;
@@ -262,6 +302,9 @@
   display: flex;
   justify-content: center;
   margin-bottom: 12px;
+  cursor: pointer;
+  position: relative;
+  z-index: 2;
 }
 
 .card-image img {
