@@ -123,11 +123,14 @@ export default function HomePage() {
         setCarousels(data.carousels || []);
         setHasLoadedHome(true);
         console.log("Carousels:", data.carousels);
-      } catch (error) {
+        }
+
+        catch (error) {
         console.error(error);
         if (axios.isAxiosError(error)) {
           console.log(error.response);
-        }
+          setErrorMessage("We couldn't connect to the server. Please check your network and try again.");
+}
       } finally {
         setLoading(false);
       }

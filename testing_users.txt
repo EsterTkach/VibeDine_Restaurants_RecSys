@@ -31,8 +31,6 @@ avatar_index- 5
 
 
 
-
-
 **419 offline reviews and 12 online-**
 
 
@@ -100,25 +98,40 @@ avatar_index: NumberInt('6')
 
 
 
+**0 offline reviews and 0 online and no onboarding, but with friends-**
 
 
-
-
-**0 offline reviews and 0 online and no onboarding-**
-
-
-
-_id: ObjectId('6a454f7b46e5c21b512d28cf'),
-
-user_id: 'c0cb6899-86a8-414f-b833-bf54f07c3a8f',
-
-username: 'aya',
-
-password: '1234'
-
+  _id: 'c2d9d6ce-ba30-4ee2-b7c2-2c2b6aad64c1',
+  user_id: 'c2d9d6ce-ba30-4ee2-b7c2-2c2b6aad64c1',
+  name: 'aya',
+  username: 'aya',
+  password: '1234',
+  liked_restaurants: [],
+  friends: [
+    '104100713934572836960',
+    '104346581732270107342',
+    '114254213772788760165',
+    '117049416485832538938',
+    '0958d55b-ab2e-48aa-ad45-a5dc5944c55c',
+    '100014714044707079162',
+    '100189498684577852365'
+  ],
+  preferences: [],
+  location: {
+    type: 'Point',
+    coordinates: [
+      NumberInt('0'),
+      NumberInt('0')
+    ]
+  },
+  avatar_index: NumberInt('0'),
+  onboarding_preferences: {
+    favorite_categories: [],
+    favorite_atmospheres: [],
+    accessibility: 'Not Required',
+    dietary_restrictions: 'None'
+  }
 }
-
-
 
 
 
@@ -126,9 +139,6 @@ password: '1234'
 
 **17 offline reviews and 12 online-**
 
-
-
-{
 
 _id: '103517930104985091440',
 
@@ -188,11 +198,6 @@ Double('39.226969')
 
 avatar_index: NumberInt('3')
 
-}
-
-
-
-
 
 
 
@@ -201,38 +206,31 @@ avatar_index: NumberInt('3')
 **0 offline reviews and 0 online with onboarding-**
 
 
-
-{
-
-_id: ObjectId('6a47a7a1a7fd067596b8770a'),
-
-user_id: '51ace930-f2bb-4295-91f1-1b7e9b37899d',
-
-username: 'esty_onboard',
-
-password: '1234',
-
-onboarding_preferences: {
-
-favorite_categories: [
-
-'Dessert'
-
-],
-
-favorite_atmospheres: [
-
-'Romantic'
-
-],
-
-accessibility: 'Not Required',
-
-dietary_restrictions: 'None'
-
-}
-
-}
+  _id: 'a0a9490c-d223-46e3-9748-799885c9b015',
+  user_id: 'a0a9490c-d223-46e3-9748-799885c9b015',
+  name: 'esty_onboard',
+  username: 'esty_onboard',
+  password: '1234',
+  liked_restaurants: [],
+  friends: [],
+  preferences: [],
+  location: {
+    type: 'Point',
+    coordinates: [
+      NumberInt('0'),
+      NumberInt('0')
+    ]
+  },
+  avatar_index: NumberInt('0'),
+  onboarding_preferences: {
+    favorite_categories: [
+      '🍣 Sushi',
+      'Japanese'
+    ],
+    favorite_atmospheres: [],
+    accessibility: 'Not Required',
+    dietary_restrictions: 'None'
+  }
 
 
 
@@ -241,68 +239,55 @@ dietary_restrictions: 'None'
 **0 offline reviews and 12 online with onboarding-**
 
 
-
-_id: ObjectId('6a47ab2ea7fd067596b8770b'),
-
-user_id: '4cbe2144-ede7-41a6-abc0-fcf456844508',
-
-username: 'esty_onborad_and_online',
-
-password: '1234',
-
-onboarding_preferences: {
-
-favorite_categories: [
-
-'Dessert',
-
-'Cafe'
-
-],
-
-favorite_atmospheres: [
-
-'Casual',
-
-'Upscale'
-
-],
-
-accessibility: 'Not Required',
-
-dietary_restrictions: 'None'
-
-},
-
-liked_restaurants: [
-
-'0x8090cbf5bbba898b:0xb37d7e1fea0c63ef',
-
-'0x8085875ce042646d:0xd289103cd80a0a97',
-
-'0x808f7fd770b93dfd:0x9163bc5a8883c63b',
-
-'0x809b053254d9dfab:0xb1b11e804211e0ea',
-
-'0x80904101ce001281:0x76db23c5d22346ae',
-
-'0x808e4aaee95d631b:0xc9d0839a2aefcb64',
-
-'0x808f7c1425bf6e9d:0xf5c6c8e213483c28',
-
-'0x80c2c7049ff0132d:0xf598d3badb3f6dc',
-
-'0x80c2d20b1642d757:0xdf3698e5172297cf',
-
-'0x80c298259dc3e43d:0x20349edf1ec7eb40',
-
-'0x809ae410bb4b79db:0x8e53e91c4a62cfcd',
-
-'0x80e84e90e72e4b39:0x606f85aade439c98'
-
-]
-
-}
+  _id: '3cdbd5a8-676f-4a5e-8714-6e646037ea93',
+  user_id: '3cdbd5a8-676f-4a5e-8714-6e646037ea93',
+  name: 'esty_onborad_and_online',
+  username: 'esty_onborad_and_online',
+  password: '1234',
+  liked_restaurants: [
+    '0x8090cbf5bbba898b:0xb37d7e1fea0c63ef',
+    '0x8085875ce042646d:0xd289103cd80a0a97',
+    '0x808f7fd770b93dfd:0x9163bc5a8883c63b',
+    '0x809b053254d9dfab:0xb1b11e804211e0ea',
+    '0x80904101ce001281:0x76db23c5d22346ae',
+    '0x808e4aaee95d631b:0xc9d0839a2aefcb64',
+    '0x808f7c1425bf6e9d:0xf5c6c8e213483c28',
+    '0x80c2c7049ff0132d:0xf598d3badb3f6dc',
+    '0x80c2d20b1642d757:0xdf3698e5172297cf',
+    '0x80c298259dc3e43d:0x20349edf1ec7eb40',
+    '0x809ae410bb4b79db:0x8e53e91c4a62cfcd',
+    '0x80e84e90e72e4b39:0x606f85aade439c98'
+  ],
+  friends: [],
+  preferences: [],
+  location: {
+    type: 'Point',
+    coordinates: [
+      NumberInt('0'),
+      NumberInt('0')
+    ]
+  },
+  avatar_index: NumberInt('0'),
+  onboarding_preferences: {
+    favorite_categories: [
+      '🍕 Pizza & Pasta',
+      '🍜 Noodles & Ramen',
+      '🍗 Chicken',
+      '🦐 Seafood',
+      'Japanese',
+      'Chinese',
+      'Asian Fusion',
+      'Mediterranean & Middle East',
+      'Italian'
+    ],
+    favorite_atmospheres: [
+      'Trendy',
+      'Upscale',
+      'Family Friendly'
+    ],
+    accessibility: 'Required',
+    dietary_restrictions: 'Gluten-Free'
+  }
 
 
 

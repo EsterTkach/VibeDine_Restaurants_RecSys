@@ -161,11 +161,15 @@ def get_home_carousels(user_id: str = "default_user", top_k: int = 25):
     is_cold_start = get_user_augmented_likes(user_id) == 0
     onboarding_candidate_gmap_ids = None
     hybrid_scores = None
+    print(time.perf_counter() - start)
+
+    start = time.perf_counter()
     if is_cold_start:
         print("User has no augmented likes, fetching onboarding candidate gmap_ids")
         onboarding_candidate_gmap_ids = get_onboarding_candidate_gmap_ids(user_id)
     else:
         hybrid_scores = get_hybrid_scores_for_user(user_id)
+    print(f"hybrid scores run time: {time.perf_counter() - start:.2f}s")
 
     # Pre-compute popular restaurants once for cold-start fallback
     ultimate_fallback = get_popular_restaurants(top_k=top_k)
