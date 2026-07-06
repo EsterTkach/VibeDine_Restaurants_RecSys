@@ -11,7 +11,7 @@ import "./HomePage.css";
 
 import { defaultUserData, useAuth } from "../contexts/AuthContext";
 import { useHome } from "../contexts/HomeContext";
-import { useLiked } from "../contexts/LikedContext";
+import { PERSONALIZATION_THRESHOLD, useLiked } from "../contexts/LikedContext";
 import FoodAvatar from "../components/FoodAvatar";
 import PersonalizationProgressPill from "../components/PersonalizationProgressPill";
 import CarouselsLoader from "../components/CarouselsLoader";
@@ -117,10 +117,17 @@ export default function HomePage() {
       }
 
       const currentOnlineLikesCount = likedRestaurants.length;
+      // Both current and previous counts below the personalization threshold
+      // means the backend still treats the user as cold-start — the feed would
+      // be identical. Skip the fetch to avoid a pointless network round-trip.
+      const bothStillColdStart =
+        lastLoad !== null &&
+        currentOnlineLikesCount < PERSONALIZATION_THRESHOLD &&
+        lastLoad.onlineLikesCount < PERSONALIZATION_THRESHOLD;
       const shouldFetch =
         !lastLoad ||
         lastLoad.userId !== userId ||
-        lastLoad.onlineLikesCount !== currentOnlineLikesCount;
+        (lastLoad.onlineLikesCount !== currentOnlineLikesCount && !bothStillColdStart);
 
       if (!shouldFetch) {
         console.log("Home cache valid — skipping fetch.");
