@@ -28,6 +28,15 @@ export default function SignUpPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const isInCalifornia = (longitude: number, latitude: number) => {
+    return (
+      latitude >= 32.5 &&
+      latitude <= 42.1 &&
+      longitude >= -124.5 &&
+      longitude <= -114.1
+    );
+  };
+
   const handleSearchLocation = async () => {
     if (!locationQuery.trim()) {
       setError("Please enter a location to search");
@@ -38,7 +47,7 @@ export default function SignUpPage() {
       setError("");
 
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+        `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${encodeURIComponent(
           locationQuery,
         )}&limit=1`,
       );
@@ -52,9 +61,19 @@ export default function SignUpPage() {
 
       const result = data[0];
 
+      if (result.address?.state !== "California") {
+        setLocation(null);
+        setLocationName("");
+        setError("VibeDine currently supports restaurants in California only. Please choose a location in California.");
+        return;
+      }
+
+      const longitude = Number(result.lon);
+      const latitude = Number(result.lat);
+
       setLocation({
         type: "Point",
-        coordinates: [Number(result.lon), Number(result.lat)],
+        coordinates: [longitude, latitude],
       });
 
       setLocationName(result.display_name);
@@ -76,6 +95,15 @@ export default function SignUpPage() {
             position.coords.latitude,
           ] as [number, number],
         };
+
+        if (
+          !isInCalifornia(position.coords.longitude, position.coords.latitude)
+        ) {
+          setLocation(null);
+          setLocationName("");
+          setError("Please choose a location in California.");
+          return;
+        }
 
         setLocation(location);
 
