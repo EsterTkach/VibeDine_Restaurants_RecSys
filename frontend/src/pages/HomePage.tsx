@@ -188,6 +188,8 @@ export default function HomePage() {
           </div>
         </div>
 
+        <PersonalizationProgressPill />
+
         <div className="search-bar" onClick={handleVibeMatchClick}>
           <span className="search-text">Vibe Matcher</span>{" "}
           <span className="search-icon">🪄</span>
