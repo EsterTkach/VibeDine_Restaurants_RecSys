@@ -1,7 +1,7 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import AppShell from "../layouts/AppShell";
-import { getHomeCarousels } from "../api/restaurants";
+import { getHomeCarousels, createGroupSession } from "../api/restaurants";
 import { useAuth } from "../contexts/AuthContext";
 import { useHome } from "../contexts/HomeContext";
 import "./LoadingPage.css";
@@ -29,6 +29,37 @@ export default function LoadingPage() {
     const loadData = async () => {
       const nextPage = location.state?.nextPage || "/home";
       const userId = location.state?.user_id || userData.user_id;
+      const mode = location.state?.mode;
+
+      if (mode === "group") {
+        const groupUserIds: string[] = location.state?.groupUserIds || [];
+        const groupFilters: Record<string, unknown> =
+          location.state?.groupFilters || {};
+
+        try {
+          const session = await createGroupSession(groupUserIds, groupFilters);
+          navigate(nextPage, {
+            replace: true,
+            state: {
+              ...location.state,
+              groupSessionId: session.session_id,
+              recommendation: session.recommendation,
+            },
+          });
+        } catch (error: any) {
+          const detail =
+            error?.response?.data?.detail || error?.message || "Unknown error";
+          console.error("Group session error:", detail, error?.response?.status);
+          navigate("/group", {
+            replace: true,
+            state: {
+              ...location.state,
+              groupError: `Could not start a group session: ${detail}`,
+            },
+          });
+        }
+        return;
+      }
 
       if (!userId) {
         navigate(nextPage, { replace: true, state: location.state });

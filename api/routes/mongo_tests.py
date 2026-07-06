@@ -26,23 +26,25 @@ def get_k_popular_restaurants(
 def get_filtered_restaurants(
     k: int,
     categories: list[str] = Query(default=[]),
-    accessibility: list[str] = Query(default=[]),
-    service_options: list[str] = Query(default=[]),
-    atmosphere: list[str] = Query(default=[]),
-    dining_options: list[str] = Query(default=[]),
-    crowd: list[str] = Query(default=[]),
-    offerings: list[str] = Query(default=[]),
+    establishment_types: list[str] = Query(default=[]),
+    meal_types: list[str] = Query(default=[]),
+    dining_styles: list[str] = Query(default=[]),
+    popular_items: list[str] = Query(default=[]),
+    dietary_preferences: list[str] = Query(default=[]),
+    vibe: list[str] = Query(default=[]),
+    is_accessible: bool | None = Query(default=None),
 ):
     return {
         "result": get_filtered_restaurants_repo(
-            k,
-            categories,
-            accessibility,
-            service_options,
-            atmosphere,
-            dining_options,
-            crowd,
-            offerings,
+            limit=k,
+            categories=categories or None,
+            establishment_types=establishment_types or None,
+            meal_types=meal_types or None,
+            dining_styles=dining_styles or None,
+            popular_items=popular_items or None,
+            dietary_preferences=dietary_preferences or None,
+            vibe=vibe or None,
+            is_accessible=is_accessible,
         )
     }
 

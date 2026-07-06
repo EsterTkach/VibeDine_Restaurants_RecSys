@@ -30,10 +30,16 @@ from api.schemas.group_schema import (
 from api.utils.utils import (
     format_restaurant_for_frontend,
     get_meal_time,
-    get_meal_time_string,
     MEAL_TIME_TITLES,
     extract_gmap_ids,
     enrich_restaurants
+)
+
+from api.utils.preference_mapping import (
+    map_hour_to_meal_type,
+    map_accessibility_to_bool,
+    map_dietary_to_enum_values,
+    map_vibe_to_enum_values,
 )
 
 from api.db.restaurant_repository import (
@@ -123,17 +129,16 @@ def _get_nearby_candidate_gmap_ids(coordinates):
 
 
 def _get_mealtime_candidate_gmap_ids():
-    meal_time = get_meal_time_string()
-    dining_options = list({meal_time, meal_time.title()})
+    meal_type = map_hour_to_meal_type()
 
     candidates = extract_gmap_ids(
         get_filtered_restaurants_repo(
-            dining_options=dining_options,
+            meal_types=[meal_type.value],
             limit=250,
         )
     )
 
-    print(f"Meal-time candidates={len(candidates)} dining_options={dining_options}")
+    print(f"Meal-time candidates={len(candidates)} meal_type={meal_type.value}")
     return candidates
 
 
@@ -359,47 +364,71 @@ def get_vibe_match_recommendations(
     user_id: str,
     filters: FilterRequest
 ):
-    filtered_restaurants = get_filtered_restaurants_repo(
-    categories=filters.categories,
-    accessibility=filters.accessibility,
-    service_options=filters.service_options,
-    atmosphere=filters.atmosphere,
-    dining_options=filters.dining_options,
-    crowd=filters.crowd,
-    offerings=filters.offerings or filters.dietary_restrictions,
-    price=filters.price,
-    latitude=filters.latitude,
-    longitude=filters.longitude,
-    radius_km=filters.radius_km,
-    min_rating=filters.min_rating,
-    limit=100
-)
+    # Normalize free-form vibe/dietary/accessibility inputs to enum values.
+    vibe_values = map_vibe_to_enum_values(filters.vibe)
+    dietary_values = map_dietary_to_enum_values(filters.dietary_preferences)
+    is_accessible = filters.is_accessible
+    if is_accessible is None:
+        # tolerate legacy clients that may still send an accessibility list
+        is_accessible = map_accessibility_to_bool(
+            getattr(filters, "accessibility", None)
+        )
 
+    repo_kwargs = dict(
+        categories=filters.categories,
+        establishment_types=filters.establishment_types,
+        meal_types=filters.meal_types,
+        dining_styles=filters.dining_styles,
+        popular_items=filters.popular_items,
+        dietary_preferences=dietary_values,
+        vibe=vibe_values,
+        is_accessible=is_accessible,
+        price=filters.price,
+        max_price=filters.max_price,
+        latitude=filters.latitude,
+        longitude=filters.longitude,
+        radius_km=filters.radius_km if filters.radius_km is not None else 15,
+        min_rating=filters.min_rating,
+    )
+
+    filtered_restaurants = get_filtered_restaurants_repo(**repo_kwargs, limit=100)
     candidate_gmap_ids = extract_gmap_ids(filtered_restaurants)
+
+    # Progressive relaxation: drop soft attributes, then geo, then keep only price.
     if not candidate_gmap_ids:
         filtered_restaurants = get_filtered_restaurants_repo(
             categories=filters.categories,
+            popular_items=filters.popular_items,
+            establishment_types=filters.establishment_types,
+            meal_types=filters.meal_types,
+            dietary_preferences=dietary_values,
             price=filters.price,
-            offerings=filters.offerings or filters.dietary_restrictions,
-            limit=100
+            max_price=filters.max_price,
+            latitude=filters.latitude,
+            longitude=filters.longitude,
+            radius_km=filters.radius_km if filters.radius_km is not None else 15,
+            limit=100,
         )
         candidate_gmap_ids = extract_gmap_ids(filtered_restaurants)
-    
+
     if not candidate_gmap_ids:
         filtered_restaurants = get_filtered_restaurants_repo(
             categories=filters.categories,
+            popular_items=filters.popular_items,
             price=filters.price,
-            limit=100
+            max_price=filters.max_price,
+            limit=100,
         )
         candidate_gmap_ids = extract_gmap_ids(filtered_restaurants)
 
     if not candidate_gmap_ids:
         filtered_restaurants = get_filtered_restaurants_repo(
             price=filters.price,
-            limit=100
+            max_price=filters.max_price,
+            limit=100,
         )
         candidate_gmap_ids = extract_gmap_ids(filtered_restaurants)
-    
+
     recommendations = get_hybrid_recommendations_for_user(
         user_id=user_id,
         top_k=7,
@@ -409,7 +438,7 @@ def get_vibe_match_recommendations(
 
     return {
         "recommendation_type": "vibe_match",
-        "filters": filters.dict(),
+        "filters": filters.model_dump(exclude_none=True),
         "recommendations": [
             format_restaurant_for_frontend(r)
             for r in recommendations

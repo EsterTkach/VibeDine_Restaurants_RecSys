@@ -56,7 +56,7 @@ export default function ProfilePage() {
             <FoodAvatar avatar_index={userData.avatar_index} size={110} />
           </div>
           <h1 className="profile-name">{userData.name}</h1>
-          <p className="profile-subtitle">Food Explorer</p>{" "}
+          <p className="profile-subtitle">@{userData.username}</p>{" "}
         </div>
 
         {/* Restaurants You Love Section */}

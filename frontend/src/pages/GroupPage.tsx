@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import AppShell from "../layouts/AppShell";
+import FoodAvatar from "../components/FoodAvatar";
 import { getFriends, createGroupSession } from "../api/restaurants";
 import { useAuth } from "../contexts/AuthContext";
 import type { Friend, MatchingCategory } from "../types";
@@ -9,6 +10,7 @@ import "./GroupPage.css";
 
 export default function GroupPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { userData } = useAuth();
   const userId  = userData.user_id;
   const username  = userData.username;
@@ -17,8 +19,7 @@ export default function GroupPage() {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedFriends, setSelectedFriends] = useState<Friend[]>([]);
-  const [isCreatingSession, setIsCreatingSession] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<string>(location.state?.groupError || "");
 
   const [budget, setBudget] = useState("");
   const [distance, setDistance] = useState("");
@@ -89,13 +90,12 @@ export default function GroupPage() {
     if (distance === "Walkable") filters.radius_km = 1;
     else if (distance === "15 Min") filters.radius_km = 3;
     else if (distance === "30 Min") filters.radius_km = 6;
-    if (accessibility === "Required")
-      filters.accessibility = ["Wheelchair accessible entrance", "Wheelchair accessible seating", "Wheelchair accessible"];
-    if (dietary === "Vegetarian") filters.dietary_restrictions = ["Vegetarian"];
-    else if (dietary === "Vegan") filters.dietary_restrictions = ["Vegan"];
-    else if (dietary === "Gluten Free") filters.dietary_restrictions = ["Gluten-Free"];
-    else if (dietary === "Kosher") filters.dietary_restrictions = ["Kosher"];
-    else if (dietary === "Halal") filters.dietary_restrictions = ["Halal"];
+    if (accessibility === "Required") filters.is_accessible = true;
+    if (dietary === "Vegetarian") filters.dietary_preferences = ["Vegetarian"];
+    else if (dietary === "Vegan") filters.dietary_preferences = ["Vegan"];
+    else if (dietary === "Gluten Free") filters.dietary_preferences = ["Gluten-Free"];
+    else if (dietary === "Kosher") filters.dietary_preferences = ["Kosher"];
+    else if (dietary === "Halal") filters.dietary_preferences = ["Halal"];
 
     // Map selected food types to their respective filter fields
     selectedFoodTypes.forEach((cat) => {
@@ -109,30 +109,20 @@ export default function GroupPage() {
     return filters;
   };
 
-  const handleFindMatch = async () => {
-    setIsCreatingSession(true);
+  const handleFindMatch = () => {
     setError("");
-    try {
-      const groupUserIds = [userId, ...selectedFriends.map((f) => f.user_id)];
-      const session = await createGroupSession(groupUserIds, buildFilters());
-      navigate("/loading", {
-        state: {
-          selectedFriends,
-          currentUserId: userId,
-          currentUserName: username || "You",
-          groupUserIds,
-          groupSessionId: session.session_id,
-          recommendation: session.recommendation,
-          nextPage: "/group-result",
-        },
-      });
-    } catch (err: any) {
-      const detail = err?.response?.data?.detail || err?.message || "Unknown error";
-      console.error("Group session error:", detail, err?.response?.status);
-      setError(`Could not start a group session: ${detail}`);
-    } finally {
-      setIsCreatingSession(false);
-    }
+    const groupUserIds = [userId, ...selectedFriends.map((f) => f.user_id)];
+    navigate("/loading", {
+      state: {
+        selectedFriends,
+        currentUserId: userId,
+        currentUserName: username || "You",
+        groupUserIds,
+        groupFilters: buildFilters(),
+        mode: "group",
+        nextPage: "/group-result",
+      },
+    });
   };
 
   return (
@@ -170,13 +160,11 @@ export default function GroupPage() {
                   className={isSelected(friend) ? "friend-select selected" : "friend-select"}
                   onClick={() => toggleFriend(friend)}
                 >
-                  <div>
-                    <strong>{friend.name || friend.username}</strong>
-                    <div className="friend-subtitle">Food Explorer 🍜</div>
+                  <div className="friend-select-check">
+                    {isSelected(friend) ? "✓" : ""}
                   </div>
-                  <div className="friend-icon">
-                    {isSelected(friend) ? "✓" : "+"}
-                  </div>
+                  <FoodAvatar avatar_index={friend.avatar_index} size={44} />
+                  <span className="friend-select-name">{friend.name || friend.username}</span>
                 </button>
               ))}
             </div>
@@ -264,10 +252,10 @@ export default function GroupPage() {
 
             <button
               className="find-match-btn"
-              disabled={selectedFriends.length === 0 || isCreatingSession}
+              disabled={selectedFriends.length === 0}
               onClick={handleFindMatch}
             >
-              {isCreatingSession ? "Finding..." : "Find Perfect Match →"}
+              Find Perfect Match →
             </button>
           </>
         )}
