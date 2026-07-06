@@ -110,6 +110,15 @@
   font-size: 14px;
 }
 
+.friends-searching {
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
 .remove-friend-btn {
   border: none;
   background: #f2ebe3;
