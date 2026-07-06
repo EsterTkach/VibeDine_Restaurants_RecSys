@@ -155,7 +155,7 @@ export default function FriendsPage() {
               <FoodAvatar avatar_index={friend.avatar_index} size={46} />
               <div style={{ flex: 1 }}>
                 <h3>{friend.name || friend.username}</h3>
-                <span>Food Explorer 🍜</span>
+                <span>@{friend.username}</span>
               </div>
               <button
                 className="remove-friend-btn"

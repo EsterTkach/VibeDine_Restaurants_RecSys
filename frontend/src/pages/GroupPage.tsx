@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import AppShell from "../layouts/AppShell";
+import FoodAvatar from "../components/FoodAvatar";
 import { getFriends, createGroupSession } from "../api/restaurants";
 import { useAuth } from "../contexts/AuthContext";
 import type { Friend, MatchingCategory } from "../types";
@@ -170,13 +171,11 @@ export default function GroupPage() {
                   className={isSelected(friend) ? "friend-select selected" : "friend-select"}
                   onClick={() => toggleFriend(friend)}
                 >
-                  <div>
-                    <strong>{friend.name || friend.username}</strong>
-                    <div className="friend-subtitle">Food Explorer 🍜</div>
+                  <div className="friend-select-check">
+                    {isSelected(friend) ? "✓" : ""}
                   </div>
-                  <div className="friend-icon">
-                    {isSelected(friend) ? "✓" : "+"}
-                  </div>
+                  <FoodAvatar avatar_index={friend.avatar_index} size={44} />
+                  <span className="friend-select-name">{friend.name || friend.username}</span>
                 </button>
               ))}
             </div>

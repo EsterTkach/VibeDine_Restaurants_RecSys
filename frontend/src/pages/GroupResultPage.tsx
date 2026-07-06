@@ -2,6 +2,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 
 import RestaurantCard from "../components/RestaurantCard";
+import FoodAvatar from "../components/FoodAvatar";
 import apiClient from "../api/client";
 import {
   submitGroupSessionFeedback,
@@ -211,9 +212,15 @@ export default function GroupResultPage() {
 
           <div className="member-list">
             <h3>Group Size: {selectedFriends.length + 1}</h3>
-            <span>You ({currentUserName})</span>
+            <div className="member-item">
+              <FoodAvatar avatar_index={0} size={36} />
+              <span>You ({currentUserName})</span>
+            </div>
             {selectedFriends.map((f: Friend) => (
-              <span key={f.user_id}>{f.name || f.username}</span>
+              <div key={f.user_id} className="member-item">
+                <FoodAvatar avatar_index={f.avatar_index} size={36} />
+                <span>{f.name || f.username}</span>
+              </div>
             ))}
           </div>
 
