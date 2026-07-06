@@ -4,6 +4,12 @@ from api.db.restaurant_repository import get_filtered_restaurants_repo
 from api.ml.cf_recommender import compute_cf_scores, get_popular_restaurants, get_user_offline_likes, recommend_for_user_cf
 from api.services.users_service import get_user_online_likes
 from api.utils.utils import extract_gmap_ids, format_restaurant_for_frontend
+from api.utils.preference_mapping import (
+    map_accessibility_to_bool,
+    map_dietary_to_enum_values,
+    map_vibe_to_enum_values,
+    split_favorite_categories,
+)
 from api.routes.users import get_onboarding_preferences
 from api.ml.cb_recommender import compute_cb_scores, restaurant_lookup
 from api.services import hybrid_cache
@@ -76,74 +82,32 @@ from api.services import hybrid_cache
 
 #     return recommendations
 
-POPULAR_FOOD_TO_CATEGORIES_MAP = {
-    "Sushi": ["Sushi", "Sushi restaurant", "Japanese", "Japanese restaurant"],
-    "Pizza & Pasta": ["Italian", "Italian restaurant", "Pizza restaurant", "Pizza"],
-    "Hamburger": ["Hamburger", "Hamburger restaurant", "Burger restaurant"],
-    "Ice Cream & Dessert": ["Dessert", "Dessert shop", "Ice cream shop", "Bakery"],
-    "Noodles & Ramen": ["Ramen", "Noodle shop", "Japanese", "Asian"],
-    "Seafood": ["Seafood", "Seafood restaurant"],
-    "Chicken": ["Chicken restaurant", "Fried chicken restaurant"],
-    "Steak & BBQ": ["Steak house", "Barbecue restaurant", "BBQ"],
-}
-
-CUISINE_TO_CATEGORIES_MAP = {
-    "American": ["American", "American restaurant"],
-    "Italian": ["Italian", "Italian restaurant", "Pizza restaurant"],
-    "Chinese": ["Chinese", "Chinese restaurant"],
-    "Japanese": ["Japanese", "Japanese restaurant", "Sushi restaurant"],
-    "Mexican & Latin": ["Mexican", "Mexican restaurant", "Latin American restaurant"],
-    "Asian Fusion": ["Asian", "Asian restaurant", "Asian fusion restaurant"],
-    "Indian": ["Indian", "Indian restaurant"],
-    "Mediterranean & Middle East": ["Mediterranean", "Mediterranean restaurant", "Middle Eastern restaurant"],
-    "European": ["European", "European restaurant", "French restaurant"],
-}
-
-ACCESSIBILITY_MAP = {
-    "Required": ["Wheelchair accessible entrance", "Wheelchair accessible seating", "Wheelchair accessible"],
-}
-
-
 def _parse_onboarding_preferences(preferences: dict):
     """
-    Maps user-facing onboarding preference values to the actual
-    MongoDB field values used by get_filtered_restaurants_repo.
+    Maps user-facing onboarding preference values to the enum-backed
+    MongoDB field values used by `get_filtered_restaurants_repo`.
+
+    Note: field names on `OnboardingPreferences` remain `favorite_atmospheres`
+    and `dietary_restrictions` for backward compatibility with existing user
+    documents in Mongo; they are translated here to `vibe` /
+    `dietary_preferences` for the repo call.
     """
-    raw_categories = preferences.get("favorite_categories", [])
-    atmosphere = preferences.get("favorite_atmospheres", [])
+    raw_categories = preferences.get("favorite_categories", []) or []
+    raw_vibes = preferences.get("favorite_atmospheres", []) or []
     accessibility_raw = preferences.get("accessibility", "")
     dietary_raw = preferences.get("dietary_restrictions", "")
 
-    # 1. Separate popular food items from cuisine types and map to DB values
-    mapped_categories = []
-    mapped_popular_items = []
-
-    for item in raw_categories:
-        # Strip emoji prefix (e.g., "🍣 Sushi" → "Sushi")
-        clean = item.split(" ", 1)[1] if " " in item and not item[0].isalpha() else item
-
-        if clean in POPULAR_FOOD_TO_CATEGORIES_MAP:
-            mapped_categories.extend(POPULAR_FOOD_TO_CATEGORIES_MAP[clean])
-            mapped_popular_items.append(clean)
-        elif clean in CUISINE_TO_CATEGORIES_MAP:
-            mapped_categories.extend(CUISINE_TO_CATEGORIES_MAP[clean])
-        else:
-            mapped_categories.append(clean)
-
-    # 2. Map accessibility
-    mapped_accessibility = ACCESSIBILITY_MAP.get(accessibility_raw)
-
-    # 3. Map dietary restrictions (single string → list, skip "None")
-    mapped_dietary = None
-    if dietary_raw and dietary_raw != "None":
-        mapped_dietary = [dietary_raw]
+    categories, popular_items = split_favorite_categories(raw_categories)
+    vibe_values = map_vibe_to_enum_values(raw_vibes)
+    is_accessible = map_accessibility_to_bool(accessibility_raw)
+    dietary_values = map_dietary_to_enum_values(dietary_raw)
 
     return {
-        "categories": mapped_categories or None,
-        "popular_items": mapped_popular_items or None,
-        "atmosphere": atmosphere or None,
-        "accessibility": mapped_accessibility,
-        "dietary_restrictions": mapped_dietary,
+        "categories": categories,
+        "popular_items": popular_items,
+        "vibe": vibe_values,
+        "is_accessible": is_accessible,
+        "dietary_preferences": dietary_values,
     }
 
 
@@ -160,17 +124,22 @@ def get_onboarding_candidate_gmap_ids(user_id: str, candidate_gmap_ids=None):
         get_filtered_restaurants_repo(
             categories=parsed["categories"],
             popular_items=parsed["popular_items"],
-            accessibility=parsed["accessibility"],
-            atmosphere=parsed["atmosphere"],
-            dietary_restrictions=parsed["dietary_restrictions"],
-            limit=1000))
+            vibe=parsed["vibe"],
+            is_accessible=parsed["is_accessible"],
+            dietary_preferences=parsed["dietary_preferences"],
+            limit=1000,
+        )
+    )
 
     # Fallback: if strict filters return nothing, relax to categories only
-    if not candidate_gmap_ids_by_category and parsed["categories"]:
+    if not candidate_gmap_ids_by_category and (parsed["categories"] or parsed["popular_items"]):
         candidate_gmap_ids_by_category = extract_gmap_ids(
             get_filtered_restaurants_repo(
                 categories=parsed["categories"],
-                limit=1000))
+                popular_items=parsed["popular_items"],
+                limit=1000,
+            )
+        )
 
     if candidate_gmap_ids is None:
         return candidate_gmap_ids_by_category
@@ -335,30 +304,39 @@ def get_hybrid_recommendations_for_user(
 
     
 
-EXACT_CATEGORY_MAP = {
-    "sushi": ["Sushi", "Sushi restaurant", "Sushi takeaway", "Conveyor belt sushi restaurant", "japanese", "japanese restaurant"],
-    "italian": ["Italian", "Italian restaurant", "Pizza restaurant", "Pizza"],
-    "dessert": ["Dessert", "Dessert shop", "Dessert restaurant", "Ice cream shop", "Bakery"],
-    "cafe": ["Cafe", "Coffee shop", "Espresso bar"],
-    "burger": ["Hamburger", "Hamburger restaurant", "Burger restaurant"],
-    "bar": ["Bar", "Coctail bar", "Bar and restaurant"]
+# Maps user-facing category slugs to enum-backed filter kwargs for the repo.
+# Each entry is a dict merged into the get_filtered_restaurants_repo call.
+EXACT_CATEGORY_FILTERS = {
+    "sushi": {"popular_items": ["Sushi"]},
+    "italian": {"categories": ["Italian"]},
+    "japanese": {"categories": ["Japanese"]},
+    "chinese": {"categories": ["Chinese"]},
+    "american": {"categories": ["American"]},
+    "indian": {"categories": ["Indian"]},
+    "mexican": {"categories": ["Mexican & Latin"]},
+    "dessert": {"popular_items": ["Ice Cream & Dessert"]},
+    "cafe": {"establishment_types": ["Cafe"]},
+    "burger": {"popular_items": ["Hamburger"]},
+    "bar": {"establishment_types": ["Bar & Pub"]},
+    "pizza": {"popular_items": ["Pizza & Pasta"]},
+    "seafood": {"popular_items": ["Seafood"]},
+    "chicken": {"popular_items": ["Chicken"]},
+    "steak": {"popular_items": ["Steak & BBQ"]},
+    "ramen": {"popular_items": ["Noodles & Ramen"]},
 }
+
 
 def get_popular_by_category(category: str, page: int = 1, per_page: int = 15):
     """
     Fetches the top matching restaurants for a category. 
     Enforces quality limits because it's rendering a direct frontend browsing tier.
     """
-    safe_category = category.lower()
-    
-    if safe_category in EXACT_CATEGORY_MAP:
-        categories_to_search = EXACT_CATEGORY_MAP[safe_category]
-    else:
-        categories_to_search = [
-            category,
-            category.title(),
-            f"{category.title()} restaurant",
-        ]
+    safe_category = (category or "").lower()
+
+    filter_kwargs = EXACT_CATEGORY_FILTERS.get(safe_category)
+    if filter_kwargs is None:
+        # Best-effort fallback: try the input as-is against `cuisines`.
+        filter_kwargs = {"categories": [category]}
 
     # Calculate pagination offsets
     skip_value = (page - 1) * per_page
@@ -367,9 +345,9 @@ def get_popular_by_category(category: str, page: int = 1, per_page: int = 15):
     raw_restaurants = get_filtered_restaurants_repo(
         skip=skip_value,
         limit=per_page,
-        categories=categories_to_search,
         min_rating=4.0,
-        min_reviews=30
+        min_reviews=30,
+        **filter_kwargs,
     )
 
     return [format_restaurant_for_frontend(r) for r in raw_restaurants]
