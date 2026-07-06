@@ -16,12 +16,45 @@
 
 .friends-list {
   margin-top: 30px;
-
   display: flex;
-
   flex-direction: column;
-
   gap: 16px;
+}
+
+.friends-section {
+  margin-top: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.section-label {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #b09070;
+  margin-bottom: 4px;
+}
+
+.search-results-section {
+  background: #fdf8f3;
+  border: 1px solid #ecddc9;
+  border-radius: 20px;
+  padding: 16px;
+}
+
+.search-result-card {
+  border: 1px solid #f0e6d8;
+}
+
+.my-friends-section {
+  transition: opacity 0.2s;
+}
+
+.my-friends-section.dimmed {
+  opacity: 0.45;
+  pointer-events: none;
 }
 
 .friend-card {
@@ -108,6 +141,15 @@
   text-align: center;
   margin-top: 12px;
   font-size: 14px;
+}
+
+.friends-searching {
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
 }
 
 .remove-friend-btn {
