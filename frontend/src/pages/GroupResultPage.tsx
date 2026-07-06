@@ -68,6 +68,23 @@ export default function GroupResultPage() {
     };
   }, [currentRecommendation?.gmap_id]);
 
+  // Keep router history state in sync with the current recommendation so that
+  // navigating away (e.g., into the restaurant detail page) and hitting Back
+  // returns to the LATEST recommendation the user is viewing, not the one
+  // they originally landed with.
+  useEffect(() => {
+    if (!currentRecommendation) return;
+    if (location.state?.recommendation?.gmap_id === currentRecommendation.gmap_id) return;
+    navigate(location.pathname, {
+      replace: true,
+      state: {
+        ...(location.state || {}),
+        recommendation: currentRecommendation,
+      },
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentRecommendation]);
+
   const toggleAffectedFriend = (label: string) => {
     setSelectedFriendsAffected((prev) =>
       prev.includes(label) ? prev.filter((f) => f !== label) : [...prev, label]

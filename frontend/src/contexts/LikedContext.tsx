@@ -174,8 +174,12 @@ export function LikedProvider({ children }: { children: React.ReactNode }) {
       const data = await userService.getOnlineLikedRestaurants(userData.user_id);
 
       setLikedRestaurants(data.online_liked_restaurants);
-      setHasLoadedLikedRestaurants(true);
+    } catch (error) {
+      console.error("Failed to fetch online liked restaurants", error);
     } finally {
+      // Always mark as loaded so the personalization hydration guard completes,
+      // even when the user has no likes yet or the endpoint errors out.
+      setHasLoadedLikedRestaurants(true);
       setLoading(false);
     }
   }
@@ -210,9 +214,12 @@ export function LikedProvider({ children }: { children: React.ReactNode }) {
       );
 
       setOfflineLikedRestaurants(data.offline_liked_restaurants);
-      setHasLoadedOfflineLikedRestaurants(true);
     } catch (error) {
       console.error("Failed to fetch offline liked restaurants", error);
+    } finally {
+      // Always mark as loaded so the personalization hydration guard completes,
+      // even for brand-new users who aren’t in the offline CF matrix.
+      setHasLoadedOfflineLikedRestaurants(true);
     }
   }
 

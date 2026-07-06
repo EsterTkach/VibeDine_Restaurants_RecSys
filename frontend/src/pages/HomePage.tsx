@@ -11,6 +11,7 @@ import "./HomePage.css";
 
 import { defaultUserData, useAuth } from "../contexts/AuthContext";
 import { useHome } from "../contexts/HomeContext";
+import { useLiked } from "../contexts/LikedContext";
 import FoodAvatar from "../components/FoodAvatar";
 import PersonalizationProgressPill from "../components/PersonalizationProgressPill";
 import CarouselsLoader from "../components/CarouselsLoader";
@@ -34,9 +35,10 @@ export default function HomePage() {
    const {
     carousels,
     setCarousels,
-    hasLoadedHome,
-    setHasLoadedHome,
+    lastLoad,
+    setLastLoad,
   } = useHome();
+  const { likedRestaurants } = useLiked();
   const [loading, setLoading] = useState<boolean>(true);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
 
@@ -96,38 +98,46 @@ export default function HomePage() {
     localStorage.removeItem("user_data");
 
     setCarousels([]);
-    setHasLoadedHome(false);
+    setLastLoad(null);
     setShowAccountMenu(false);
     navigate("/login", { replace: true });
   };
   console.log("HomePage render");
   // BACKEND INTEGRATION EFFECT
-  // Fires only on mount and when the logged-in user changes. Mid-session
-  // likes set `hasLoadedHome=false` silently (see HomeContext); we pick that
-  // up on the next HomePage mount (i.e., when the user navigates back).
+  // Fires only on mount and when the logged-in user changes. Refetches only
+  // when: (a) never fetched, (b) different user, or (c) the online likes count
+  // changed since the last successful fetch. Otherwise reuses cached carousels.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     console.log("Home useEffect started");
     async function fetchDashboardData() {
-      if (hasLoadedHome) {
-        console.log("Home data already loaded, skipping fetch.");
+      if (!userId) {
+        navigate("/login", { replace: true });
+        return;
+      }
+
+      const currentOnlineLikesCount = likedRestaurants.length;
+      const shouldFetch =
+        !lastLoad ||
+        lastLoad.userId !== userId ||
+        lastLoad.onlineLikesCount !== currentOnlineLikesCount;
+
+      if (!shouldFetch) {
+        console.log("Home cache valid — skipping fetch.");
         setLoading(false);
         return;
       }
+
       try {
         setLoading(true);
         setErrorMessage(null); // Reset previous errors on reload
 
-        if (!userId) {
-          navigate("/login", { replace: true });
-          return;
-        }
         const data = await getHomeCarousels(userId);
 
         console.log("Home carousels response:", data);
 
         setCarousels(data.carousels || []);
-        setHasLoadedHome(true);
+        setLastLoad({ userId, onlineLikesCount: currentOnlineLikesCount });
         console.log("Carousels:", data.carousels);
         }
 
