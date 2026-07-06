@@ -1,19 +1,12 @@
 import { useState, useEffect } from "react";
 import AppShell from "../layouts/AppShell";
 import BottomNav from "../components/BottomNav";
+import FoodAvatar from "../components/FoodAvatar";
 import { getFriends, searchUsers, addFriend, removeFriend } from "../api/restaurants";
 import { useAuth } from "../contexts/AuthContext";
 import type { Friend } from "../types";
 
 import "./FriendsPage.css";
-
-const AVATAR_COLORS = [
-  "#d6b48a", "#8b6b4a", "#c9956d", "#b87a52", "#e8c9a0", "#a08060",
-];
-
-function avatarColor(index: number) {
-  return AVATAR_COLORS[index % AVATAR_COLORS.length];
-}
 
 export default function FriendsPage() {
   const { userData } = useAuth();
@@ -28,6 +21,7 @@ export default function FriendsPage() {
   const [addedId, setAddedId] = useState<string | null>(null);
   const [addError, setAddError] = useState<string | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [searching, setSearching] = useState(false);
 
   useEffect(() => {
     if (!userId) return;
@@ -42,6 +36,7 @@ export default function FriendsPage() {
       setHasSearched(false);
       return;
     }
+    setSearching(true);
     const timer = setTimeout(async () => {
       try {
         const results = await searchUsers(searchQuery, userId);
@@ -52,6 +47,7 @@ export default function FriendsPage() {
         setSearchResults([]);
       } finally {
         setHasSearched(true);
+        setSearching(false);
       }
     }, 400);
     return () => clearTimeout(timer);
@@ -111,15 +107,16 @@ export default function FriendsPage() {
         )}
 
         {searchQuery.trim().length >= 2 && (
-          <div className="friends-list">
-            {searchResults.map((user) => (
-              <div key={user.user_id} className="friend-card">
-                <div
-                  className="friend-avatar"
-                  style={{ background: avatarColor(user.avatar_index) }}
-                >
-                  {(user.name || user.username)[0].toUpperCase()}
-                </div>
+          <div className="friends-section search-results-section">
+            <h2 className="section-label">Search Results</h2>
+
+            {searching && (
+              <p className="friends-empty friends-searching">Searching...</p>
+            )}
+
+            {!searching && searchResults.map((user) => (
+              <div key={user.user_id} className="friend-card search-result-card">
+                <FoodAvatar avatar_index={user.avatar_index} size={46} />
                 <div style={{ flex: 1 }}>
                   <h3>{user.name || user.username}</h3>
                   <span>@{user.username}</span>
@@ -138,27 +135,24 @@ export default function FriendsPage() {
               </div>
             ))}
 
-            {hasSearched && searchResults.length === 0 && (
+            {!searching && hasSearched && searchResults.length === 0 && (
               <p className="friends-empty">No users found for "{searchQuery}"</p>
             )}
           </div>
         )}
 
-        <div className="friends-list">
+        <div className={`friends-section my-friends-section${searchQuery.trim().length >= 2 ? " dimmed" : ""}`}>
+          <h2 className="section-label">My Friends</h2>
+
           {loading && <p className="friends-empty">Loading...</p>}
 
-          {!loading && friends.length === 0 && !searchQuery && (
+          {!loading && friends.length === 0 && (
             <p className="friends-empty">No friends yet. Search to add some!</p>
           )}
 
           {friends.map((friend) => (
             <div key={friend.user_id} className="friend-card">
-              <div
-                className="friend-avatar"
-                style={{ background: avatarColor(friend.avatar_index) }}
-              >
-                {(friend.name || friend.username)[0].toUpperCase()}
-              </div>
+              <FoodAvatar avatar_index={friend.avatar_index} size={46} />
               <div style={{ flex: 1 }}>
                 <h3>{friend.name || friend.username}</h3>
                 <span>Food Explorer 🍜</span>
