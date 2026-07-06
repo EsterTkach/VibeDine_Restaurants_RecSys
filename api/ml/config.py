@@ -6,7 +6,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 DATA_PATH = BASE_DIR / "data"
 MODEL_PATH = BASE_DIR / "models"
 
-DATA_VERSION = "1"
+DATA_VERSION = "2"
 
 # Content-Based parameters
 MAX_FEATURES = 10000
