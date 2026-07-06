@@ -4,12 +4,14 @@ import BottomNav from "../components/BottomNav";
 import FoodAvatar from "../components/FoodAvatar";
 import { getFriends, searchUsers, addFriend, removeFriend } from "../api/restaurants";
 import { useAuth } from "../contexts/AuthContext";
+import { useHome } from "../contexts/HomeContext";
 import type { Friend } from "../types";
 
 import "./FriendsPage.css";
 
 export default function FriendsPage() {
   const { userData } = useAuth();
+  const { notifyLikeChanged } = useHome();
   const userId = userData.user_id;
 
   const [friends, setFriends] = useState<Friend[]>([]);
@@ -22,6 +24,12 @@ export default function FriendsPage() {
   const [addError, setAddError] = useState<string | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [searching, setSearching] = useState(false);
+
+  // Visiting Friends marks the home feed stale so the next Home visit fetches
+  // fresh recommendations reflecting any likes made in this session.
+  useEffect(() => {
+    notifyLikeChanged();
+  }, [notifyLikeChanged]);
 
   useEffect(() => {
     if (!userId) return;

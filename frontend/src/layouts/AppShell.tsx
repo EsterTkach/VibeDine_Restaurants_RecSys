@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import PersonalizationToast from "../components/PersonalizationToast";
 import "./AppShell.css";
 
 interface AppShellProps {
@@ -14,6 +15,7 @@ export default function AppShell({ children }: AppShellProps) {
             {children}
           </main>
         </div>
+        <PersonalizationToast />
       </div>
     </div>
   );

@@ -5,15 +5,12 @@ import AppShell from "../layouts/AppShell";
 import apiClient from "../api/client";
 import { useAuth } from "../contexts/AuthContext";
 import { useLiked } from "../contexts/LikedContext";
-import { useHome } from "../contexts/HomeContext";
 
 export default function RestaurantPage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const { userData } = useAuth();
   const { likedRestaurants, likeRestaurant, unlikeRestaurant } = useLiked();
-
-  const { notifyLikeChanged } = useHome();
 
   const liked = likedRestaurants.some((r) => r.gmap_id === id);
   const [restaurant, setRestaurant] = useState<any>(null);
@@ -41,8 +38,6 @@ export default function RestaurantPage() {
       } else {
         await likeRestaurant(id);
       }
-
-      notifyLikeChanged();
     } catch (error) {
       console.error("Failed to update liked restaurant", error);
     } finally {

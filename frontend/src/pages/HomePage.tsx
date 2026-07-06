@@ -12,6 +12,8 @@ import "./HomePage.css";
 import { defaultUserData, useAuth } from "../contexts/AuthContext";
 import { useHome } from "../contexts/HomeContext";
 import FoodAvatar from "../components/FoodAvatar";
+import PersonalizationProgressPill from "../components/PersonalizationProgressPill";
+import CarouselsLoader from "../components/CarouselsLoader";
 
 
 
@@ -100,10 +102,14 @@ export default function HomePage() {
   };
   console.log("HomePage render");
   // BACKEND INTEGRATION EFFECT
+  // Fires only on mount and when the logged-in user changes. Mid-session
+  // likes set `hasLoadedHome=false` silently (see HomeContext); we pick that
+  // up on the next HomePage mount (i.e., when the user navigates back).
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     console.log("Home useEffect started");
     async function fetchDashboardData() {
-      if (hasLoadedHome || carousels.length > 0) {
+      if (hasLoadedHome) {
         console.log("Home data already loaded, skipping fetch.");
         setLoading(false);
         return;
@@ -137,7 +143,7 @@ export default function HomePage() {
     }
     console.log("fetchDashboardData called");
     fetchDashboardData();
-  }, [userId, hasLoadedHome, carousels.length, navigate, setCarousels, setHasLoadedHome]);
+  }, [userId]);
 
   const emojiMap: Record<string, string> = {
     recommended_for_you: "✨",
@@ -205,8 +211,8 @@ export default function HomePage() {
             marginTop: '24px'
           }}
         >
-          {loading ? (
-            <div className="text-center p-10 text-gray-400">Loading your customized feed...</div>
+          {loading && carousels.length === 0 ? (
+            <CarouselsLoader />
           ) : errorMessage ? (
             // CLEAN ALTERNATIVE: Replaces carousels with an interactive alert box if something breaks
             <div className="error-banner" style={{ textAlign: 'center', padding: '40px 20px', background: '#fff5f5', borderRadius: '12px', border: '1px dashed #feb2b2', color: '#c53030' }}>

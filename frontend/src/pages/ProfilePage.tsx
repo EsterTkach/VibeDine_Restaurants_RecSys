@@ -1,5 +1,5 @@
 import "./ProfilePage.css";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Heart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -20,12 +20,18 @@ export default function ProfilePage() {
   const navigate = useNavigate();
 
   const { userData } = useAuth();
-  const { setHasLoadedHome } = useHome();
+  const { setHasLoadedHome, notifyLikeChanged } = useHome();
   const { likedRestaurants, offlineLikedRestaurants, loading, unlikeRestaurant } = useLiked();
 
   const [removingRestaurantIds, setRemovingRestaurantIds] = useState<string[]>(
     [],
   );
+
+  // Visiting Profile marks the home feed stale so the next Home visit fetches
+  // fresh recommendations (personalized to any likes made in this session).
+  useEffect(() => {
+    notifyLikeChanged();
+  }, [notifyLikeChanged]);
 
   const handleUnlike = async (restaurantId: string) => {
     setRemovingRestaurantIds((prev) => [...prev, restaurantId]);
