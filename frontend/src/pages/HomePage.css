@@ -3,8 +3,8 @@
   flex-direction: column;
   height: 100%;
   overflow-y: auto;
-  padding-top: 40px;
-  padding-bottom: 120px;
+  padding-top: 24px;
+  padding-bottom: 80px;
   box-sizing: border-box;
 
   scrollbar-width: none;
@@ -150,7 +150,7 @@
 }
 
 section {
-  margin-bottom: 34px;
+  margin-bottom: 28px;
 }
 
 section h2 {
@@ -193,7 +193,8 @@ section h2 {
 .restaurant-card-home img {
   width: 100%;
 
-  height: 160px;
+  /* slightly reduced image height to fit more rows on screen */
+  height: 140px;
 
   object-fit: cover;
 }
@@ -207,7 +208,7 @@ section h2 {
 
 .restaurant-card-home.restaurant-card-list img {
   width: 140px;
-  height: 140px;
+  height: 120px;
   flex-shrink: 0;
 }
 

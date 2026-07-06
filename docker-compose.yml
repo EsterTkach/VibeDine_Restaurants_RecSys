@@ -9,6 +9,7 @@ services:
       - ./api:/api
       - ./data:/data
       - ./models:/models
+      - ./enums:/enums
     environment:
       - WATCHFILES_FORCE_POLLING=true
       - MONGO_URI=mongodb+srv://ayarotbart_db_user:x0fGOfhRThKnkX4S@cluster0.yodtpzx.mongodb.net/?appName=Cluster0
