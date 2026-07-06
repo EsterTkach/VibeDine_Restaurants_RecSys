@@ -17,10 +17,10 @@ import { LikedProvider } from "./contexts/LikedContext.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <AuthProvider>
-    <LikedProvider>
-      <HomeProvider>
+    <HomeProvider>
+      <LikedProvider>
         <App />
-      </HomeProvider>
-    </LikedProvider>
+      </LikedProvider>
+    </HomeProvider>
   </AuthProvider>,
 );

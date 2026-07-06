@@ -4,6 +4,7 @@ import AppShell from "../layouts/AppShell";
 import { getHomeCarousels, createGroupSession } from "../api/restaurants";
 import { useAuth } from "../contexts/AuthContext";
 import { useHome } from "../contexts/HomeContext";
+import { useLiked } from "../contexts/LikedContext";
 import "./LoadingPage.css";
 
 export default function LoadingPage() {
@@ -19,7 +20,8 @@ export default function LoadingPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { userData } = useAuth();
-  const { setCarousels, setHasLoadedHome } = useHome();
+  const { setCarousels, setLastLoad } = useHome();
+  const { likedRestaurants } = useLiked();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -69,7 +71,7 @@ export default function LoadingPage() {
       try {
         const data = await getHomeCarousels(userId);
         setCarousels(data.carousels || []);
-        setHasLoadedHome(true);
+        setLastLoad({ userId, onlineLikesCount: likedRestaurants.length });
         navigate(nextPage, {
           replace: true,
           state: location.state,
@@ -77,7 +79,7 @@ export default function LoadingPage() {
       } catch (error) {
         console.error("Failed to load home recommendations:", error);
         setCarousels([]);
-        setHasLoadedHome(true);
+        setLastLoad({ userId, onlineLikesCount: likedRestaurants.length });
         navigate(nextPage, {
           replace: true,
           state: location.state,
@@ -90,7 +92,7 @@ export default function LoadingPage() {
     return () => {
       clearInterval(interval);
     };
-  }, [location.state, navigate, setCarousels, setHasLoadedHome, userData.user_id, messages.length]);
+  }, [location.state, navigate, setCarousels, setLastLoad, userData.user_id, likedRestaurants.length, messages.length]);
 
   return (
     <AppShell>

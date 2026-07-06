@@ -3,45 +3,44 @@ import {
   useContext,
   useState,
   useCallback,
-  useRef,
   type ReactNode,
 } from "react";
 
 import type { CarouselData } from "../types";
 
-const LIKES_BEFORE_REFRESH = 3;
+// Snapshot of the state at the last successful home fetch. HomePage compares
+// (userId, onlineLikesCount) on mount and only refetches when either changed.
+export type HomeLoadSnapshot = {
+  userId: string;
+  onlineLikesCount: number;
+};
 
 type HomeContextType = {
   carousels: CarouselData[];
   setCarousels: React.Dispatch<React.SetStateAction<CarouselData[]>>;
-  hasLoadedHome: boolean;
-  setHasLoadedHome: React.Dispatch<React.SetStateAction<boolean>>;
-  notifyLikeChanged: () => void;
+  lastLoad: HomeLoadSnapshot | null;
+  setLastLoad: (snapshot: HomeLoadSnapshot | null) => void;
 };
 
 const HomeContext = createContext<HomeContextType | null>(null);
 
 export function HomeProvider({ children }: { children: ReactNode }) {
   const [carousels, setCarousels] = useState<CarouselData[]>([]);
-  const [hasLoadedHome, setHasLoadedHome] = useState(false);
-  const likeCountRef = useRef(0);
+  const [lastLoad, setLastLoadState] =
+    useState<HomeLoadSnapshot | null>(null);
 
-  const notifyLikeChanged = useCallback(() => {
-    likeCountRef.current += 1;
-    if (likeCountRef.current >= LIKES_BEFORE_REFRESH) {
-      likeCountRef.current = 0;
-      setHasLoadedHome(false);
-    }
-  }, []);
+  const setLastLoad = useCallback(
+    (snapshot: HomeLoadSnapshot | null) => setLastLoadState(snapshot),
+    [],
+  );
 
   return (
     <HomeContext.Provider
       value={{
         carousels,
         setCarousels,
-        hasLoadedHome,
-        setHasLoadedHome,
-        notifyLikeChanged,
+        lastLoad,
+        setLastLoad,
       }}
     >
       {children}

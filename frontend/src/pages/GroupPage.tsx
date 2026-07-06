@@ -21,10 +21,10 @@ export default function GroupPage() {
   const [selectedFriends, setSelectedFriends] = useState<Friend[]>([]);
   const [error, setError] = useState<string>(location.state?.groupError || "");
 
-  const [budget, setBudget] = useState("");
-  const [distance, setDistance] = useState("");
+  const [budget, setBudget] = useState<string[]>([]);
+  const [distance, setDistance] = useState<string[]>([]);
   const [accessibility, setAccessibility] = useState("");
-  const [dietary, setDietary] = useState("");
+  const [dietary, setDietary] = useState<string[]>([]);
   const [selectedFoodTypes, setSelectedFoodTypes] = useState<MatchingCategory[]>([]);
 
   const foodCategories: { key: MatchingCategory; label: string; emoji: string }[] = [
@@ -63,6 +63,17 @@ export default function GroupPage() {
     );
   };
 
+  // Toggle helper for the multi-select preference groups (budget, distance,
+  // dietary). Tap to add, tap again to remove.
+  const toggleInList = (
+    value: string,
+    setList: React.Dispatch<React.SetStateAction<string[]>>,
+  ) => {
+    setList((prev) =>
+      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value],
+    );
+  };
+
   useEffect(() => {
     if (!userId) return;
     getFriends(userId)
@@ -86,16 +97,48 @@ export default function GroupPage() {
 
   const buildFilters = (): Record<string, unknown> => {
     const filters: Record<string, unknown> = {};
-    if (budget) filters.price = budget;
-    if (distance === "Walkable") filters.radius_km = 1;
-    else if (distance === "15 Min") filters.radius_km = 3;
-    else if (distance === "30 Min") filters.radius_km = 6;
+
+    // Budget (multi): send max_price = highest selected. Backend filters to
+    // restaurants at or below that tier (e.g. picking $ + $$ → max_price = $$,
+    // matches $ and $$ but not $$$).
+    if (budget.length > 0) {
+      const priceOrder = ["$", "$$", "$$$", "$$$$"];
+      const highestIdx = Math.max(
+        ...budget.map((b) => priceOrder.indexOf(b)).filter((i) => i >= 0),
+      );
+      if (highestIdx >= 0) filters.max_price = priceOrder[highestIdx];
+    }
+
+    // Distance (multi): send radius_km = max walking radius selected. Picking
+    // “Anywhere” drops the geo filter entirely.
+    if (distance.length > 0 && !distance.includes("Anywhere")) {
+      const radiusByLabel: Record<string, number> = {
+        "Walkable": 1,
+        "15 Min": 3,
+        "30 Min": 6,
+      };
+      const maxKm = Math.max(
+        ...distance.map((d) => radiusByLabel[d] ?? 0),
+      );
+      if (maxKm > 0) filters.radius_km = maxKm;
+    }
+
     if (accessibility === "Required") filters.is_accessible = true;
-    if (dietary === "Vegetarian") filters.dietary_preferences = ["Vegetarian"];
-    else if (dietary === "Vegan") filters.dietary_preferences = ["Vegan"];
-    else if (dietary === "Gluten Free") filters.dietary_preferences = ["Gluten-Free"];
-    else if (dietary === "Kosher") filters.dietary_preferences = ["Kosher"];
-    else if (dietary === "Halal") filters.dietary_preferences = ["Halal"];
+
+    // Dietary (multi): send dietary_preferences as a list. “None” disables it.
+    if (dietary.length > 0 && !dietary.includes("None")) {
+      const dietaryEnumByLabel: Record<string, string> = {
+        "Vegetarian": "Vegetarian",
+        "Vegan": "Vegan",
+        "Gluten Free": "Gluten-Free",
+        "Kosher": "Kosher",
+        "Halal": "Halal",
+      };
+      const values = dietary
+        .map((d) => dietaryEnumByLabel[d])
+        .filter(Boolean);
+      if (values.length > 0) filters.dietary_preferences = values;
+    }
 
     // Map selected food types to their respective filter fields
     selectedFoodTypes.forEach((cat) => {
@@ -193,8 +236,8 @@ export default function GroupPage() {
                   {["$", "$$", "$$$", "$$$$"].map((value) => (
                     <button
                       key={value}
-                      className={budget === value ? "segment active" : "segment"}
-                      onClick={() => setBudget(value)}
+                      className={budget.includes(value) ? "segment active" : "segment"}
+                      onClick={() => toggleInList(value, setBudget)}
                     >
                       {value}
                     </button>
@@ -208,8 +251,8 @@ export default function GroupPage() {
                   {["Walkable", "15 Min", "30 Min", "Anywhere"].map((value) => (
                     <button
                       key={value}
-                      className={distance === value ? "segment active" : "segment"}
-                      onClick={() => setDistance(value)}
+                      className={distance.includes(value) ? "segment active" : "segment"}
+                      onClick={() => toggleInList(value, setDistance)}
                     >
                       {value}
                     </button>
@@ -238,8 +281,8 @@ export default function GroupPage() {
                   {["None", "Vegetarian", "Vegan", "Kosher", "Halal", "Gluten Free"].map((value) => (
                     <button
                       key={value}
-                      className={dietary === value ? "segment active" : "segment"}
-                      onClick={() => setDietary(value)}
+                      className={dietary.includes(value) ? "segment active" : "segment"}
+                      onClick={() => toggleInList(value, setDietary)}
                     >
                       {value}
                     </button>

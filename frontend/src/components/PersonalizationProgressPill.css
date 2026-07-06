@@ -1,0 +1,38 @@
+.personalization-progress {
+  margin: 16px 20px 0;
+  padding: 14px 16px;
+  background: #fdf6ec;
+  border: 1px solid #ecdcc4;
+  border-radius: 18px;
+  box-shadow: 0 4px 12px rgba(139, 107, 74, 0.08);
+}
+
+.personalization-progress__label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #6e553d;
+}
+
+.personalization-progress__track {
+  margin-top: 10px;
+  height: 6px;
+  border-radius: 999px;
+  background: #ecdcc4;
+  overflow: hidden;
+}
+
+.personalization-progress__fill {
+  height: 100%;
+  background: linear-gradient(90deg, #b98a5a, #d4a56b);
+  border-radius: 999px;
+  transition: width 300ms ease-out;
+}
+
+.personalization-progress__hint {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: #a06a3d;
+}
