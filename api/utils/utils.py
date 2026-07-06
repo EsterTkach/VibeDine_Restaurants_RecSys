@@ -80,12 +80,6 @@ def get_meal_time() -> MealTime:
         return MealTime.DINNER
 
 
-def get_meal_time_string() -> str:
-    """
-    Checks the current server time and returns 'breakfast', 'lunch', or 'dinner'.
-    """
-    return get_meal_time().value
-
 def extract_gmap_ids(restaurants: list) -> list:
     """
     Extracts a clean list of gmap_id strings from a list of restaurant dictionaries.

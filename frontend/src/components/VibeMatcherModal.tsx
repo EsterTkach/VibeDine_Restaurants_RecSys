@@ -112,20 +112,19 @@ export default function VibeMatcherModal({
     }
 
     if (accessibilityOption === "Required") {
-      addFilterValues("accessibility", ["Wheelchair accessible entrance"]);
+      filters.is_accessible = true;
     }
 
     if (dietaryOption && dietaryOption !== "None") {
-      addFilterValues("offerings", [dietaryOption]);
+      // "Gluten Free" (UI) -> "Gluten-Free" (DietaryPreference enum value)
+      const dietaryValue =
+        dietaryOption === "Gluten Free" ? "Gluten-Free" : dietaryOption;
+      addFilterValues("dietary_preferences", [dietaryValue]);
     }
 
-    if (dineOption === "Takeout") {
-      addFilterValues("service_options", ["Takeout"]);
-    }
-
-    if (dineOption === "Dine-in") {
-      addFilterValues("service_options", ["Dine-in"]);
-    }
+    // NOTE: `dineOption` (Dine-in / Takeout) is intentionally not sent to the
+    // backend — there is no corresponding enum / restaurant field today. The
+    // UI selection is kept for future extension.
 
     if (distanceOption === "Walking Distance") {
       filters.radius_km = 2;

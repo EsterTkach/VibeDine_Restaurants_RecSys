@@ -3,26 +3,19 @@ from api.db.mongo import (restaurants_collection, users_collection)
 def get_filtered_restaurants_repo(
     skip: int = 0,
     limit: int = 50,
-    categories: list = None, # AKA- cuisines
-    establishment_types: list = None,
-    meal_types: list = None,
-    dining_styles: list = None,
-    popular_items: list = None,
-    dietary_preferences: list = None,
-    accessibility: list = None, # Unsupported by data (Legacy)
-    service_options: list = None, # Unsupported by data (Legacy)
-    atmosphere: list = None, # Unsupported by data (Legacy)
-    dining_options: list = None, # Unsupported by data (Legacy)
-    crowd: list = None, # Unsupported by data (Legacy)
-    offerings: list = None, # Unsupported by data (Legacy)
-    dietary_restrictions: list = None, # Unsupported by data (Legacy)
-    vibe: list = None, # NEW: Replaces atmosphere/crowd
-    is_accessible: bool = None, # NEW: Strict boolean for accessibility
+    categories: list = None, # AKA- cuisines (CuisineType values)
+    establishment_types: list = None, # EstablishmentType values
+    meal_types: list = None, # MealType values
+    dining_styles: list = None, # DiningStyle values
+    popular_items: list = None, # PopularFoodItem values
+    dietary_preferences: list = None, # DietaryPreference values
+    vibe: list = None, # Vibe values (replaces legacy atmosphere/crowd)
+    is_accessible: bool = None, # Strict boolean for accessibility
     min_rating: float = 0.0,
     min_reviews: int = 0,
     max_reviews: int = None,
     max_price: str = None,
-    latitude: float = None, 
+    latitude: float = None,
     longitude: float = None,
     radius_km: float = 15,
     price: str = None,
@@ -53,15 +46,13 @@ def get_filtered_restaurants_repo(
     Args:
         skip (int): Pagination offset. Defaults to 0.
         limit (int): Maximum number of top documents to return. Defaults to 50.
-        categories (list, optional): Exact-match category strings (e.g., ["Sushi"]).
-        accessibility (list, optional): Legacy accessibility tags.
-        service_options (list, optional): Legacy service tags (e.g., ["Delivery", "Takeout"]).
-        atmosphere (list, optional): Legacy atmosphere tags (e.g., ["Cozy", "Casual"]).
-        dining_options (list, optional): Legacy dining tags.
-        crowd (list, optional): Legacy crowd tags.
-        offerings (list, optional): Legacy offering tags.
-        dietary_restrictions (list, optional): Legacy dietary restriction tags (e.g., ["Halal", "Vegan"]).
-        vibe (list, optional): Vibe tags (e.g., ["Romantic", "Bustling"]). 
+        categories (list, optional): CuisineType values (e.g., ["Italian"]). Filters `cuisines`.
+        establishment_types (list, optional): EstablishmentType values (e.g., ["Cafe"]).
+        meal_types (list, optional): MealType values (e.g., ["Dinner"]).
+        dining_styles (list, optional): DiningStyle values (e.g., ["Fast Food / Quick Bite"]).
+        popular_items (list, optional): PopularFoodItem values (e.g., ["Sushi"]).
+        dietary_preferences (list, optional): DietaryPreference values (e.g., ["Vegan"]).
+        vibe (list, optional): Vibe values (e.g., ["Cozy", "Romantic"]).
         is_accessible (bool, optional): Strict boolean flag for physical accessibility.
         min_rating (float, optional): The absolute minimum average rating required. Defaults to 0.0.
         min_reviews (int, optional): The absolute minimum number of reviews required. Defaults to 0.
@@ -91,15 +82,8 @@ def get_filtered_restaurants_repo(
     dining_styles = ensure_list(dining_styles)
     popular_items = ensure_list(popular_items)
     dietary_preferences = ensure_list(dietary_preferences)
-    accessibility = ensure_list(accessibility)
-    service_options = ensure_list(service_options)
-    atmosphere = ensure_list(atmosphere)
-    dining_options = ensure_list(dining_options)
-    crowd = ensure_list(crowd)
-    offerings = ensure_list(offerings)
-    dietary_restrictions = ensure_list(dietary_restrictions)
     vibe = ensure_list(vibe)
-    
+
     # 1. Build the base Match Query
     query = {}
 
@@ -140,7 +124,7 @@ def get_filtered_restaurants_repo(
     if is_accessible is not None:
         query["is_accessible"] = is_accessible
 
-    # Apply flexible $in filters
+    # Apply flexible $in filters (all backed by enum values in restaurant docs)
     if categories:
         query["cuisines"] = {"$in": categories}
     if establishment_types:
@@ -153,20 +137,6 @@ def get_filtered_restaurants_repo(
         query["popular_items"] = {"$in": popular_items}
     if dietary_preferences:
         query["dietary_preferences"] = {"$in": dietary_preferences}
-    if accessibility:
-        query["accessibility"] = {"$in": accessibility}
-    if service_options:
-        query["service_options"] = {"$in": service_options}
-    if atmosphere:
-        query["atmosphere"] = {"$in": atmosphere}
-    if dining_options:
-        query["dining_options"] = {"$in": dining_options}
-    if crowd:
-        query["crowd"] = {"$in": crowd}
-    if offerings:
-        query["offerings"] = {"$in": offerings}
-    if dietary_restrictions:
-        query["dietary_restrictions"] = {"$in": dietary_restrictions}
     if vibe:
         query["vibe"] = {"$in": vibe}
 
@@ -215,20 +185,6 @@ def get_filtered_restaurants_repo(
         score_components.append(add_intersection("popular_items", popular_items))
     if dietary_preferences:
         score_components.append(add_intersection("dietary_preferences", dietary_preferences))
-    if accessibility:
-        score_components.append(add_intersection("accessibility", accessibility))
-    if service_options:
-        score_components.append(add_intersection("service_options", service_options))
-    if atmosphere:
-        score_components.append(add_intersection("atmosphere", atmosphere))
-    if dining_options:
-        score_components.append(add_intersection("dining_options", dining_options))
-    if crowd:
-        score_components.append(add_intersection("crowd", crowd))
-    if offerings:
-        score_components.append(add_intersection("offerings", offerings))
-    if dietary_restrictions:
-        score_components.append(add_intersection("dietary_restrictions", dietary_restrictions))
     if vibe:
         score_components.append(add_intersection("vibe", vibe))
 
