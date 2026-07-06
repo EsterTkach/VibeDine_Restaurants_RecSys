@@ -111,8 +111,10 @@ export function LikedProvider({ children }: { children: React.ReactNode }) {
     previousCountRef.current = augmentedLikesCount;
 
     if (previous === null) return;
-    // Only celebrate real increases (a user-driven like), not decreases.
-    if (augmentedLikesCount <= previous) return;
+    // Only fire on a real single-like increment. Skips bulk jumps from
+    // fetches finishing (online+offline landing in the same commit can push
+    // the count by >1) and any decreases (unlikes).
+    if (augmentedLikesCount !== previous + 1) return;
 
     if (
       augmentedLikesCount >= PERSONALIZATION_THRESHOLD &&
