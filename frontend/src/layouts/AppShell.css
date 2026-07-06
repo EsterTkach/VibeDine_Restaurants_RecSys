@@ -13,8 +13,9 @@
 .phone-frame {
   width: 100%;
   max-width: 430px;
-  height: 88vh;
-  max-height: 860px;
+  /* make the phone frame taller so more content fits without scrolling */
+  height: 94vh;
+  max-height: 980px;
   background: #ffffff;
   border-radius: 44px;
   overflow: hidden;
