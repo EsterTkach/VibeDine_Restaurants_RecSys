@@ -107,13 +107,15 @@ export default function FriendsPage() {
         )}
 
         {searchQuery.trim().length >= 2 && (
-          <div className="friends-list">
+          <div className="friends-section search-results-section">
+            <h2 className="section-label">Search Results</h2>
+
             {searching && (
               <p className="friends-empty friends-searching">Searching...</p>
             )}
 
             {!searching && searchResults.map((user) => (
-              <div key={user.user_id} className="friend-card">
+              <div key={user.user_id} className="friend-card search-result-card">
                 <FoodAvatar avatar_index={user.avatar_index} size={46} />
                 <div style={{ flex: 1 }}>
                   <h3>{user.name || user.username}</h3>
@@ -139,10 +141,12 @@ export default function FriendsPage() {
           </div>
         )}
 
-        <div className="friends-list">
+        <div className={`friends-section my-friends-section${searchQuery.trim().length >= 2 ? " dimmed" : ""}`}>
+          <h2 className="section-label">My Friends</h2>
+
           {loading && <p className="friends-empty">Loading...</p>}
 
-          {!loading && friends.length === 0 && !searchQuery && (
+          {!loading && friends.length === 0 && (
             <p className="friends-empty">No friends yet. Search to add some!</p>
           )}
 
