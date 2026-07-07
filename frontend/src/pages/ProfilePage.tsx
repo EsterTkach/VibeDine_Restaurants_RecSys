@@ -6,7 +6,6 @@ import { useNavigate } from "react-router-dom";
 import AppShell from "../layouts/AppShell";
 import BottomNav from "../components/BottomNav";
 import { useAuth } from "../contexts/AuthContext";
-import { useHome } from "../contexts/HomeContext";
 import { useLiked } from "../contexts/LikedContext";
 import SectionDivider from "../components/SectionDivider";
 import FoodAvatar from "../components/FoodAvatar";
@@ -16,7 +15,6 @@ export default function ProfilePage() {
   const navigate = useNavigate();
 
   const { userData } = useAuth();
-  const { setHasLoadedHome } = useHome();
   const { likedRestaurants, offlineLikedRestaurants, loading, unlikeRestaurant } = useLiked();
 
   const [removingRestaurantIds, setRemovingRestaurantIds] = useState<string[]>(
@@ -26,13 +24,11 @@ export default function ProfilePage() {
   const handleUnlike = async (restaurantId: string) => {
     setRemovingRestaurantIds((prev) => [...prev, restaurantId]);
 
-    // await userService.unlikeRestaurant(userData.user_id, restaurantId);
-
     setTimeout(async () => {
       try {
-
+        // Unlike updates the online likes count in LikedContext, which is what
+        // HomePage compares against on next mount to decide whether to refresh.
         await unlikeRestaurant(restaurantId);
-        setHasLoadedHome(false);
       } catch (err) {
         console.error(err);
       } finally {
@@ -52,7 +48,7 @@ export default function ProfilePage() {
             <FoodAvatar avatar_index={userData.avatar_index} size={110} />
           </div>
           <h1 className="profile-name">{userData.name}</h1>
-          <p className="profile-subtitle">Food Explorer 🍜</p>{" "}
+          <p className="profile-subtitle">@{userData.username}</p>{" "}
         </div>
 
         {/* Restaurants You Love Section */}

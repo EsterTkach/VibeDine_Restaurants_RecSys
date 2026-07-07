@@ -35,6 +35,22 @@
   line-height: 1.6;
 }
 
+.result-meta {
+  margin-top: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  color: #6e553d;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.result-address {
+  margin-top: 8px;
+  color: #6e553d;
+  font-size: 14px;
+}
+
 .member-list {
   margin-top: 32px;
 
@@ -43,6 +59,20 @@
   flex-direction: column;
 
   gap: 10px;
+}
+
+.member-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: white;
+  padding: 10px 14px;
+  border-radius: 14px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.05);
+}
+
+.member-item span {
+  font-size: 15px;
 }
 
 .member-list span {

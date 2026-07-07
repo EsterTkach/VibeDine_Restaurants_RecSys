@@ -2,6 +2,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 
 import RestaurantCard from "../components/RestaurantCard";
+import FoodAvatar from "../components/FoodAvatar";
 import apiClient from "../api/client";
 import {
   submitGroupSessionFeedback,
@@ -24,9 +25,16 @@ export default function GroupResultPage() {
 
   const [currentRecommendation, setCurrentRecommendation] =
     useState<GroupRecommendation | null>(location.state?.recommendation || null);
-  const [resolvedImageUrl, setResolvedImageUrl] = useState<string | undefined>(
-    location.state?.recommendation?.image_url || undefined
+  // Full restaurant doc (from /restaurants/{gmap_id}). Holds image_url plus
+  // the richer fields the group endpoint doesn’t return: num_of_reviews,
+  // full cuisines list, address, hours, etc.
+  const [resolvedRestaurant, setResolvedRestaurant] = useState<any | null>(
+    location.state?.recommendation || null
   );
+  const resolvedImageUrl: string | undefined =
+    resolvedRestaurant?.image_url ||
+    currentRecommendation?.image_url ||
+    undefined;
 
   const [showModal, setShowModal] = useState(false);
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
@@ -36,12 +44,7 @@ export default function GroupResultPage() {
 
   useEffect(() => {
     if (!currentRecommendation) {
-      setResolvedImageUrl(undefined);
-      return;
-    }
-
-    if (currentRecommendation.image_url) {
-      setResolvedImageUrl(currentRecommendation.image_url);
+      setResolvedRestaurant(null);
       return;
     }
 
@@ -51,19 +54,36 @@ export default function GroupResultPage() {
       .get(`/restaurants/${currentRecommendation.gmap_id}`)
       .then((res) => {
         if (!cancelled) {
-          setResolvedImageUrl(res.data?.image_url || "");
+          setResolvedRestaurant(res.data || currentRecommendation);
         }
       })
       .catch(() => {
         if (!cancelled) {
-          setResolvedImageUrl("");
+          setResolvedRestaurant(currentRecommendation);
         }
       });
 
     return () => {
       cancelled = true;
     };
-  }, [currentRecommendation?.gmap_id, currentRecommendation?.image_url]);
+  }, [currentRecommendation?.gmap_id]);
+
+  // Keep router history state in sync with the current recommendation so that
+  // navigating away (e.g., into the restaurant detail page) and hitting Back
+  // returns to the LATEST recommendation the user is viewing, not the one
+  // they originally landed with.
+  useEffect(() => {
+    if (!currentRecommendation) return;
+    if (location.state?.recommendation?.gmap_id === currentRecommendation.gmap_id) return;
+    navigate(location.pathname, {
+      replace: true,
+      state: {
+        ...(location.state || {}),
+        recommendation: currentRecommendation,
+      },
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentRecommendation]);
 
   const toggleAffectedFriend = (label: string) => {
     setSelectedFriendsAffected((prev) =>
@@ -102,7 +122,7 @@ export default function GroupResultPage() {
       );
 
       setCurrentRecommendation(response.recommendation);
-      setResolvedImageUrl(response.recommendation?.image_url || "");
+      setResolvedRestaurant(response.recommendation || null);
       setSelectedFriendsAffected([]);
       setSelectedReason("");
       setShowModal(false);
@@ -191,16 +211,74 @@ export default function GroupResultPage() {
           <h1>{currentRecommendation?.name || "No match found"}</h1>
 
           {currentRecommendation ? (
-            <RestaurantCard
-              restaurant={{
-                gmap_id: currentRecommendation.gmap_id,
-                name: currentRecommendation.name,
-                cuisine: currentRecommendation.cuisines?.[0] || "",
-                avg_rating: currentRecommendation.avg_rating || 0,
-                price: (currentRecommendation.price as '$' | '$$' | '$$$' | undefined) ?? '$',
-                image_url: resolvedImageUrl || currentRecommendation.image_url || "",
-              }}
-            />
+            <>
+              <RestaurantCard
+                restaurant={{
+                  gmap_id: currentRecommendation.gmap_id,
+                  name: currentRecommendation.name,
+                  cuisine:
+                    resolvedRestaurant?.cuisines?.[0] ||
+                    currentRecommendation.cuisines?.[0] ||
+                    "",
+                  avg_rating:
+                    resolvedRestaurant?.avg_rating ||
+                    currentRecommendation.avg_rating ||
+                    0,
+                  price:
+                    ((resolvedRestaurant?.price ||
+                      currentRecommendation.price) as
+                      | '$'
+                      | '$$'
+                      | '$$$'
+                      | undefined) ?? '$',
+                  image_url:
+                    resolvedImageUrl ||
+                    currentRecommendation.image_url ||
+                    "",
+                }}
+              />
+
+              <div className="result-meta">
+                {(resolvedRestaurant?.avg_rating ??
+                  currentRecommendation.avg_rating) != null && (
+                  <span>
+                    ⭐{" "}
+                    {Number(
+                      resolvedRestaurant?.avg_rating ??
+                        currentRecommendation.avg_rating,
+                    ).toFixed(1)}
+                  </span>
+                )}
+                {resolvedRestaurant?.num_of_reviews != null && (
+                  <span>
+                    • {Number(resolvedRestaurant.num_of_reviews).toLocaleString()} reviews
+                  </span>
+                )}
+                {(resolvedRestaurant?.price ||
+                  currentRecommendation.price) && (
+                  <span>
+                    • {resolvedRestaurant?.price || currentRecommendation.price}
+                  </span>
+                )}
+                {(resolvedRestaurant?.cuisines?.length ||
+                  currentRecommendation.cuisines?.length) && (
+                  <span>
+                    •{" "}
+                    {(
+                      resolvedRestaurant?.cuisines ||
+                      currentRecommendation.cuisines ||
+                      []
+                    )
+                      .slice(0, 2)
+                      .join(" · ")}
+                  </span>
+                )}
+              </div>
+
+              {resolvedRestaurant?.address && (
+                <div className="result-address">📍 {resolvedRestaurant.address}</div>
+              )}
+            </>
           ) : null}
 
           <p>
@@ -211,9 +289,15 @@ export default function GroupResultPage() {
 
           <div className="member-list">
             <h3>Group Size: {selectedFriends.length + 1}</h3>
-            <span>You ({currentUserName})</span>
+            <div className="member-item">
+              <FoodAvatar avatar_index={0} size={36} />
+              <span>You ({currentUserName})</span>
+            </div>
             {selectedFriends.map((f: Friend) => (
-              <span key={f.user_id}>{f.name || f.username}</span>
+              <div key={f.user_id} className="member-item">
+                <FoodAvatar avatar_index={f.avatar_index} size={36} />
+                <span>{f.name || f.username}</span>
+              </div>
             ))}
           </div>
 

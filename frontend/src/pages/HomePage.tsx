@@ -11,7 +11,10 @@ import "./HomePage.css";
 
 import { defaultUserData, useAuth } from "../contexts/AuthContext";
 import { useHome } from "../contexts/HomeContext";
+import { PERSONALIZATION_THRESHOLD, useLiked } from "../contexts/LikedContext";
 import FoodAvatar from "../components/FoodAvatar";
+import PersonalizationProgressPill from "../components/PersonalizationProgressPill";
+import CarouselsLoader from "../components/CarouselsLoader";
 
 
 
@@ -32,9 +35,10 @@ export default function HomePage() {
    const {
     carousels,
     setCarousels,
-    hasLoadedHome,
-    setHasLoadedHome,
+    lastLoad,
+    setLastLoad,
   } = useHome();
+  const { likedRestaurants } = useLiked();
   const [loading, setLoading] = useState<boolean>(true);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
 
@@ -94,34 +98,53 @@ export default function HomePage() {
     localStorage.removeItem("user_data");
 
     setCarousels([]);
-    setHasLoadedHome(false);
+    setLastLoad(null);
     setShowAccountMenu(false);
     navigate("/login", { replace: true });
   };
   console.log("HomePage render");
   // BACKEND INTEGRATION EFFECT
+  // Fires only on mount and when the logged-in user changes. Refetches only
+  // when: (a) never fetched, (b) different user, or (c) the online likes count
+  // changed since the last successful fetch. Otherwise reuses cached carousels.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     console.log("Home useEffect started");
     async function fetchDashboardData() {
-      if (hasLoadedHome || carousels.length > 0) {
-        console.log("Home data already loaded, skipping fetch.");
+      if (!userId) {
+        navigate("/login", { replace: true });
+        return;
+      }
+
+      const currentOnlineLikesCount = likedRestaurants.length;
+      // Both current and previous counts below the personalization threshold
+      // means the backend still treats the user as cold-start — the feed would
+      // be identical. Skip the fetch to avoid a pointless network round-trip.
+      const bothStillColdStart =
+        lastLoad !== null &&
+        currentOnlineLikesCount < PERSONALIZATION_THRESHOLD &&
+        lastLoad.onlineLikesCount < PERSONALIZATION_THRESHOLD;
+      const shouldFetch =
+        !lastLoad ||
+        lastLoad.userId !== userId ||
+        (lastLoad.onlineLikesCount !== currentOnlineLikesCount && !bothStillColdStart);
+
+      if (!shouldFetch) {
+        console.log("Home cache valid — skipping fetch.");
         setLoading(false);
         return;
       }
+
       try {
         setLoading(true);
         setErrorMessage(null); // Reset previous errors on reload
 
-        if (!userId) {
-          navigate("/login", { replace: true });
-          return;
-        }
         const data = await getHomeCarousels(userId);
 
         console.log("Home carousels response:", data);
 
         setCarousels(data.carousels || []);
-        setHasLoadedHome(true);
+        setLastLoad({ userId, onlineLikesCount: currentOnlineLikesCount });
         console.log("Carousels:", data.carousels);
         }
 
@@ -137,7 +160,7 @@ export default function HomePage() {
     }
     console.log("fetchDashboardData called");
     fetchDashboardData();
-  }, [userId, hasLoadedHome, carousels.length, navigate, setCarousels, setHasLoadedHome]);
+  }, [userId]);
 
   const emojiMap: Record<string, string> = {
     recommended_for_you: "✨",
@@ -182,6 +205,8 @@ export default function HomePage() {
           </div>
         </div>
 
+        <PersonalizationProgressPill />
+
         <div className="search-bar" onClick={handleVibeMatchClick}>
           <span className="search-text">Vibe Matcher</span>{" "}
           <span className="search-icon">🪄</span>
@@ -205,8 +230,8 @@ export default function HomePage() {
             marginTop: '24px'
           }}
         >
-          {loading ? (
-            <div className="text-center p-10 text-gray-400">Loading your customized feed...</div>
+          {loading && carousels.length === 0 ? (
+            <CarouselsLoader />
           ) : errorMessage ? (
             // CLEAN ALTERNATIVE: Replaces carousels with an interactive alert box if something breaks
             <div className="error-banner" style={{ textAlign: 'center', padding: '40px 20px', background: '#fff5f5', borderRadius: '12px', border: '1px dashed #feb2b2', color: '#c53030' }}>
