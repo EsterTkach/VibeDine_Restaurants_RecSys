@@ -10,11 +10,7 @@ import { useHome } from "../contexts/HomeContext";
 import { useLiked } from "../contexts/LikedContext";
 import SectionDivider from "../components/SectionDivider";
 import FoodAvatar from "../components/FoodAvatar";
-
-const DEFAULT_RESTAURANT_IMAGE =
-  "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=500";
-
-
+import { DEFAULT_RESTAURANT_IMAGE } from "../constants/imgs";
 
 export default function ProfilePage() {
   const navigate = useNavigate();
@@ -56,7 +52,7 @@ export default function ProfilePage() {
             <FoodAvatar avatar_index={userData.avatar_index} size={110} />
           </div>
           <h1 className="profile-name">{userData.name}</h1>
-          <p className="profile-subtitle">Food Explorer</p>{" "}
+          <p className="profile-subtitle">Food Explorer 🍜</p>{" "}
         </div>
 
         {/* Restaurants You Love Section */}
@@ -107,7 +103,13 @@ export default function ProfilePage() {
                         navigate(`/restaurant/${restaurant.gmap_id}`);
                       }}
                     >
-                      <img src={restaurant.image_url || DEFAULT_RESTAURANT_IMAGE } alt=""/>
+                      <img
+                        src={restaurant.image_url || DEFAULT_RESTAURANT_IMAGE}
+                        alt=""
+                        onError={(e) => {
+                          e.currentTarget.src = DEFAULT_RESTAURANT_IMAGE;
+                        }}
+                      />
                     </div>
                     <div className="card-name">{restaurant.name}</div>
                   </div>
@@ -143,6 +145,9 @@ export default function ProfilePage() {
                     <img
                       src={restaurant.image_url || DEFAULT_RESTAURANT_IMAGE}
                       alt=""
+                      onError={(e) => {
+                        e.currentTarget.src = DEFAULT_RESTAURANT_IMAGE;
+                      }}
                     />
                   </div>
                   <div className="card-name">{restaurant.name}</div>
