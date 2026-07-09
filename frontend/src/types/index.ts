@@ -7,27 +7,6 @@ export interface Restaurant {
   image_url: string;
 }
 
-export interface RowConfig {
-  id: string;
-  title: string;
-  emoji: string;
-  restaurants: Restaurant[];
-}
-
-export interface CarouselData {
-  id: string;
-  title: string;
-  items: Restaurant[];
-}
-
-export interface User {
-  user_id: string;
-  name: string;
-  username: string;
-  password: string;
-  avatar_index: number;
-  liked_restaurants: Restaurant[];
-}
 
 export interface Friend {
   user_id: string;
@@ -36,26 +15,6 @@ export interface Friend {
   avatar_index: number;
 }
 
-export interface ApiRecommendation {
-  gmap_id: string;
-  name: string;
-  avg_rating?: number;
-  review_count?: number;
-  similarity_score?: number;
-  predicted_rating?: number;
-}
-
-export interface ApiRecommendationResponse {
-  recommendation_type?: string;
-  recommendations: ApiRecommendation[];
-}
-
-export type PreferenceOption = 
-  | "budget" 
-  | "accessibility" 
-  | "dietary" 
-  | "distance" 
-  | "dineOption";
 
 export type BudgetOption = "$" | "$$" | "$$$";
 export type DistanceOption = "Walking Distance" | "Up to 15 Minutes" | "Up to 30 Minutes" | "Anywhere";
@@ -77,17 +36,7 @@ export type MatchingCategory =
   | "vegetarian"
   | "halal";
 
-export interface VibeMatcherState {
-  selectedPreferences: PreferenceOption[];
-  selectedCategories: MatchingCategory[];
-  preferences: {
-    budget?: BudgetOption;
-    distance?: DistanceOption;
-    accessibility?: AccessibilityOption;
-    dietary?: DietaryOption;
-    dineOption?: DineOption;
-  };
-}
+
 
 
 

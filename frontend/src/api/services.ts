@@ -3,10 +3,7 @@ import type { RegisterRequest } from "../types";
 import {
   login,
   signup,
-  getUserRecommendations,
-  getSimilarRestaurants,
   saveOnboardingPreferences,
-  getHomeCarousels,
 } from "./restaurants";
 
 const BASE_URL = "http://localhost:8000";
@@ -31,24 +28,6 @@ async function handleRequest<T>(
   return response.json();
 }
 
-// 2. Export specific, semantic API services mapped cleanly to your teammate's setup
-export const restaurantService = {
-  // Bridges to teammate's Collaborative Filtering endpoint
-  getAll: async () => {
-    // Uses a default placeholder user ID for now until state context management is added
-    const data = await getUserRecommendations("default_user_id");
-    // If their endpoint returns a structured object, adjust this mapping to extract the array
-    return data.recommendations || data;
-  },
-
-  // Bridges to teammate's Content-Based matching endpoint
-  getSimilar: (restaurantName: string) => getSimilarRestaurants(restaurantName),
-
-  getHomeCarousels: (userId: string) => getHomeCarousels(userId),
-
-  getById: (id: string) => handleRequest<any>(`/restaurants/${id}`),
-
-};
 
 export const userService = {
   getOnlineLikedRestaurants: (userId: string | number) =>

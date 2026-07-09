@@ -1,7 +1,7 @@
 import pandas as pd
 from api.ml import config
 from api.db.restaurant_repository import get_filtered_restaurants_repo
-from api.ml.cf_recommender import compute_cf_scores, get_popular_restaurants, get_user_offline_likes, recommend_for_user_cf
+from api.ml.cf_recommender import compute_cf_scores, get_popular_restaurants, get_user_offline_likes
 from api.services.users_service import get_user_online_likes
 from api.utils.utils import extract_gmap_ids, format_restaurant_for_frontend
 from api.utils.preference_mapping import (
@@ -14,73 +14,6 @@ from api.routes.users import get_onboarding_preferences
 from api.ml.cb_recommender import compute_cb_scores, restaurant_lookup
 from api.services import hybrid_cache
 
-
-
-# def get_popular_restaurants(top_k=10):
-#     """
-#     Fallback recommendations for cold-start users.
-#     Returns most popular restaurants.
-#     """
-
-#     interactions = pd.read_parquet(
-#         config.INTERACTIONS_FILE
-#     )
-
-#     popular = (
-#         interactions.groupby("gmap_id")
-#         .agg(
-#             avg_rating=("rating", "mean"),
-#             review_count=("rating", "count"),
-#         )
-#         .reset_index()
-#     )
-
-#     # avoid restaurants with very few reviews
-#     popular = popular[
-#         popular["review_count"] >= 20
-#     ]
-
-#     # weighted ranking
-#     popular["score"] = (
-#         popular["avg_rating"]
-#         * popular["review_count"]
-#     )
-
-#     popular = popular.sort_values(
-#         by="score",
-#         ascending=False
-#     )
-
-#     restaurants = pd.read_parquet(
-#         config.CBF_FEATURES_FILE
-#     )
-
-#     merged = popular.merge(
-#         restaurants[
-#             ["gmap_id", "name"]
-#         ],
-#         on="gmap_id",
-#         how="left"
-#     )
-
-#     recommendations = []
-
-#     for _, row in merged.head(top_k).iterrows():
-
-#         recommendations.append(
-#             {
-#                 "gmap_id": row["gmap_id"],
-#                 "name": row["name"],
-#                 "avg_rating": round(
-#                     float(row["avg_rating"]), 2
-#                 ),
-#                 "review_count": int(
-#                     row["review_count"]
-#                 ),
-#             }
-#         )
-
-#     return recommendations
 
 def _parse_onboarding_preferences(preferences: dict):
     """
@@ -227,12 +160,7 @@ def get_hybrid_scores_for_user(user_id: str):
     cf_scores = compute_cf_scores(user_id)
     alpha = get_user_alpha(user_id)
 
-    print(f"alpha={alpha} for user {user_id}")
-    print(f"CB restaurants={len(cb_scores)}")
-    print(f"CF restaurants={len(cf_scores)}")
-
     hybrid_scores = combine_hybrid_scores(cb_scores, cf_scores, alpha)[0]
-    print(f"Hybrid restaurants={len(hybrid_scores)}")
 
     hybrid_cache.set(user_id, hybrid_scores)
     return hybrid_scores

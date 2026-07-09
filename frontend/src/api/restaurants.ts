@@ -1,19 +1,6 @@
 import apiClient from './client';
-import type { ApiRecommendationResponse, Friend , RegisterRequest, UserData } from '../types';
+import type {Friend, RegisterRequest, UserData } from '../types';
 
-export async function getUserRecommendations(userId: string, topK = 10): Promise<ApiRecommendationResponse> {
-  const response = await apiClient.get<ApiRecommendationResponse>(`/recommend/cf/${userId}`, {
-      params: { top_k: topK },
-    });
-  return response.data;
-}
-
-export async function getSimilarRestaurants(restaurantName: string, topK = 10): Promise<ApiRecommendationResponse> {
-  const response = await apiClient.get<ApiRecommendationResponse>(`/recommend/cb/${encodeURIComponent(restaurantName)}`, {
-      params: { top_k: topK },
-    });
-  return response.data;
-}
 
 export async function signup(data: RegisterRequest,): Promise<{ message: string; user_data: UserData }> {
   const response = await apiClient.post('/users/signup', data);
@@ -111,13 +98,6 @@ export async function createGroupSession(userIds: string[], filters?: Record<str
   return response.data;
 }
 
-export async function likeRestaurant(userId: string, restaurantId: string): Promise<void> {
-  await apiClient.post(`/users/restaurants/${restaurantId}/like`, { user_id: userId });
-}
-
-export async function unlikeRestaurant(userId: string, restaurantId: string): Promise<void> {
-  await apiClient.delete(`/users/restaurants/${restaurantId}/like`, { data: { user_id: userId } });
-}
 
 export async function submitGroupSessionFeedback(
   sessionId: string,

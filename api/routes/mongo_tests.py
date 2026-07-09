@@ -5,7 +5,6 @@ from api.ml.cf_recommender import (
 
 from api.db.mongo import (
     users_collection,
-    user_interactions_collection
 )
 from api.db.restaurant_repository import get_filtered_restaurants_repo
 
