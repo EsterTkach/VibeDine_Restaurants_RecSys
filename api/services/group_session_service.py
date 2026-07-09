@@ -50,14 +50,6 @@ def create_group_recommendation_session(
     }
 
 
-def delete_group_recommendation_session(session_id):
-    if session_id not in group_recommendation_sessions:
-        raise HTTPException(status_code=404, detail="session not found")
-
-    del group_recommendation_sessions[session_id]
-    return {"deleted": True}
-
-
 def apply_group_session_feedback(
     session_id,
     current_restaurant,

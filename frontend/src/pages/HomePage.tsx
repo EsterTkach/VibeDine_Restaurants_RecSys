@@ -102,14 +102,13 @@ export default function HomePage() {
     setShowAccountMenu(false);
     navigate("/login", { replace: true });
   };
-  console.log("HomePage render");
+  
   // BACKEND INTEGRATION EFFECT
   // Fires only on mount and when the logged-in user changes. Refetches only
   // when: (a) never fetched, (b) different user, or (c) the online likes count
   // changed since the last successful fetch. Otherwise reuses cached carousels.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    console.log("Home useEffect started");
     async function fetchDashboardData() {
       if (!userId) {
         navigate("/login", { replace: true });
@@ -141,11 +140,8 @@ export default function HomePage() {
 
         const data = await getHomeCarousels(userId);
 
-        console.log("Home carousels response:", data);
-
         setCarousels(data.carousels || []);
         setLastLoad({ userId, onlineLikesCount: currentOnlineLikesCount });
-        console.log("Carousels:", data.carousels);
         }
 
         catch (error) {
@@ -158,7 +154,6 @@ export default function HomePage() {
         setLoading(false);
       }
     }
-    console.log("fetchDashboardData called");
     fetchDashboardData();
   }, [userId]);
 

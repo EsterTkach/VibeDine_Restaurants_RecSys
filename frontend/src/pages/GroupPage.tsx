@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import AppShell from "../layouts/AppShell";
 import FoodAvatar from "../components/FoodAvatar";
-import { getFriends, createGroupSession } from "../api/restaurants";
+import { getFriends } from "../api/restaurants";
 import { useAuth } from "../contexts/AuthContext";
 import type { Friend, MatchingCategory } from "../types";
 
