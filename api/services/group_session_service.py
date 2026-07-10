@@ -2,8 +2,11 @@ from uuid import uuid4
 
 from fastapi import HTTPException
 
+from copy import deepcopy
+
 from api.db.restaurant_repository import get_filtered_restaurants_repo
 from api.services.groups_service import (
+    _filters_to_dict,
     get_hybrid_recommendations_for_group,
     get_hybrid_recommendations_for_group_with_user_candidates,
 )
@@ -29,11 +32,13 @@ def create_group_recommendation_session(
     if not user_ids:
         raise HTTPException(status_code=400, detail="user_ids cannot be empty")
 
+    original_filters = _filters_to_dict(filters)
+
     session_id = str(uuid4())
     group_recommendation_sessions[session_id] = {
         "session_id": session_id,
         "user_ids": user_ids,
-        "filters_per_user": {user_id: {} for user_id in user_ids},
+        "filters_per_user": {user_id: deepcopy(original_filters) for user_id in user_ids},
         "excluded_restaurant_ids": set(),
     }
 
@@ -80,11 +85,14 @@ def apply_group_session_feedback(
         filters = session["filters_per_user"][user_id]
 
         if reason == "Too expensive":
-            current_price = filters.get("max_price") or "$$$$"
+            current_price = filters.get("max_price") or filters.get("price") or "$$$$"
             if current_price in PRICE_LEVELS and PRICE_LEVELS.index(current_price) > 0:
-                filters["max_price"] = PRICE_LEVELS[PRICE_LEVELS.index(current_price) - 1]
+                new_price = PRICE_LEVELS[PRICE_LEVELS.index(current_price) - 1]
             else:
-                filters["max_price"] = "$"
+                new_price = "$"
+
+            filters.pop("price", None)
+            filters["max_price"] = new_price
 
         elif reason == "Too far away":
             current_radius = filters.get("radius_km") or DEFAULT_RADIUS_KM
