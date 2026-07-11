@@ -79,10 +79,6 @@ def compute_cf_scores(user_id):
     """
 
     user_row = get_user_row(user_id)
-    
-    print("user_row.indices :  ",user_row.indices)
-    print("user_row.data :  ",user_row.data)
-    print("user_row.shape : ",user_row.shape)
 
     liked_indices = user_row.indices
 
