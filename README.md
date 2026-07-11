@@ -1,36 +1,84 @@
-Link to project docs- https://docs.google.com/document/d/1V400O_kI9OInR3E6nqbkzn43qCVtPkT29pzhgIPvJ6A/edit?usp=sharing
+![Logo](images/logo.png)
 
-DataSets-
-https://mailtauacil-my.sharepoint.com/:f:/g/personal/estertkach_mail_tau_ac_il/IgCoo6KQJvaFRagY4IRDZW11AYesNT-0K6gkNcuXLhoHgOQ?e=VPvzd8
+# VibeDine
+
+**VibeDine** is a hybrid restaurant recommendation system developed to solve the **dining dilemma**.
+
+Choosing where to eat is often influenced by much more than cuisine, ratings, or distance. The right restaurant depends on the **moment**, the **people you're with**, and the **vibe** you're looking for.
+
+To address this challenge, we built a recommendation system that combines **Content-Based Filtering** and **Collaborative Filtering** to generate personalized restaurant recommendations. The models were trained on the **Google Local Data (2021)** dataset, focusing on restaurants in California, allowing the system to recommend places that better match each user's preferences and dining context.
+
+---
+
+## Documentation
+
+Project documentation is available in the following files:
+
+- [Installation Guide](install.md)
+- [Project Summary](summary.md)
+- [Modules Description](modules.md)
+
+---
+## About
+
+This project was developed as part of the **Recommender Systems Workshop** at **Tel Aviv University**.
+
+More information about the course can be found on the [Workshop Website](https://courses.cs.tau.ac.il/recsys/).
+
+### Authors
+
+- Aya Rotbart
+- Ester Tkach
+- Liora Yaakov
+- Yuval Hazut
+
+---
+## What Makes VibeDine Different?
+
+![Main Features:](images/vibedine_features.png)
+---
+
+## Screenshots
+
+### Home Page
+
+![Home Page](images/HomePage.png)
+
+---
+
+### Vibe Matcher
+
+<video src="videos/feature1_VibeMatcher.mp4" controls width="900"></video>
+
+---
+
+### Group Sync
+
+<video src="videos/feature2_Group.mp4" controls width="900"></video>
+
+---
+
+### Mood Interface
+
+<video src="videos/feature3_Carousels.mp4" controls width="900"></video>
+
+---
+
+### User Profile
+
+<video src="videos/profile.mp4" controls width="900"></video>
+
+---
+
+### Cold-Start Onboarding
+
+<video src="videos/onboarding.mp4" controls width="900"></video>
+
+---
 
 
-LIORA-
-1) Add the 2 .parquet files Esty made to the /data folder.
-2) To build the OFFLINE Content-Based Model, run: python api/ml/train_content_based.py
-3) To get Content Based recommendations see functions in  file: api/ml/cb_recommender.py
-4) To build the OFFLINE Item-Based Collaborative Filtering Model, run: python api/ml/train_item_cf.py
-5) To get Collaborative Filtering recommendations, see functions in: api/ml/cf_recommender.py
+### User Profile
 
-AYA (if not docker)- 
-1) Change config.py to allow data versoning
-2) Created api folder - FastApi server, cold start run: python -m uvicorn api.main:app --reload
-3) Added requirements.txt file. In order to install all: cd api, and only then, pip install -r requirements.txt 
-
-Docker-
-1) Make sure your docker app is open.
-2) Open start.bat
-3) Will open server, front and log if needed. 
-4) First load takes half a minute. Future loads take a few seconds. 
-5) To close follow console instructions. 
-
-for mac users 😁
-1) Run single time: chmod +x start.sh
-2) Then, every time run: ./start.sh
+![Profile](images/profile.png)
 
 
-Or, regular way will also work: 
-cd api
-python -m venv venv
-source venv/bin/activate        # Mac/Linux
-pip install -r requirements.txt
-python -m uvicorn api.main:app --reload

@@ -9,36 +9,41 @@
   - Receives carousel data, group recommendations, and user profile info from backend to render UI.
 - Source code: [`/frontend/src/`](../frontend/src/)
 
+
 ## Recommendation Engine (Hybrid System)
 
-- Technology: scikit-learn (TF-IDF, cosine similarity, sparse CSR matrices), NumPy, pandas
-- Responsibilities: Generate personalized restaurant recommendations by combining Content-Based Filtering and Collaborative Filtering with adaptive alpha weighting per user.
+- Technology: Python, scikit-learn, NumPy, pandas
+- Responsibilities: Orchestrate the recommendation process by combining Content-Based and Collaborative Filtering scores. Generate personalized recommendations for both cold-start and established users, rank candidate restaurants, and return the final results.
+
 - Interactions:
-  - Receives user likes (offline from parquet data + online from MongoDB) to compute scores.
-  - Content-Based module computes TF-IDF similarity on restaurant features.
-  - Collaborative Filtering module uses item-based weighted CF on the user-item interaction matrix.
-  - Hybrid scores are combined: `hybrid_score = alpha × CF + (1 - alpha) × CB`, with alpha determined by user interaction count.
-  - Returns ranked restaurant IDs to the routes layer.
+  - Receives user interaction data from the repository layer.
+  - Uses onboarding preferences for users with insufficient interaction history.
+  - Requests recommendation scores from the Content-Based and Collaborative Filtering modules.
+  - Combines the scores using an adaptive hybrid strategy.
+  - Returns ranked restaurant recommendations to the API routes.
 - Source code: [`/api/services/recommendation_service.py`](../api/services/recommendation_service.py)
 
 ## Content-Based Filtering (CB)
 
-- Technology: scikit-learn TF-IDF Vectorizer, cosine similarity
-- Responsibilities: Compute similarity between restaurants based on text features (name, category, service options, dining options). Generate CB scores for a user by averaging cosine similarities across their liked items.
+- Technology: scikit-learn (TF-IDF Vectorizer, cosine similarity)
+- Responsibilities: Compute recommendation scores based on restaurant content similarity using textual features such as name, category, service options, and dining options.
 - Interactions:
-  - Loads pre-trained TF-IDF model from `/models/content_based_model.pkl`.
-  - Used by the Hybrid Recommendation Engine to supply CB scores.
+  - Loads the pre-trained TF-IDF model and restaurant feature vectors.
+  - Computes Content-Based scores for the current user.
+  - Returns scores to the Hybrid Recommendation Engine.
 - Source code: [`/api/ml/cb_recommender.py`](../api/ml/cb_recommender.py)
 
 ## Collaborative Filtering (CF)
 
 - Technology: scikit-learn, SciPy sparse matrices, NumPy
-- Responsibilities: Compute item-based collaborative filtering scores using a weighted similarity approach: `score[i] = Σ(sim[liked_j, i] × rating[j]) / Σ(sim[liked_j, i])`. Augments offline interaction matrix with online likes (rated as 5).
+- Responsibilities: Compute recommendation scores using an item-based Collaborative Filtering model based on user-item interactions, while augmenting the offline interaction matrix with online user likes.
 - Interactions:
-  - Loads pre-trained CF model from `/models/item_cf_model.pkl`.
-  - Queries online likes from MongoDB to augment the offline matrix.
-  - Used by the Hybrid Recommendation Engine to supply CF scores.
+  - Loads the pre-trained Collaborative Filtering model.
+  - Retrieves online user interactions from MongoDB.
+  - Computes Collaborative Filtering scores for the current user.
+  - Returns scores to the Hybrid Recommendation Engine.
 - Source code: [`/api/ml/cf_recommender.py`](../api/ml/cf_recommender.py)
+
 
 ## Group Recommendation Service
 
@@ -68,15 +73,14 @@
   - Handles all frontend HTTP requests.
   - Routes requests to recommendation services, user services, and group services.
   - Applies CORS middleware for frontend communication.
-- Source code: [`/api/`](../api/)
+- Source code: [`/api/routes`](../api/)
 
 ## Data & Model Training Pipeline
 
 - Technology: pandas, scikit-learn, Parquet files
 - Responsibilities: Preprocess restaurant features and user interaction data, train the Content-Based (TF-IDF) and Collaborative Filtering (item-based CF) models, and export trained `.pkl` files.
 - Interactions:
-  - Reads `data/CBF_item_features_2.parquet` for restaurant features.
-  - Reads `data/CF_interaction_matrix_2.parquet` for user-item ratings.
+  - Reads the preprocessed restaurant feature dataset and user interaction dataset stored as Parquet files.
   - Outputs trained models to `/models/` directory.
   - `rests_uploader.py` seeds MongoDB from parquet data.
 - Source code: [`/api/ml/train_content_based.py`](../api/ml/train_content_based.py), [`/api/ml/train_item_cf.py`](../api/ml/train_item_cf.py), [`/data/`](../data/)
