@@ -5,22 +5,12 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { HomeProvider } from "./contexts/HomeContext.tsx";
 import { LikedProvider } from "./contexts/LikedContext.tsx";
 
-// createRoot(document.getElementById("root")!).render(
-//   <StrictMode>
-//     <AuthProvider>
-//       <HomeProvider>
-//       <App />
-//       </HomeProvider>
-//     </AuthProvider>
-//   </StrictMode>,
-// );
-
 createRoot(document.getElementById("root")!).render(
   <AuthProvider>
-    <LikedProvider>
-      <HomeProvider>
+    <HomeProvider>
+      <LikedProvider>
         <App />
-      </HomeProvider>
-    </LikedProvider>
+      </LikedProvider>
+    </HomeProvider>
   </AuthProvider>,
 );

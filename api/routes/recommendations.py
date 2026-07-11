@@ -1,30 +1,16 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 import time
 import random
 
 from api.schemas.restaurant_schema import FilterRequest
 
-from api.ml.cb_recommender import (
-    compute_cb_scores,
-    recommend_similar_restaurants,
-)
-
-from api.ml.cf_recommender import (
-    compute_cf_scores,
-)
 
 from api.services.recommendation_service import (
     get_hybrid_recommendations_for_user,
     get_hybrid_scores_for_user,
     get_onboarding_candidate_gmap_ids,
     get_popular_restaurants,
-    get_popular_by_category,
     get_user_augmented_likes,
-    get_user_onboarding_recommendations,
-)
-
-from api.schemas.group_schema import (
-    GroupRecommendationRequest,
 )
 
 from api.utils.utils import (
@@ -311,53 +297,6 @@ def get_home_carousels(user_id: str = "default_user", top_k: int = 25):
         ]
     }
 
-# Popular restaurants endpoint - returns top 10 popular restaurants similar to the original restaurant based on overall ratings and number of reviews
-@router.get("/cb/{restaurant_name}")
-def get_similar_restaurants(
-    restaurant_name: str,
-    top_k: int = 10
-):
-    results = recommend_similar_restaurants(
-        restaurant_name=restaurant_name,
-        top_k=top_k
-    )
-
-    if not results:
-        raise HTTPException(
-            status_code=404,
-            detail="Restaurant not found"
-        )
-
-    return {
-        "restaurant": restaurant_name,
-        "recommendations": results
-    }
-
-
-@router.get("/cf/{user_id}")
-def get_user_recommendations(
-    user_id: str,
-    top_k: int = 10
-):
-    # return get_hybrid_recommendations_for_user(
-    #     user_id=user_id,
-    #     top_k=top_k
-    # )
-    return get_hybrid_recommendations_for_user(user_id)
-
-
-
-# @router.get("/group")
-# def get_group_recommendations(request: GroupRecommendationRequest):
-#     if not request.user_ids:
-#         raise HTTPException(status_code=400, detail="user_ids cannot be empty")
-
-#     return get_hybrid_recommendations_for_group(
-#         user_ids=request.user_ids,
-#         top_k=request.top_k,
-#         per_user_k=request.per_user_k,
-#         filters=request.filters,
-#     )
 
 @router.post("/vibe-match/{user_id}")
 def get_vibe_match_recommendations(

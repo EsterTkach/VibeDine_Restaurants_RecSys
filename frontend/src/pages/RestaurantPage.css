@@ -15,24 +15,6 @@
   height: 100%;
   object-fit: cover;
 }
-
-.floating-back {
-  position: absolute;
-  top: 16px;
-  left: 16px;
-  background: rgba(255, 255, 255, 0.9);
-  padding: 8px 16px;
-  border-radius: 999px;
-  margin-bottom: 0;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  z-index: 10;
-}
-/* ------------------------ */
-
-.restaurant-content {
-  padding: 24px;
-}
-
 .back-btn {
   border: none;
   background: transparent;
@@ -41,6 +23,40 @@
   margin-bottom: 20px;
   font-weight: 600;
 }
+
+.back-btn.floating-back {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 10;
+
+  margin-bottom: 0;
+  padding: 8px 16px;
+
+  background: rgba(255, 255, 255, 0.92);
+  color: #8b6b4a;
+
+  border: none;
+  border-radius: 999px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.back-btn.floating-back:hover {
+  background: white;
+}
+
+
+/* ------------------------ */
+
+
+
+.restaurant-content {
+  padding: 24px;
+}
+
 
 .restaurant-content h1 {
   font-size: 42px;

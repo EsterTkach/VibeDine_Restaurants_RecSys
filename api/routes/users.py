@@ -71,8 +71,6 @@ def login(
     request:
     UserLoginRequest
 ):
-    print("Username:", request.username)
-    print("Password:", request.password)
 
     user = users_collection.find_one(
         {
@@ -83,7 +81,6 @@ def login(
             request.password,
         }
     )
-    print("User found:", user)
 
     if not user:
         raise HTTPException(
@@ -231,70 +228,6 @@ def unlike_restaurant(
     }
 
 
-@router.post("/{user_id}/restaurants/{restaurant_id}/save")
-def save_restaurant(
-    user_id: str,
-    restaurant_id: str
-):
-
-    users_collection.update_one(
-        {
-            "user_id":
-            user_id
-        },
-        {
-            "$addToSet": {
-                "saved_restaurants":
-                restaurant_id
-            }
-        },
-        upsert=True
-    )
-
-    return {
-        "message":
-        "Restaurant saved",
-
-        "user_id":
-        user_id,
-
-        "restaurant_id":
-        restaurant_id,
-    }
-
-
-@router.post("/{user_id}/restaurants/{restaurant_id}/view")
-def record_restaurant_view(
-    user_id: str,
-    restaurant_id: str
-):
-
-    users_collection.update_one(
-        {
-            "user_id":
-            user_id
-        },
-        {
-            "$addToSet": {
-                "viewed_restaurants":
-                restaurant_id
-            }
-        },
-        upsert=True
-    )
-
-    return {
-        "message":
-        "Restaurant view recorded",
-
-        "user_id":
-        user_id,
-
-        "restaurant_id":
-        restaurant_id,
-    }
-
-
 @router.get("/search")
 def search_users(
     username: str = Query(..., min_length=1),
@@ -375,7 +308,6 @@ def get_online_liked_restaurants(user_id: str):
 @router.get("/{user_id}/restaurants/likes/offline")
 def get_offline_liked_restaurants(user_id: str):
     offline_likes_ids = get_user_offline_likes(user_id)
-    print("offline_likes_ids: ", offline_likes_ids)
 
     offline_likes_restaurants = list(
         restaurants_collection.find(

@@ -80,7 +80,7 @@ export default function Onboarding() {
   const navigate = useNavigate();
   const { userData } = useAuth();
   const userId = userData.user_id;
-  const username = userData.username || "there";
+  const username = userData.name || userData.username || "there";
 
   const [isStarted, setIsStarted] = useState(false);
   const [activeStepIndex, setActiveStepIndex] = useState(0);

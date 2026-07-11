@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import type { Restaurant } from "../types";
+import { DEFAULT_RESTAURANT_IMAGE } from "../constants/imgs";
 
 interface Props {
   restaurant: Restaurant;
@@ -15,8 +16,11 @@ export default function RestaurantCard({
   return (
     <div className={`restaurant-card-home ${variant === "list" ? "restaurant-card-list" : ""}`}>
       <img
-        src={restaurant.image_url}
-        alt={restaurant.name}
+        src={restaurant.image_url || DEFAULT_RESTAURANT_IMAGE}
+        alt=""
+        onError={(e) => {
+          e.currentTarget.src = DEFAULT_RESTAURANT_IMAGE;
+        }}
         onClick={() => navigate(`/restaurant/${restaurant.gmap_id}`)}
         style={{ cursor: "pointer" }}
       />
@@ -26,7 +30,7 @@ export default function RestaurantCard({
 
         <span>
           ⭐ {Number(restaurant.avg_rating || 0).toFixed(1)}
-        </span>
+          </span>
 
         <p>
           {restaurant.cuisine} {restaurant.price ? `• ${restaurant.price}` : ""}

@@ -35,6 +35,22 @@
   line-height: 1.6;
 }
 
+.result-meta {
+  margin-top: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  color: #6e553d;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.result-address {
+  margin-top: 8px;
+  color: #6e553d;
+  font-size: 14px;
+}
+
 .member-list {
   margin-top: 32px;
 

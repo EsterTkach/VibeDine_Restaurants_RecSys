@@ -7,7 +7,6 @@ from api.schemas.group_schema import (
 from api.services.group_session_service import (
     apply_group_session_feedback,
     create_group_recommendation_session,
-    delete_group_recommendation_session,
 )
 
 
@@ -41,6 +40,3 @@ def submit_group_session_feedback(
         per_user_k=request.per_user_k,
     )
 
-@router.delete("/session/{session_id}")
-def delete_group_session(session_id: str):
-    return delete_group_recommendation_session(session_id)

@@ -5,17 +5,20 @@ import AppShell from "../layouts/AppShell";
 import apiClient from "../api/client";
 import { useAuth } from "../contexts/AuthContext";
 import { useLiked } from "../contexts/LikedContext";
-import { useHome } from "../contexts/HomeContext";
+import { DEFAULT_RESTAURANT_IMAGE } from "../constants/imgs";
+
 
 export default function RestaurantPage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const { userData } = useAuth();
-  const { likedRestaurants, likeRestaurant, unlikeRestaurant } = useLiked();
-
-  const { notifyLikeChanged } = useHome();
+  const { likedRestaurants, likeRestaurant, unlikeRestaurant, offlineLikedRestaurants } = useLiked();
 
   const liked = likedRestaurants.some((r) => r.gmap_id === id);
+  const offlineLiked = offlineLikedRestaurants.some((r) => r.gmap_id === id);
+
+  const isLiked = liked || offlineLiked;
+
   const [restaurant, setRestaurant] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [likeLoading, setLikeLoading] = useState(false);
@@ -31,7 +34,7 @@ export default function RestaurantPage() {
   }, [id]);
 
   const handleLikeToggle = async () => {
-    if (!userData.user_id || !id || likeLoading) return;
+    if (!userData.user_id || !id || likeLoading || offlineLiked) return;
 
     setLikeLoading(true);
 
@@ -41,8 +44,6 @@ export default function RestaurantPage() {
       } else {
         await likeRestaurant(id);
       }
-
-      notifyLikeChanged();
     } catch (error) {
       console.error("Failed to update liked restaurant", error);
     } finally {
@@ -82,20 +83,19 @@ export default function RestaurantPage() {
             <div className="restaurant-hero">
               <button
                 className="back-btn floating-back"
-                style={{
-                  color: "#ffffff",
-                }}
                 onClick={() => navigate(-1)}
               >
                 ← Back
               </button>
-              {restaurant.image_url && (
-                <img
-                  src={restaurant.image_url}
-                  alt={restaurant.name}
-                  className="hero-img"
-                />
-              )}
+
+              <img
+                src={restaurant.image_url || DEFAULT_RESTAURANT_IMAGE}
+                alt=""
+                onError={(e) => {
+                  e.currentTarget.src = DEFAULT_RESTAURANT_IMAGE;
+                }}
+                className="hero-img"
+              />
             </div>
 
             <div className="restaurant-content">
@@ -128,11 +128,11 @@ export default function RestaurantPage() {
 
               <div className="actions-row">
                 <button
-                  className={`action-btn${liked ? " liked" : ""}`}
+                  className={`action-btn${isLiked ? " liked" : ""}`}
                   onClick={handleLikeToggle}
-                  disabled={likeLoading}
+                  disabled={likeLoading || offlineLiked}
                 >
-                  {liked ? "❤️ Liked" : "🤍 Like"}
+                  {isLiked ? "❤️ Liked" : "🤍 Like"}
                 </button>
               </div>
 
