@@ -2,7 +2,7 @@ import pandas as pd
 from enum import Enum
 
 # שם קובץ הפרקט של המסעדות
-PARQUET_FILE = "CBF_item_features_1.parquet"
+PARQUET_FILE = "CBF_item_features_2.parquet"
 
 # השדות שאנחנו רוצים לחקור ולייצר עבורם Enum (כולל קטגוריות למסעדות ויוזרים)
 fields_to_analyze = [

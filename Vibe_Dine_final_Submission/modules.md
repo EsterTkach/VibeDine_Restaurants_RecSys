@@ -75,8 +75,8 @@
 - Technology: pandas, scikit-learn, Parquet files
 - Responsibilities: Preprocess restaurant features and user interaction data, train the Content-Based (TF-IDF) and Collaborative Filtering (item-based CF) models, and export trained `.pkl` files.
 - Interactions:
-  - Reads `data/CBF_item_features_1.parquet` for restaurant features.
-  - Reads `data/CF_interaction_matrix_1.parquet` for user-item ratings.
+  - Reads `data/CBF_item_features_2.parquet` for restaurant features.
+  - Reads `data/CF_interaction_matrix_2.parquet` for user-item ratings.
   - Outputs trained models to `/models/` directory.
   - `rests_uploader.py` seeds MongoDB from parquet data.
 - Source code: [`/api/ml/train_content_based.py`](../api/ml/train_content_based.py), [`/api/ml/train_item_cf.py`](../api/ml/train_item_cf.py), [`/data/`](../data/)

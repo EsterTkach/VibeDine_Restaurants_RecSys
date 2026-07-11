@@ -17,7 +17,7 @@ def process_and_upload_users():
     
     print("Reading interactions Parquet file to extract unique users...")
     # קריאת עמודת ה-user_id בלבד כדי לחסוך בזיכרון
-    df_interactions = pd.read_parquet("CF_interaction_matrix_1.parquet", columns=["user_id"])
+    df_interactions = pd.read_parquet("CF_interaction_matrix_2.parquet", columns=["user_id"])
     
     # חילוץ רשימת המשתמשים הייחודיים
     unique_user_ids = df_interactions["user_id"].dropna().unique()

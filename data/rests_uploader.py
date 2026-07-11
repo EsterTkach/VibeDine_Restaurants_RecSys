@@ -127,7 +127,7 @@ def process_and_upload():
     collection.drop()
     
     print("Reading Parquet file...")
-    df = pd.read_parquet(os.path.join(os.path.dirname(__file__), "CBF_item_features_1.parquet"))
+    df = pd.read_parquet(os.path.join(os.path.dirname(__file__), "CBF_item_features_2.parquet"))
     
     batch = []
     print("Processing restaurant rows...")
