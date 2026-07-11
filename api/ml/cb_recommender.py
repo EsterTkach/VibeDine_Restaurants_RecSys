@@ -20,49 +20,6 @@ tfidf = model["tfidf"]
 tfidf_matrix = model["tfidf_matrix"]
 
 
-### get top K recommanded restaurants by content - by restaurant gmap_id
-def recommend_similar_restaurants(
-    restaurant_gmap_id, top_k=config.TOP_K, candidate_gmap_ids=None
-):
-    matches = restaurants[restaurants["gmap_id"] == restaurant_gmap_id]
-
-    if matches.empty:
-        print(f"Restaurant '{restaurant_gmap_id}' not found")
-        return []
-
-    idx = matches.index.item()
-
-    scores = cosine_similarity(tfidf_matrix[idx], tfidf_matrix).flatten()
-
-    scores = list(enumerate(scores))
-
-    scores = sorted(scores, key=lambda x: x[1], reverse=True)
-
-    recommendations = []
-    candidate_set = set(candidate_gmap_ids) if candidate_gmap_ids is not None else None
-
-    for i, score in scores:
-        if i == idx:
-            continue
-
-        gmap_id = restaurants.iloc[i]["gmap_id"]
-
-        if candidate_set is not None and gmap_id not in candidate_set:
-            continue
-
-        recommendations.append(
-            {
-                "name": restaurants.iloc[i]["name"],
-                "gmap_id": gmap_id,
-                "similarity_score": round(float(score), 3),
-            }
-        )
-
-        if len(recommendations) == top_k:
-            break
-
-    return recommendations
-
 def compute_cb_scores(user_id):
 
     online_likes = get_user_online_likes(user_id)["online_likes"]

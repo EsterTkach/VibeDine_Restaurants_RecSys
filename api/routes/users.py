@@ -71,8 +71,6 @@ def login(
     request:
     UserLoginRequest
 ):
-    print("Username:", request.username)
-    print("Password:", request.password)
 
     user = users_collection.find_one(
         {
@@ -83,7 +81,6 @@ def login(
             request.password,
         }
     )
-    print("User found:", user)
 
     if not user:
         raise HTTPException(
@@ -311,7 +308,6 @@ def get_online_liked_restaurants(user_id: str):
 @router.get("/{user_id}/restaurants/likes/offline")
 def get_offline_liked_restaurants(user_id: str):
     offline_likes_ids = get_user_offline_likes(user_id)
-    print("offline_likes_ids: ", offline_likes_ids)
 
     offline_likes_restaurants = list(
         restaurants_collection.find(
