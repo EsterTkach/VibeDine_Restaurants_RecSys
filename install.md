@@ -1,5 +1,3 @@
-**You should change the content of this file. Please use all second-level headings.**
-
 # Installation Guide
 
 ## Prerequisites
@@ -72,25 +70,7 @@ chmod +x start.sh      # first time only
 ./start.sh
 ```
 
-The first startup may take about 30 seconds while Docker builds the containers.
-
----
-
-### Without Docker
-
-```bash
-cd api
-
-python -m venv venv
-
-# Windows
-venv\Scripts\activate
-
-# macOS / Linux
-source venv/bin/activate
-
-pip install -r requirements.txt
-```
+The first startup may take a few minutes while Docker builds the containers.
 
 ---
 
