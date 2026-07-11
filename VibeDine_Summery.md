@@ -188,6 +188,9 @@ Recommendation quality was evaluated using:
 
 ## Additional Comments
 
+-   The home page carusele feature "Popular Near You" is sensetive to user location and urban density. 
+        In order to experiance the caruseles feature as intented please make a new user in Los Angeles, California. 
+
 
 
 
