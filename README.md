@@ -1,4 +1,4 @@
-![Logo](images/logo.png)
+![Logo](images/Logo.png)
 
 # VibeDine
 
@@ -6,7 +6,9 @@
 
 Choosing where to eat is often influenced by much more than cuisine, ratings, or distance. The right restaurant depends on the **moment**, the **people you're with**, and the **vibe** you're looking for.
 
-To address this challenge, we built a recommendation system that combines **Content-Based Filtering** and **Collaborative Filtering** to generate personalized restaurant recommendations. The models were trained on the **Google Local Data (2021)** dataset, focusing on restaurants in California, allowing the system to recommend places that better match each user's preferences and dining context.
+To address this challenge, we built a recommendation system that combines **Content-Based Filtering** and **Collaborative Filtering** to generate personalized restaurant recommendations. 
+
+The models were trained on the **Google Local Data (2021)** dataset, focusing on restaurants in California, allowing the system to recommend places that better match each user's preferences and dining context.
 
 ---
 
