@@ -83,9 +83,6 @@ export default function RestaurantPage() {
             <div className="restaurant-hero">
               <button
                 className="back-btn floating-back"
-                style={{
-                  color: "#ffffff",
-                }}
                 onClick={() => navigate(-1)}
               >
                 ← Back
