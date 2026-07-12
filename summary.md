@@ -85,8 +85,6 @@ The recommendation engine combines several complementary algorithms to support d
 
 ## System Architecture
 
-## System Architecture
-
 VibeDine follows a layered architecture that separates the user interface, business logic, recommendation algorithms, and data management.
 
 The React frontend communicates exclusively with the FastAPI backend through REST APIs. The backend orchestrates the recommendation process by retrieving restaurant candidates from MongoDB, invoking the recommendation engine, and returning ranked recommendations to the client. Offline-trained recommendation models are loaded into memory during application startup, while MongoDB stores all runtime user data and interactions.
@@ -193,5 +191,4 @@ One of the main engineering challenges was combining offline-trained recommendat
 
 
 The **"Popular Near You"** carousel relies on the user's geographic location and local restaurant density.
-
 For the best experience, create a new user located in **Los Angeles, California**, where the dataset provides the richest restaurant coverage.
