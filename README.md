@@ -50,7 +50,7 @@ More information about the course can be found on the [Workshop Website](https:/
 
 ### Vibe Matcher
 
-<video src="videos/feature1_VibeMatcher.mp4" controls width="900"></video>
+![VibeMatcher](gifs/feature1_VibeMatcher.gif)
 
 ---
 
