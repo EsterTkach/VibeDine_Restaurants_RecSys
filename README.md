@@ -31,6 +31,7 @@ More information about the course can be found on the [Workshop Website](https:/
 - Ester Tkach
 - Liora Yaakov
 - Yuval Hazut
+- Yuval Namir Bar
 
 ---
 ## What Makes VibeDine Different?
