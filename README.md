@@ -4,15 +4,15 @@
 
 **VibeDine** is a hybrid restaurant recommendation system developed to solve the **dining dilemma**.
 
-Choosing where to eat is often influenced by much more than cuisine, ratings, or distance. The right restaurant depends on the **moment**, the **people you're with**, and the **vibe** you're looking for.
+Choosing where to eat is influenced by much more than cuisine, ratings, or distance. The right restaurant depends on the **moment**, the **people you're with**, and the **vibe** you're looking for.
 
-To address this challenge, we built a recommendation system that combines **Content-Based Filtering** and **Collaborative Filtering** to generate personalized restaurant recommendations. 
+To address this challenge, we built a recommendation system that combines **Content-Based Filtering** and **Item-Based Collaborative Filtering** to generate personalized restaurant recommendations.
 
-The models were trained on the **Google Local Data (2021)** dataset, focusing on restaurants in California, allowing the system to recommend places that better match each user's preferences and dining context.
+The recommendation models were trained on the **Google Local Data (2021)** dataset, focusing on restaurants in California, allowing the system to recommend restaurants that better match each user's preferences and dining context.
 
 ---
 
-## Documentation
+## 📚 Documentation
 
 Project documentation is available in the following files:
 
@@ -27,60 +27,80 @@ This project was developed as part of the **Recommender Systems Workshop** at **
 
 More information about the course can be found on the [Workshop Website](https://courses.cs.tau.ac.il/recsys/).
 
-### Authors
+## 👥 Authors
+
+Developed as part of the **Recommender Systems Workshop** at **Tel Aviv University**.
 
 - Aya Rotbart
 - Ester Tkach
 - Liora Yaakov
 - Yuval Hazut
-
----
-## What Makes VibeDine Different?
-
-![Main Features:](images/vibedine_features.png)
+- Yuval Namir Bar
 ---
 
-## Screenshots
+## ✨ What Makes VibeDine Different?
+
+<p align="center">
+  <img src="images/vibedine_features.png" width="850"/>
+</p>
+
+---
+
+## 📸 Demo
 
 ### Home Page
 
-![Home Page](images/HomePage.png)
+<p align="center">
+  <img src="images/HomePage.png" width="850"/>
+</p>
 
 ---
 
 ### Vibe Matcher
 
-![VibeMatcher](gifs/feature1_VibeMatcher.gif)
+<p align="center">
+  <img src="images/feature1_VibeMatcher.png" width="850"/>
+</p>
 
 ---
 
 ### Group Sync
 
-<video src="videos/feature2_Group.mp4" controls width="900"></video>
+<p align="center">
+  <img src="images/feature2_Group.png" width="850"/>
+</p>
 
 ---
 
 ### Mood Interface
 
-<video src="videos/feature3_Carousels.mp4" controls width="900"></video>
+<p align="center">
+  <img src="images/feature3_Carousels.png" width="850"/>
+</p>
 
 ---
 
 ### User Profile
 
-<video src="videos/profile.mp4" controls width="900"></video>
+<p align="center">
+  <img src="images/profile.png" width="850"/>
+</p>
 
 ---
 
 ### Cold-Start Onboarding
 
-<video src="videos/onboarding.mp4" controls width="900"></video>
+<p align="center">
+  <img src="images/onboarding_images/onboarding_start.webp" width="250"/>
+  <img src="images/onboarding_images/onboarding_preferences.webp" width="250"/>
+  <img src="images/onboarding_images/onboarding_pick.webp" width="250"/>
+</p>
+
+<p align="center">
+  <img src="images/onboarding_images/onboarding_NewUser.webp" width="500"/>
+</p>
 
 ---
 
-
-### User Profile
-
-![Profile](images/profile.png)
 
 
