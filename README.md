@@ -32,7 +32,7 @@ More information about the course can be found on the [Workshop Website](https:/
 Developed as part of the **Recommender Systems Workshop** at **Tel Aviv University**.
 
 - Aya Rotbart
-- Ester Tkach
+- Ester Tkach - estertkach@mail.tau.ac.il
 - Liora Yaakov
 - Yuval Hazut
 - Yuval Namir Bar
