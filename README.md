@@ -31,11 +31,11 @@ More information about the course can be found on the [Workshop Website](https:/
 
 Developed as part of the **Recommender Systems Workshop** at **Tel Aviv University**.
 
-- Aya Rotbart
+- Aya Rotbart - aya.rotbart@gmail.com
 - Ester Tkach - estertkach@mail.tau.ac.il
-- Liora Yaakov
-- Yuval Hazut
-- Yuval Namir Bar
+- Liora Yaakov - liorayacob10@gmail.com
+- Yuval Hazut - yuvalhazut@mail.tau.ac.il
+- Yuval Namir Bar - namirbarr@mail.tau.ac.il
 ---
 
 ## ✨ What Makes VibeDine Different?
