@@ -27,16 +27,20 @@ This project was developed as part of the **Recommender Systems Workshop** at **
 
 More information about the course can be found on the [Workshop Website](https://courses.cs.tau.ac.il/recsys/).
 
+
 ## 👥 Authors
 
-Developed as part of the **Recommender Systems Workshop** at **Tel Aviv University**.
+Developed as part of the **Workshop On Recommender Systems** at **Tel Aviv University**.
 
 - Aya Rotbart - aya.rotbart@gmail.com
 - Ester Tkach - estertkach@mail.tau.ac.il
-- Liora Yaakov - liorayacob10@gmail.com
+- Liora Yacob - liorayacob10@gmail.com
 - Yuval Hazut - yuvalhazut@mail.tau.ac.il
 - Yuval Namir Bar - namirbarr@mail.tau.ac.il
+
+
 ---
+
 
 ## ✨ What Makes VibeDine Different?
 
