@@ -36,7 +36,7 @@ Developed as part of the **Workshop On Recommender Systems** at **Tel Aviv Unive
 - Ester Tkach - estertkach@mail.tau.ac.il
 - Liora Yacob - liorayacob10@gmail.com
 - Yuval Hazut - yuvalhazut@mail.tau.ac.il
-- Yuval Namir Bar - namirbarr@mail.tau.ac.il
+- Yuval Namir Barr - yuvalnamirbarr@gmail.com
 
 
 ---
