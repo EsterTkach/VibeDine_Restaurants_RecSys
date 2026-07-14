@@ -5,7 +5,7 @@ from pymongo import MongoClient
 
 def process_and_upload_users():
     # התחברות למונגו
-    client = MongoClient("mongodb+srv://___.mongodb.net/?appName=Cluster0")
+    client = MongoClient("mongodb+srv://<username>:<password>@cluster0.yodtpzx.mongodb.net/?appName=Cluster0")
     db = client["restaurants_project_db"]
     collection = db["users"]
     
